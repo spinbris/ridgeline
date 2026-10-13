@@ -1,0 +1,31 @@
+{
+  "_meta": {
+    "engine_sha": "fd5fc652cade1f62c82a5faac360957906c5645c",
+    "engine_tree_dirty": false,
+    "iterations": {
+      "deliverable": 100000,
+      "period": 100000,
+      "tier1": 25000
+    },
+    "measured_on": "2026-09-17",
+    "seed": 42
+  },
+  "comparator_p80": 10210859.395408642,
+  "deliverable_p80_delay_days": 94.13818359375,
+  "gate_all_pass": true,
+  "gate_cost_gap_dollars": 11871.600038591772,
+  "gate_cost_gap_fraction": 0.0023654958885118036,
+  "gate_cross_surface_gap_days": 0.0,
+  "gate_tie_line": "rank 3: KH-017 vs KH-002 tie within the band (SR5 0.9939, integrated 0.9948). CONSISTENT.",
+  "headline_line": "Recommended project contingency: $11.32 M (P80, integrated cost plus schedule).",
+  "headline_p80": 11322332.223175053,
+  "period_baseline_date": "2027-09-13",
+  "period_integrated_p80": 11322332.22,
+  "period_p80_days_behind_plan": 131,
+  "period_p80_delay_days": 94.14,
+  "period_p80_finish": "2028-01-22",
+  "period_tracked_risks": 10,
+  "tier1_p50": 80005535.79269579,
+  "tier1_p80": 84995629.22414221,
+  "tier1_p90": 87704504.71358587
+}

@@ -1,0 +1,178 @@
+---
+title: "Tropic Ridge Wind Farm: what the contingency really is"
+subtitle: "Upfront integrated cost-and-schedule risk analysis for a 40 MW, ~$50M wind-farm scope"
+date: 2026-06-09
+author: "CBL Analytics"
+from: markdown-smart
+format:
+  html:
+    toc: true
+    number-sections: false
+    anchor-sections: false
+abstract: >
+  A worked, end-to-end quantitative risk analysis (cost QRA + schedule SRA +
+  Stage 3 CPM-replay) on a synthetic 40 MW wind farm. This is the upfront
+  analysis stage; the live month-by-month tracking is a separate dashboard.
+  Illustrative synthetic data, for analytical purposes only - not a client
+  deliverable and not for funding decisions.
+---
+
+<!--
+showcase-P5 WS5-D marketing-summary derivative. Content-staging artefact:
+P6 lifts this into the public blog (pillars 1 and 2 and the LinkedIn
+carousels). Figures are the committed Tropic Ridge Wind Farm showcase run
+(seed 42); prose is selected and framed from the existing wind outputs, not
+rewritten. ASCII only (no em/en dashes); zero client identifiers; gated by
+the wind leak gate (scripts/wind_leak_gate.py in the engine repo).
+-->
+
+## Who this is for, and which stage it covers
+
+This is for project sponsors, business-case owners, and PMO/finance leads who
+need to know how much contingency a wind-farm scope actually needs, and why.
+
+It covers the **upfront analysis** stage: the question answered before
+delivery starts is "how big should the contingency be, and what drives it?"
+The companion **active-management dashboard** answers a different question
+during delivery: "as risks fire and milestones move, where is the forecast
+now?" The two stages never blur - this page is the sizing analysis; the
+dashboard is the live tracking.
+
+All figures below come from a synthetic Tropic Ridge Wind Farm dataset (40 MW,
+~$50M capex: EPC $45M + grid connect $5M). They are illustrative and for
+analytical purposes only.
+
+## The headline answer
+
+A deterministic base estimate carries no contingency and quietly assumes
+nothing goes wrong. The integrated Monte Carlo analysis prices what "wrong"
+actually costs, across both arms of the project at once:
+
+| Component | P80 | % of $50M capex |
+|---|---|---|
+| Cost QRA (risk register, Layer 2) | $5.68M | 11.4% |
+| Schedule (Stage 2.5, dollarised at $35k/day) | $1.64M | 3.3% |
+| **Combined contingency (P80)** | **$7.31M** | **14.6%** |
+
+So an estimate presented with no contingency had roughly a **1-in-5 chance of
+being enough** at the combined P80 level. The number that matters for a
+business case is not the base estimate; it is this contingency and the
+confidence attached to it.
+
+## Chart 1 - Contingency by confidence (the cost S-curve)
+
+The cost contingency is not a single number; it is a distribution. Reading it
+at a chosen confidence level is the whole point of a QRA. The S-curve below
+(cumulative probability against contingency dollars) is the canonical view.
+
+![Cumulative-probability S-curve of the Layer-2 cost contingency, with P50, P80, P90 and P95 marked.](figs/wind_cost_s_curve.png){#fig-cost-s-curve}
+
+The same distribution as a density histogram shows where the mass sits and how
+the right tail stretches out toward the high-confidence percentiles:
+
+![Density of the cost contingency with the mean and P50/P80/P90/P95 reference lines.](figs/wind_cost_density.png){#fig-cost-density}
+
+| Confidence | Cost contingency | % of $50M capex |
+|---|---|---|
+| Mean | $4.22M | 8.4% |
+| P50 (median) | $3.97M | 7.9% |
+| P80 | $5.68M | 11.4% |
+| P90 | $6.67M | 13.3% |
+| P95 | $7.58M | 15.2% |
+
+*Caption: cumulative-probability S-curve of the Layer-2 cost contingency. The
+gap between P50 ($3.97M) and P80 ($5.68M) is the cost of buying down risk from
+even-odds to a defensible 4-in-5 confidence - about $1.7M, and the reason
+"use the mean" understates what a sponsor should hold.*
+
+## Chart 2 - What drives the cost (the tornado)
+
+Contingency is only actionable if you know which risks own it. Ranked by mean
+expected monetary value (EMV), the cost is concentrated in a short list:
+
+![Top cost risks ranked by mean EMV (the cost tornado).](figs/wind_cost_tornado.png){#fig-cost-tornado}
+
+| Risk | Description | Cost group | Mean EMV |
+|---|---|---|---|
+| WT-002 | Access road wet-weather damage | CG01 Civil | $0.37M |
+| WT-008 | WTG delivery delay (long-lead) | CG02 Turbine | $0.27M |
+| WT-009 | Main crane mobilisation delay | CG02 Turbine | $0.27M |
+| WT-012 | Erection weather standby | CG02 Turbine | $0.24M |
+| WT-003 | Unforeseen ground conditions | CG01 Civil | $0.19M |
+| WT-021 | Grid connection redesign | CG04 Grid | $0.19M |
+
+*Caption: top cost risks by mean EMV. The top three (WT-002, WT-008, WT-009)
+account for roughly 22% of the mean contingency, and the turbine cost group
+(CG02) carries the largest single-group share at $1.47M mean. Risk treatment
+spent here moves the number more than anywhere else.*
+
+## Chart 3 - Where the schedule risk lives (Stage 3 CPM-replay)
+
+The schedule arm runs the same risks through a CPM-replay over the full
+171-activity construction schedule, so the delay reflects the real critical
+path, not a spreadsheet add-up. Each schedule risk is auto-mapped to a single
+gating activity, so the risk-driven spread reflects additive PERT impacts,
+not over-binding.
+
+![Stage 3 project-finish S-curve (working days from start), with P50/P80/P90/P95 marked.](figs/wind_schedule_finish_s_curve.png){#fig-schedule-s-curve}
+
+| Confidence | Project finish (working days from start) |
+|---|---|
+| Mean | 622.1 |
+| P50 | 620.6 |
+| P80 | 637.0 |
+| P90 | 645.9 |
+| P95 | 653.0 |
+
+Top schedule-risk contributions (mean finish-delay days):
+
+| Risk | Description | Mean delay (days) |
+|---|---|---|
+| WT-008 | WTG delivery delay (long-lead) | 8.82 |
+| WT-001 | Turbine foundation rework | 5.76 |
+| WT-021 | Grid connection redesign | 5.00 |
+| WT-031 | SCADA integration defects | 4.88 |
+
+The CPM-replay also scores every activity by how often it lands on the critical
+path across the simulated futures. The top activities by criticality index are
+the ones to watch during delivery, shown under both measurements (the
+Mode-conditioned current baseline and the Mode-independent AACE 65R-11 view):
+
+![Top 20 activities by criticality index, Mode-conditioned vs Mode-independent.](figs/wind_activity_criticality.png){#fig-activity-criticality}
+
+*Caption: Stage 3 project-finish P-bands and the schedule drivers. A single
+risk - WT-008, turbine delivery - accounts for roughly 28% of the mean
+schedule slip; it is the single highest-value schedule-treatment action. The
+P95-P50 spread is about 32 working days, a tight, credible band rather than
+the blown-out range that over-binding produces.*
+
+## Chart 4 - The two layers, side by side
+
+The cost arm and the schedule arm answer different questions and are sized
+separately, then combined. Carrying both is what separates an integrated
+analysis from a cost-only estimate that silently ignores the schedule:
+
+| Arm | What it prices | P80 contingency |
+|---|---|---|
+| Cost QRA | Register risks landing as dollars | $5.68M (11.4%) |
+| Schedule SRA (dollarised) | Finish delay at $35k/working day | $1.64M (3.3%) |
+| **Combined** | Both at once | **$7.31M (14.6%)** |
+
+*Caption: the integrated headline. Most renewable business cases stop at the
+cost line; the schedule line is where projects are quietly won or lost.*
+
+## What this is, and is not
+
+This is the upfront sizing analysis on synthetic data. It does not track the
+project through delivery - that is the active-management dashboard, which
+re-runs the same engine each month against the live risk register and shows
+the forecast moving period over period. Sizing is done once, upfront;
+tracking is continuous, during delivery. Keeping the two distinct is the
+difference between a number on a page and a number you can manage to.
+
+---
+
+*Tropic Ridge Wind Farm is a synthetic project. All figures are illustrative,
+generated for analytical and demonstration purposes only. Nothing here is a
+client deliverable, a cost estimate for any real project, or a basis for
+funding decisions.*

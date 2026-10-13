@@ -1,0 +1,39 @@
+# Dev/automation dependencies (includes client runtime deps)
+-r requirements_client.txt
+jupyter>=1.0
+nbconvert>=7.0
+# ENVLOCK-01 (2026-08-10): the test runner was missing from the dev set. This
+# file layers on requirements_client.txt, which deliberately omits xlwings —
+# and omitted pytest with it, so `pip install -r requirements-dev.txt` produced
+# an environment that could not run `pytest`. The test discipline
+# requires a green suite before every commit, so the runner belongs here.
+# xlwings stays out by design: it is in requirements.txt for the legacy VBA
+# RunMC path, which a dev/notebook environment does not need.
+pytest>=7.0
+# XDIST-01 (2026-08-10): parallel test execution. The fast lane runs 20:50 serial
+# and 5:43 at -n auto on 22 cores, with byte-identical outcomes (2096 passed, the
+# same standing-5, 2 skipped, 2 xfailed). Not just a speed-up: 2000+ tests
+# reshuffled across 22 processes exposed no order-dependence and no collisions on
+# shared paths, which is the repo's ban on dict/set iteration-order dependence
+# confirmed dynamically rather than only by review.
+pytest-xdist>=3.8
+# SR-S3-Beta-11 §4 — PNG OCR regression test
+# (tests/test_sr9_v33_path_a_chart_legends.py @pytest.mark.slow).
+# Requires the tesseract system binary; the test SKIPs cleanly if the
+# binary is unavailable on the runner.
+pytesseract>=0.3.10
+# REG03 S2 — headless evaluation of the register's live EMV Excel formulas for
+# the reconciliation test (tests/test_reg03_s2_emv.py). The test SKIPs cleanly
+# when `formulas` is unavailable, so it is not a hard suite dependency.
+formulas>=1.3
+
+# 3d B-1 (Director, 05/09/2026): the two remaining UNDECLARED-DEPS-01 edges, decided.
+#
+# pywin32 provides win32com, used by Excel diagnostics outside the product and by
+# nothing the product runs. DEV, and Windows-only - the marker keeps a POSIX dev install from
+# failing on a package that cannot build there.
+#
+# weasyprint is NOT here and is not owed a home: D-12 retired the PDF, its only importer was
+# run_report.py, and that was deleted at 3c Part A. No module imports it anywhere in the tree.
+# Recorded so the next reader does not re-add it looking for a missing declaration.
+pywin32>=306; sys_platform == "win32"

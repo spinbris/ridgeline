@@ -1,0 +1,45 @@
+{
+  "purpose": "SRA-02 AC-5 pinned schedule baseline. Consolidated register path, schedule-only values, exact equality on float.hex(). Exists because the bit-identity gate is aggregate-only AND sits on the strawman branch, so it cannot see a schedule move on the consolidated path (brief A2.3/A2.4).",
+  "captured_on": {
+    "engine_sha": "97e921745df144b0c41afcbf5fae426de6e29233",
+    "branch": "feature/CONFIGTRUTH-01",
+    "tree_dirty_tracked": false
+  },
+  "fingerprint_n": 5,
+  "percentiles_pinned": [
+    50,
+    80,
+    90
+  ],
+  "wind_consolidated_schedule": {
+    "entry": "scripts.run_wind_showcase.run_integrated -> sched_days (consolidated register path, WIND_ITERATIONS=10000)",
+    "seed": 42,
+    "iterations": 10000,
+    "day_rate": "0x1.1170000000000p+15",
+    "n_dual_coded": 10,
+    "inputs": {
+      "register": {
+        "path": "tests/fixtures/synthetic_wind/wind_register.xlsx",
+        "sha256": "45328342244526f582b8000692ed0b46a56c95427ad552dac0e81f5befd57b5c"
+      },
+      "xer": {
+        "path": "tests/fixtures/synthetic_wind/wind_schedule.xer",
+        "sha256": "2120db0da6469fd4c07b9ab433e02d2ca6958a129dc5f51c28195472a71d2324"
+      }
+    },
+    "schedule_days_first_n": [
+      "0x1.644f400000000p+5",
+      "0x1.a610400000000p+5",
+      "0x1.2c00800000000p+5",
+      "0x1.638ba00000000p+5",
+      "0x0.0p+0"
+    ],
+    "schedule_days_mean": "0x1.5475f23a29c78p+5",
+    "schedule_days_p50": "0x1.4c6b500000000p+5",
+    "schedule_days_p80": "0x1.e5cf333333334p+5",
+    "schedule_days_p90": "0x1.1adb44ccccccdp+6",
+    "schedule_days_max": "0x1.0cedb00000000p+7",
+    "schedule_days_nonzero_count": 9880,
+    "cost_arm_p80_crosscheck": "0x1.4b632abe35f38p+22"
+  }
+}

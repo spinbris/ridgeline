@@ -1,0 +1,13 @@
+* text=auto eol=lf
+
+# Declared, not content-detected. wind_register.xlsx's blob OID (0885e241) is a
+# recorded input identity in both the golden manifest and AM's served provenance.
+*.parquet binary
+*.docx binary
+*.xlsx binary
+*.jpg binary
+*.xlsm binary
+*.png binary
+*.npz binary
+*.zip binary
+*.pkl binary

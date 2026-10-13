@@ -1,0 +1,10 @@
+{#- The client report, with MathJax removed.
+
+    nbconvert's lab template loads MathJax with $...$ as inline maths, so "$5.02M at $48,000"
+    in the executive summary was typeset as an equation. The report carries no mathematics, and
+    the MathJax config is hard-coded in base/mathjax.html.j2 (mathjax_url cannot switch it off),
+    so the block is emptied here. Every output kind is covered - Markdown, DataFrame HTML, HTML()
+    - and the report no longer fetches a script from a CDN when a client opens it.
+    Passed by RUN_FINAL.bat; guarded by tests/test_delivfix01_no_mathjax.py. -#}
+{%- extends 'lab/index.html.j2' -%}
+{%- block html_head_js_mathjax -%}{%- endblock html_head_js_mathjax -%}

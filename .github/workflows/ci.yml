@@ -1,0 +1,156 @@
+# The audit lane (PROCDIET-01 A1): the one blocking gate on every pull request and every push to
+# master. It proves the output is right and that nothing leaks, in at most 10 minutes, and the run
+# summary states its time. Everything else runs weekly, or on request (nightly.yml, A2).
+#
+# Two jobs:
+# - track (ubuntu): computes Track L or N from what the change does (A5), requires the
+#   `director-approved` label on Track N (R2), and runs gitleaks over the commits.
+# - audit (GitHub-hosted Windows, A8 (c)): the goldens, the refusal tests (tests/audit_lane.txt),
+#   then the output pack: the headline diff and both deliverables' cross-validation.
+#
+# Why Windows for the audit: the lock is Windows-only, and the goldens were blessed on Windows.
+# The client gate stays its own workflow; it must never share this one's fate.
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The range a change covers: the PR against its base, or the push against what was there.
+      - name: Range
+        id: range
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "base=origin/${{ github.base_ref }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "push" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            echo "base=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=origin/master" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A5: the track is computed, never chosen. stdlib only, so no install.
+      - name: Track
+        id: track
+        run: |
+          python scripts/track.py "${{ steps.range.outputs.base }}" HEAD | tee track.txt
+          echo "track=$(head -1 track.txt | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+          { echo "## Track $(head -1 track.txt | cut -d= -f2)"; echo; echo '```'; cat track.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      # R2: a Track N pull request merges only with the Director's label. The local approval file
+      # is invisible to GitHub, so the label is the server-side form of it; tags stay gated locally.
+      - name: Track N needs the director-approved label
+        if: github.event_name == 'pull_request' && steps.track.outputs.track == 'N'
+        run: |
+          if [ "${{ contains(github.event.pull_request.labels.*.name, 'director-approved') }}" != "true" ]; then
+            echo "RED: this change is Track N and the pull request has no director-approved label."
+            exit 1
+          fi
+
+      # gitleaks over the commits this change adds (the pre-commit hook covers staged changes only).
+      - name: gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks git --redact --no-banner --log-opts="${{ steps.range.outputs.base }}..HEAD"
+
+  audit:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Start the clock
+        run: echo "LANE_START=$(date +%s)" >> "$GITHUB_ENV"
+
+      # Before checkout, deliberately. The longest tracked path is 151 characters and
+      # core.longpaths is unset by default, so the clone would abort partway with
+      # "Filename too long" rather than failing cleanly.
+      - name: Long paths on, before anything clones
+        run: git config --global core.longpaths true
+
+      - uses: actions/checkout@v4
+
+      # 3.12, the lock's own: numpy 1.26.4 publishes no cp313 wheel (LOCKWHEEL-01).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-lock-20260901-py312.txt
+
+      - name: Install the locked environment
+        run: pip install -r requirements-lock-20260901-py312.txt
+
+      # Asserted before any test runs, rather than inferred from a green afterwards: a
+      # confidential input present on a runner, or the guard armed, would make the
+      # confidential golden tier run here, which this workflow must never do.
+      - name: No confidential input, and the confidential tier is not armed
+        run: |
+          python - <<'PY'
+          import os, sys, tomllib
+          from pathlib import Path
+
+          rows = tomllib.loads(Path("tests/golden/projects.toml").read_text())["projects"]
+          bad = []
+          if os.environ.get("QRA_GOLDEN_LOCAL"):
+              bad.append("QRA_GOLDEN_LOCAL is set; the confidential golden tier would run")
+          for name, row in rows.items():
+              if not row["confidential"]:
+                  continue
+              for rel in row["inputs"]:
+                  if Path(rel).exists():
+                      bad.append(f"confidential input present on the runner: {name} -> {rel}")
+          if Path("tests/golden/local").exists():
+              bad.append("tests/golden/local/ present; confidential manifests must never reach CI")
+          for line in bad:
+              print("FAIL:", line)
+          sys.exit(1 if bad else 0)
+          PY
+
+      # A4: a failure is retried once, a golden never (GATEHOLD-01); one that passes on the retry is
+      # named as a flake.
+      - name: Audit lane (goldens, refusals)
+        run: python scripts/audit_lane.py -n 4 --report flakes.txt
+
+      # The output pack reruns every golden itself, so a skipped golden test cannot read as green.
+      - name: Output pack and headline diff
+        if: always()
+        run: python scripts/output_pack.py --out outputs/pack
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Audit lane: $(( ($(date +%s) - LANE_START) / 60 )) min $(( ($(date +%s) - LANE_START) % 60 )) s"
+            echo
+            if [ -s flakes.txt ]; then echo "**Flakes (passed on the retry):**"; sed 's/^/- /' flakes.txt; echo; fi
+            cat outputs/pack/headline_diff.md 2>/dev/null || echo "The output pack did not complete."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: output-pack
+          path: outputs/pack
+          if-no-files-found: warn

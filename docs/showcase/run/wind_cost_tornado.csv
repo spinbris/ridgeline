@@ -1,0 +1,36 @@
+risk_id,description,cg,mean_emv
+WT-008,WTG delivery delay (long-lead),CG02,273486.64099114714
+WT-009,Main crane mobilisation delay,CG02,269507.0390930942
+WT-012,Erection weather standby,CG02,239954.00877078073
+WT-021,Grid connection redesign,CG04,191780.54039138454
+WT-003,Unforeseen ground conditions,CG01,189274.54420008784
+WT-014,Major component warranty defect,CG02,167341.43516067756
+WT-031,SCADA integration defects,CG06,167236.68565924317
+WT-011,Tower section nonconformance,CG02,163194.0796206562
+WT-015,Gearbox / main-bearing replacement,CG02,161778.07147433938
+WT-001,Turbine foundation rework,CG01,150860.3443820437
+WT-005,Bulk earthworks quantity overrun,CG01,143085.36215836738
+WT-032,Turbine commissioning faults,CG06,140603.17388410974
+WT-022,Network operator approval delay,CG04,127305.50717242096
+WT-016,Array cable supply shortfall,CG03,126555.44427995339
+WT-002,Access road wet-weather damage,CG01,124119.2252939997
+WT-010,Blade transport damage,CG02,121225.65737826511
+WT-028,Power transformer delivery delay,CG05,114385.79883406889
+WT-017,Cable installation productivity,CG03,97232.15816364641
+WT-024,Grid compliance test failure,CG04,90864.58996043065
+WT-026,Substation civils delay,CG05,88214.68972724772
+WT-027,Substation E&I commissioning slip,CG05,80932.93962537759
+WT-020,HV array cable test failures,CG03,75725.17414075478
+WT-013,Bolt tensioning / torque rework,CG02,72035.52862960413
+WT-035,Punchlist / defects liability,CG06,64056.240646345206
+WT-023,Protection settings rework,CG04,59886.92093357751
+WT-018,Cable joint re-termination,CG03,59294.844196094076
+WT-034,Grid code compliance retest,CG06,58244.273585400544
+WT-033,Power performance test shortfall,CG06,54765.86208500452
+WT-025,Connection-point scope change,CG04,51650.778472068254
+WT-029,Control building fit-out overrun,CG05,50564.86675654784
+WT-006,Drainage & culvert rework,CG01,46118.3088621824
+WT-007,Erosion & sediment control overrun,CG01,45628.31028910269
+WT-004,Hardstand settlement,CG01,36607.55661272562
+WT-019,Trenching clash with civil works,CG03,33941.84996385804
+WT-030,Earthing & lightning protection rework,CG05,31501.279986886893

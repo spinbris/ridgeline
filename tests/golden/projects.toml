@@ -1,0 +1,72 @@
+# GOLDEN01 - golden-number project registry.
+#
+# Paths + flags ONLY. NEVER any headline numbers here (numbers live in the
+# manifests: committed for public projects, gitignored local/ for confidential).
+#
+# Confidentiality is a per-project DATA attribute (PM ruling 2, 24/07/2026):
+#   confidential = true  -> goldens route to tests/golden/local/<project>/  (gitignored)
+#   confidential = false -> goldens route to tests/golden/manifests/<project>/ (committed)
+# There is NO `if project == "..."` anywhere in the harness; every project runs
+# the same adapter / test / bless path. Only the manifest location and the
+# breadth of input hashing vary, both read from this file.
+#
+# Adding a project = a row here + a bless + AN ADAPTER FUNCTION.
+#
+# GENERIC-01 (07/09/2026) corrected this. It previously read "No code change is
+# needed for a project that reuses an existing `adapter`", which is not true of a
+# genuinely new project: neither current adapter is parametrised by project.
+# `_adapter_wind` imports scripts/run_wind_showcase.py, which hardcodes its own
+# register and xer paths, capex and day rate. Reusing `adapter = "wind"` for another project would
+# re-run the WIND fixture and return wind's numbers under the new project's name -
+# a golden that passes while measuring the wrong project.
+#
+# Generalising an adapter so the claim becomes true is raised as GOLDENADPT-01,
+# deliberately not done here: the shape it needs is the third project's to define,
+# and building it blind invites fitting it to whatever wind happens to require.
+#
+# Fields per row:
+#   adapter      - engine entry key (golden_harness.ADAPTERS). Injects seed explicitly.
+#   confidential - routes tier + input-hash breadth. DATA attribute, not a code branch.
+#   seed         - the seed injected into the run (explicit, never a module global).
+#   scenarios    - list of golden scenarios. GOLDEN01 = one canonical integrated
+#                  headline per project (PM ruling 1, Option A). Extensible: mode
+#                  variants can be added later as data rows, no code change.
+#   inputs       - repo-relative (forward-slash) paths hashed & asserted every run.
+#                  A changed input with a moved number fails as INPUT CHANGED, not an
+#                  engine bug; with every number identical it is provenance-only (R7).
+
+[projects.wind_synth]
+# Public showcase: synthetic "Tropic Ridge" wind farm on committed fixtures.
+# Safe to publish; runs on a fresh clone / in CI.
+adapter = "wind"
+confidential = false
+seed = 42
+scenarios = ["canonical"]
+inputs = [
+    "tests/fixtures/synthetic_wind/wind_register.xlsx",
+    "tests/fixtures/synthetic_wind/wind_schedule.xer",
+]
+
+[projects.synthetic_road]
+# ROAD-01 project #2: the Kestrel Highway Upgrade, a 7.2 km brownfield highway
+# upgrade ($68.4M base). Synthetic and publishable, like wind_synth.
+#
+# The row key is the BINDING key, deliberately. The integrated adapter resolves a
+# project's inputs through its binding, so for such a row the two namespaces must be
+# the same name - wind's row (`wind_synth`) and its binding (`synthetic_wind`) differ,
+# which is harmless only because the wind adapter never resolves a binding. A test
+# holds this for every `integrated` row.
+#
+# adapter = "integrated", NOT "wind": the wind adapter is a closure over the wind
+# fixture, so reusing it here would have re-run wind and reported wind's numbers
+# under this project's name (GOLDENADPT-01). The integrated adapter resolves inputs
+# from this project's binding, and reproduces wind bit-identically, which is what
+# makes it a generalisation rather than a second answer.
+adapter = "integrated"
+confidential = false
+seed = 42
+scenarios = ["canonical"]
+inputs = [
+    "tests/fixtures/synthetic_road/road_register.xlsx",
+    "tests/fixtures/synthetic_road/road_schedule.xer",
+]

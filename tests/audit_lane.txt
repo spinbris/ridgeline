@@ -1,0 +1,48 @@
+# PROCDIET-01 A1: the audit lane's pytest half. scripts/audit_lane.py runs exactly these node IDs.
+# The other half is scripts/output_pack.py (headline diff and both deliverables' cross-validation),
+# then the client gate and gitleaks.
+#
+# A node ID that no longer exists stops the lane (pytest exits 4): removing a refusal test is red.
+# Adding or removing a line here is the Director's call (A1: "the Director approves the list").
+#
+# Every test named here ships in the public snapshot, so the lane runs there too. The docs budget and
+# flow-guard tests do not ship, so they run with the weekly full suite (A2's fallback).
+
+# Goldens, exact float.hex, both shipped projects; the period golden
+tests/golden/test_golden.py
+tests/test_7a_period_json_golden.py
+
+# Refusals, one per hard invariant or refusal rule
+# No default project: registry, AM activation, deliverable
+tests/test_qraxl01_generic_decoupling.py::test_get_active_binding_fails_loud_when_unset
+tests/test_generic01_project_types_are_config.py::TestRemovingTheRestrictionDidNotRemoveTheDiagnosis::test_an_empty_project_is_still_refused
+tests/test_3c_a_deliverable.py::test_the_deliverable_refuses_before_computing_anything_when_unconfigured
+# A binding that declares an input or a parameter incompletely
+tests/test_generic01_project_types_are_config.py::TestAnIncompleteBindingIsRefusedByName
+tests/test_generic01_project_types_are_config.py::TestNoProjectsSCHEDULEParametersStandAsAnothersDefault::test_a_project_that_declares_no_driver_parameters_is_refused
+# No fallback to another project's file; an unset path is never invented
+tests/integrated/test_sr11_integrated_simulation_stage3.py::test_the_loader_refuses_an_input_it_cannot_resolve
+tests/test_3c_a_deliverable_preflight.py::test_an_unset_path_names_the_variable_and_does_not_invent_a_default
+# Register methodology named ranges
+tests/test_methodology_defaults_reader.py::test_missing_named_range_composite_error
+# Invariant 2: strawman shape
+tests/test_sr9_v34_engine_data_driven.py::test_assert_strawman_shape_raises_when_count_mismatches
+tests/test_sr9_v34_engine_data_driven.py::test_assert_strawman_shape_raises_when_expected_count_is_none
+# Invariant 4: joint sampling
+tests/test_methfire01_shared_fire_draw.py::TestCostArmFireMask::test_a_driver_the_cost_arm_does_not_price_is_refused
+# Invariant 5: calibration tolerances
+tests/test_rsd2_calibration_tolerance.py::test_reader_raises_for_a_workbook_without_tolerances
+tests/test_rsd2_calibration_tolerance.py::test_integrated_config_requires_the_four_tolerances
+# Invariant 6: write, then fail (D-11)
+tests/test_3c_a_deliverable.py::test_d11_writes_every_artefact_bannered_and_only_then_fails
+tests/test_3c_a_deliverable.py::test_a_stage3_emit_failure_fails_the_run_rather_than_shipping_stage25_numbers
+tests/test_3c_a_gate_exit_code.py::test_a_failing_manifest_for_this_run_exits_one
+# Invariant 7: day rate
+tests/integrated/test_dayrate01_run_config_contract.py::TestAbsentDayRateStopsTheRun::test_absent_day_rate_raises_naming_input_and_source
+# Invariant 10: header-driven lookup
+tests/sra/cpm/test_graph_builder.py::TestSyntheticGraphBuilder::test_missing_required_column_raises
+# Seed, zero and iteration overrides refused by name
+tests/test_configtruth01_seed.py::test_a_negative_or_non_numeric_seed_is_refused_by_name
+tests/test_configtruth01_zero.py::test_the_builder_refuses_a_zero_saying_it_is_zero
+tests/test_configtruth01_env_overrides.py::test_an_iteration_override_that_is_not_a_positive_integer_is_refused_by_name
+

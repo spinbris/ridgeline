@@ -1,0 +1,42 @@
+{
+  "name": "dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "//engines": "SPEC §8, ruled into stage 7 part D. Next 15.3.9 declares ^18.18.0 || ^19.8.0 || >= 20.0.0; this floor is DELIBERATELY HIGHER at the major version actually built and tested here (v22.15.0 on the build machine, 06/09/2026). requires-python taught the same lesson in 3d: an untested floor lets an install succeed and fail later on someone else's machine, and widening later breaks nobody while narrowing breaks everyone who already installed.",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "predev": "node scripts/copy-data.js",
+    "dev": "next dev --turbopack",
+    "prebuild": "node scripts/copy-data.js",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "next": "15.3.9",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^3.8.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.7.0",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.9",
+    "jsdom": "^25.0.1",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^2.1.9"
+  }
+}

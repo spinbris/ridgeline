@@ -1,0 +1,28 @@
+# Cycle time (PROCDIET-01 A7): how long a pull request took from open to merge, by track. The
+# targets: a Track L change merges the same day it is ready; a Track N change within two working
+# days of its brief's signature, the Director's audit included. This records; it never blocks.
+name: cycle-time
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  record:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Open to merge
+        shell: bash
+        env:
+          OPENED: ${{ github.event.pull_request.created_at }}
+          MERGED: ${{ github.event.pull_request.merged_at }}
+          APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'director-approved') }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          secs=$(( $(date -d "$MERGED" +%s) - $(date -d "$OPENED" +%s) ))
+          track=$([ "$APPROVED" = "true" ] && echo N || echo L)
+          line="PR #$NUMBER, Track $track: open $OPENED, merged $MERGED, $((secs / 3600)) h $((secs % 3600 / 60)) min"
+          echo "$line"
+          { echo "## Cycle time"; echo; echo "$line"; } >> "$GITHUB_STEP_SUMMARY"

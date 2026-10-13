@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/**
+ * Design tokens per UX01-T0 (docs/design_tokens.json), sourced from
+ * ../../renewables/reports/theme.scss (slate + teal). D-UX4 (resolved):
+ * this replaces the AM03 v1.1 mockup's navy palette outright, the mockup
+ * (../mockup/the original dashboard mockup (archived)) is no longer the
+ * colour source of truth; typography/spacing/component hierarchy from it
+ * still apply.
+ *
+ * Tailwind 4 @theme directive registers these as utility-class values
+ * so `bg-page`, `text-accent`, `border-card` work in JSX.
+ */
+:root {
+  /* Page chrome */
+  --color-page: #f8fafc;
+  --color-card: #ffffff;
+  --color-card-border: #e2e8f0;
+
+  /* Text */
+  --color-body: #334155;
+  --color-muted: #64748b;
+
+  /* Brand */
+  --color-header: #1e293b;
+  --color-accent: #0d9488;
+  --color-accent-dark: #0f766e;
+  --color-accent-light: #5eead4;
+  --color-accent-soft: #ccfbf1;
+  --color-border: #e2e8f0;
+  --color-warn: #dc2626;
+
+  /* Status / outcome (functional, not brand tokens - left unchanged) */
+  --color-fired: #c93545;
+  --color-closed: #2d8659;
+  --color-fired-soft-bg: #fee2e2;
+  --color-fired-soft-fg: #991b1b;
+  --color-closed-soft-bg: #d1fae5;
+  --color-closed-soft-fg: #065f46;
+  --color-actioned-bg: #fef3c7;
+  --color-actioned-fg: #92400e;
+  --color-monitor-bg: #ddd6fe;
+  --color-monitor-fg: #5b21b6;
+
+  /* Headline contrast (label / behind-baseline accent) */
+  --color-behind: #ffb088;
+
+  /* Disclosure callout (analyst pages, AM02.1 Curiosity 7) */
+  --color-disclosure-bg: #fffbeb;
+  --color-disclosure-fg: #78350f;
+  --color-disclosure-border: #d97706;
+  --color-disclosure-strong: #92400e;
+}
+
+@theme inline {
+  --color-page: var(--color-page);
+  --color-card: var(--color-card);
+  --color-card-border: var(--color-card-border);
+  --color-body: var(--color-body);
+  --color-muted: var(--color-muted);
+  --color-header: var(--color-header);
+  --color-accent: var(--color-accent);
+  --color-accent-dark: var(--color-accent-dark);
+  --color-accent-light: var(--color-accent-light);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-border: var(--color-border);
+  --color-warn: var(--color-warn);
+  --color-fired: var(--color-fired);
+  --color-closed: var(--color-closed);
+}
+
+html,
+body {
+  background: var(--color-page);
+  color: var(--color-body);
+  /* --font-inter is set by next/font/google on <html> in app/layout.tsx,
+     self-hosted at build time so it survives static export (D1). */
+  font-family: var(--font-inter), "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Tabular numerics for risk tables and percentile rows */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Screen-reader-only content; visually hidden but accessible to AT.
+   Used by the Stochastic Gantt to expose row data alongside the
+   SVG for screen-reader users. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Print-friendly fallback (AM03 v1.1 §5.D item 5).
+   "No need for elaborate print styling - just don't actively block
+   it." Strategy:
+   - Hide chrome (.print:hidden classes; AppHeader/PageNav/AppFooter)
+   - Flatten card borders + remove shadows so they don't waste ink
+   - Force white background and dark text
+   - Drop interactive cursors; we're on paper now */
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  section,
+  article,
+  div {
+    box-shadow: none !important;
+  }
+  /* Ensure inline-styled card borders print as thin grey lines
+     rather than absent (some browsers strip light borders on print). */
+  [style*="border-color"],
+  [style*="borderColor"] {
+    border-color: #aaaaaa !important;
+  }
+  /* Hide any interactive control intentionally marked .print\:hidden
+     in JSX (e.g. AppHeader, PageNav, mitigation Apply buttons). */
+  .print\:hidden {
+    display: none !important;
+  }
+  /* Tooltips and Recharts focus rings noise on paper. */
+  .recharts-tooltip-wrapper,
+  *:focus {
+    outline: none !important;
+  }
+}

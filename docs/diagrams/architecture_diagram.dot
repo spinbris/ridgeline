@@ -1,0 +1,67 @@
+digraph SRAArchitecture {
+    rankdir=TB;
+    bgcolor="white";
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11, color="#1f3a5f", fontcolor="#1f3a5f", penwidth=1.5];
+    edge [fontname="Helvetica", fontsize=9, color="#4a5b6e", arrowsize=0.7, penwidth=1.2];
+
+    // Input layer
+    subgraph cluster_inputs {
+        label="Locked input files";
+        labeljust=l;
+        style="rounded,dashed";
+        color="#7a8a9c";
+        fontname="Helvetica-Bold";
+        fontsize=11;
+        fontcolor="#1f3a5f";
+
+        register [label="Risk register\n(Excel)", fillcolor="#e8eef7"];
+        p6 [label="P6 longest-path\nexport (Excel)", fillcolor="#e8eef7"];
+        xer [label="P6 XER export\n(full network)", fillcolor="#e8eef7"];
+    }
+
+    // Strawman
+    strawman [label="SRA strawman workbook\n(Excel, generated)\nMode per risk · Day rate · Run config", fillcolor="#fef4dc", color="#a07a1f", fontcolor="#5a4308"];
+
+    // Components
+    subgraph cluster_components {
+        label="Analytical components";
+        labeljust=l;
+        style="rounded,dashed";
+        color="#7a8a9c";
+        fontname="Helvetica-Bold";
+        fontsize=11;
+        fontcolor="#1f3a5f";
+
+        c1 [label="Component 1\nDeterministic QRA\n(Excel)", fillcolor="#dde6f0"];
+        c2 [label="Component 2\nCost Monte Carlo\n(Python)", fillcolor="#dde6f0"];
+        c3 [label="Component 3\nSchedule Monte Carlo\n(Python)", fillcolor="#dde6f0"];
+        c4 [label="Component 4\nIntegrated joint MC\n(Python)", fillcolor="#c4d4e6"];
+    }
+
+    // Output
+    composer [label="Composer", fillcolor="#e3f0e3", color="#2d5a2d", fontcolor="#1a3a1a"];
+    deliverable [label="Final deliverable\nWord doc + HTML report", shape=note, fillcolor="#fff8e1", color="#7a6010", fontcolor="#3a2f08"];
+
+    // Flow edges
+    register -> c1;
+    register -> c2;
+    register -> strawman [style=dashed, label=" build"];
+    p6 -> strawman [style=dashed, label=" build"];
+    strawman -> c3;
+    strawman -> c4;
+    xer -> c3 [label=" Stage 3 BETA"];
+    xer -> c4 [label=" Stage 3 BETA"];
+
+    c2 -> c4;
+    c3 -> c4;
+    c1 -> composer [style=dotted];
+    c2 -> composer;
+    c3 -> composer;
+    c4 -> composer [penwidth=2.0];
+
+    composer -> deliverable [penwidth=2.0];
+
+    // Layout hints
+    { rank=same; c1; c2; }
+    { rank=same; c3; c4; }
+}

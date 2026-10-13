@@ -1,0 +1,20 @@
+ERMHDR	7.0	2026-01-01	Project	admin	admin	Project Management	USD
+%T	CALENDAR
+%F	clndr_id	clndr_name	default_flag	clndr_data	day_hr_cnt	week_hr_cnt	month_hr_cnt	year_hr_cnt
+%R	1	Standard 5-day	Y	(0||CalendarData())	8.0	40.0	172.0	2000.0
+%T	PROJWBS
+%F	wbs_id	proj_id	parent_wbs_id	wbs_short_name	wbs_name	seq_num
+%R	900	1		FA	Float absorption demonstrator	1
+%T	TASK
+%F	task_id	proj_id	wbs_id	clndr_id	task_code	task_name	task_type	target_drtn_hr_cnt	total_float_hr_cnt	free_float_hr_cnt	early_start_date	early_end_date	late_start_date	late_end_date	target_start_date	target_end_date	cstr_date	cstr_type	driving_path_flag
+%R	9001	1	900	1	FA.START	Site establishment complete	TT_Task	0.0	0.0	0.0	2026-07-06 08:00	2026-07-06 08:00	2026-07-06 08:00	2026-07-06 08:00	2026-07-06 08:00	2026-07-06 08:00			Y
+%R	9002	1	900	1	FA.CRIT	Controlling works (drives the finish)	TT_Task	400.0	0.0	0.0	2026-07-06 08:00	2026-07-23 00:00	2026-07-06 08:00	2026-07-23 00:00	2026-07-06 08:00	2026-07-23 00:00			Y
+%R	9003	1	900	1	FA.FLOAT	Parallel works (carries float)	TT_Task	80.0	320.0	40.0	2026-07-06 08:00	2026-07-09 16:00	2026-07-06 08:00	2026-07-09 16:00	2026-07-06 08:00	2026-07-09 16:00			N
+%R	9004	1	900	1	FA.END	Practical completion	TT_Task	0.0	0.0	0.0	2026-07-06 08:00	2026-07-06 08:00	2026-07-06 08:00	2026-07-06 08:00	2026-07-06 08:00	2026-07-06 08:00			Y
+%T	TASKPRED
+%F	task_pred_id	task_id	pred_task_id	pred_type	lag_hr_cnt
+%R	9501	9002	9001	PR_FS	0.0
+%R	9502	9003	9001	PR_FS	0.0
+%R	9503	9004	9002	PR_FS	0.0
+%R	9504	9004	9003	PR_FS	0.0
+%E

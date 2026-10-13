@@ -1,0 +1,23 @@
+# Client notebook dependencies (no xlwings required)
+# The numpy upper bound is load-bearing. Under numpy 2.x the
+# wind_synth public golden moves 1 ULP and the gate reds; a spec admitting that version
+# permits a red. Lifting it is a methodology decision (re-bless), not a dependency bump.
+numpy>=1.26,<2
+scipy>=1.12
+matplotlib>=3.8
+openpyxl>=3.1
+pandas>=2.0
+
+# State cache persistence: parquet for arrays + JSON for metadata
+# replaces pickle. See SCALABILITY.md §3.2 / §4 and ARCHITECTURE.md §9.
+pyarrow>=15
+
+# Word deliverable. Both were once undeclared and
+# only ever resolved because they happened to be present in user site-packages:
+# a genuinely fresh venv could not import src/final/word_generator.py, so it
+# could not produce the client exec summary, and 12 test modules failed to
+# collect. lxml is a DIRECT dependency (word_generator.py:144 and :201 do
+# `from lxml import etree`), not merely python-docx's transitive one — declare
+# it explicitly so a future python-docx backend change cannot silently break it.
+python-docx>=1.1
+lxml>=5.0

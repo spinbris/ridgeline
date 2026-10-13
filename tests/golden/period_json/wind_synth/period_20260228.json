@@ -1,0 +1,708 @@
+{
+  "schema_version": "1.4",
+  "meta": {
+    "period_end_date": "2026-02-28",
+    "previous_period_end_date": null,
+    "engine_run_date": "2026-10-06T05:13:58Z",
+    "engine_run_hash": "ed4c7248-40dd-4ee2-9180-eac9811ebd01",
+    "register_version": "Tropic Ridge Wind Farm",
+    "workbook_filename": "wind_period_01.xlsx",
+    "xer_filename": "wind_schedule.xer",
+    "iterations": 2000,
+    "seed": 42,
+    "project_key": "synthetic_wind",
+    "project_display_name": "Tropic Ridge Wind Farm",
+    "engine_sha": "c082970e5f0ed0ea68b2c4f967dcf194b4fcd4cb",
+    "engine_tree_dirty": false,
+    "input_sha256": {
+      "register": {
+        "method": "git_blob_oid",
+        "value": "e9c7c72bb50dbe749c8ab15634aef14bff901706"
+      },
+      "xer": {
+        "method": "git_blob_oid",
+        "value": "5cbed8f12994c6f82b1c4809dd8791f58add2764"
+      },
+      "workbook": {
+        "method": "git_blob_oid",
+        "value": "ea513f64a97c24961160fbf7335014bf5e0beddd"
+      }
+    }
+  },
+  "headline": {
+    "p10_finish": "2026-04-29",
+    "p50_finish": "2026-06-02",
+    "mean_finish": "2026-06-04",
+    "p80_finish": "2026-06-30",
+    "p90_finish": "2026-07-17",
+    "p95_finish": "2026-07-28",
+    "deterministic_finish": "2026-04-06",
+    "p80_days_behind_plan": 85,
+    "p50_days_behind_plan": 57,
+    "p90_days_behind_plan": 102,
+    "open_risks_count": 10,
+    "fired_this_period_count": 0,
+    "closed_this_period_count": 0,
+    "near_critical_milestones_30d": []
+  },
+  "trend": {
+    "periods": [
+      {
+        "period_end": "2026-02-28",
+        "p80_finish": "2026-06-30"
+      }
+    ]
+  },
+  "risks": [
+    {
+      "risk_id": "WT-008",
+      "title": "WTG delivery delay (long-lead)",
+      "context": "",
+      "days_at_risk_p80": 13.2,
+      "owner": "Procurement Lead",
+      "status": "open",
+      "probability": 0.4,
+      "impact_days_emv": 8.0,
+      "criticality_conditioned": 1.0,
+      "criticality_independent": 1.0,
+      "ssi": 0.8082,
+      "cruciality_proxy_p80": 0.0203,
+      "mode": "Series",
+      "cg_code": null,
+      "tornado_sigma_days": 2.47,
+      "tornado_sample_sigma_days": 5.21
+    },
+    {
+      "risk_id": "WT-031",
+      "title": "SCADA integration defects",
+      "context": "",
+      "days_at_risk_p80": 10.2,
+      "owner": "Commissioning Lead",
+      "status": "open",
+      "probability": 0.5,
+      "impact_days_emv": 4.5,
+      "criticality_conditioned": 1.0,
+      "criticality_independent": 1.0,
+      "ssi": 0.9642,
+      "cruciality_proxy_p80": 0.0156,
+      "mode": "Series",
+      "cg_code": null,
+      "tornado_sigma_days": 1.25,
+      "tornado_sample_sigma_days": 2.57
+    },
+    {
+      "risk_id": "WT-001",
+      "title": "Turbine foundation rework",
+      "context": "",
+      "days_at_risk_p80": 9.9,
+      "owner": "Civil Lead",
+      "status": "open",
+      "probability": 0.45,
+      "impact_days_emv": 5.4,
+      "criticality_conditioned": 1.0,
+      "criticality_independent": 1.0,
+      "ssi": 0.195,
+      "cruciality_proxy_p80": 0.0152,
+      "mode": "Series",
+      "cg_code": null,
+      "tornado_sigma_days": 1.43,
+      "tornado_sample_sigma_days": 2.98
+    },
+    {
+      "risk_id": "WT-009",
+      "title": "Main crane mobilisation delay",
+      "context": "",
+      "days_at_risk_p80": 8.4,
+      "owner": "Erection Lead",
+      "status": "open",
+      "probability": 0.45,
+      "impact_days_emv": 4.5,
+      "criticality_conditioned": 1.0,
+      "criticality_independent": 1.0,
+      "ssi": 0.8082,
+      "cruciality_proxy_p80": 0.0129,
+      "mode": "Hybrid",
+      "cg_code": null,
+      "tornado_sigma_days": 1.5,
+      "tornado_sample_sigma_days": 2.68
+    },
+    {
+      "risk_id": "WT-021",
+      "title": "Grid connection redesign",
+      "context": "",
+      "days_at_risk_p80": 8.2,
+      "owner": "Grid Lead",
+      "status": "open",
+      "probability": 0.3,
+      "impact_days_emv": 4.5,
+      "criticality_conditioned": 1.0,
+      "criticality_independent": 1.0,
+      "ssi": 0.9352,
+      "cruciality_proxy_p80": 0.0126,
+      "mode": "Series",
+      "cg_code": null,
+      "tornado_sigma_days": 1.45,
+      "tornado_sample_sigma_days": 2.72
+    },
+    {
+      "risk_id": "WT-032",
+      "title": "Turbine commissioning faults",
+      "context": "",
+      "days_at_risk_p80": 7.8,
+      "owner": "Commissioning Lead",
+      "status": "open",
+      "probability": 0.45,
+      "impact_days_emv": 3.1,
+      "criticality_conditioned": 0.0,
+      "criticality_independent": 0.0,
+      "ssi": 0.0,
+      "cruciality_proxy_p80": 0.0119,
+      "mode": "Hybrid",
+      "cg_code": null,
+      "tornado_sigma_days": 0.97,
+      "tornado_sample_sigma_days": 1.95
+    },
+    {
+      "risk_id": "WT-002",
+      "title": "Access road wet-weather damage",
+      "context": "",
+      "days_at_risk_p80": 6.8,
+      "owner": "Civil Lead",
+      "status": "open",
+      "probability": 0.5,
+      "impact_days_emv": 3.5,
+      "criticality_conditioned": 1.0,
+      "criticality_independent": 1.0,
+      "ssi": 0.195,
+      "cruciality_proxy_p80": 0.0105,
+      "mode": "Hybrid",
+      "cg_code": null,
+      "tornado_sigma_days": 1.08,
+      "tornado_sample_sigma_days": 1.91
+    },
+    {
+      "risk_id": "WT-020",
+      "title": "HV array cable test failures",
+      "context": "",
+      "days_at_risk_p80": 4.5,
+      "owner": "Electrical Lead",
+      "status": "open",
+      "probability": 0.35,
+      "impact_days_emv": 1.4,
+      "criticality_conditioned": 0.0,
+      "criticality_independent": 0.0,
+      "ssi": 0.0,
+      "cruciality_proxy_p80": 0.0069,
+      "mode": "Parallel",
+      "cg_code": null,
+      "tornado_sigma_days": 0.52,
+      "tornado_sample_sigma_days": 1.31
+    },
+    {
+      "risk_id": "WT-026",
+      "title": "Substation civils delay",
+      "context": "",
+      "days_at_risk_p80": 4.4,
+      "owner": "Substation Lead",
+      "status": "open",
+      "probability": 0.35,
+      "impact_days_emv": 2.1,
+      "criticality_conditioned": 1.0,
+      "criticality_independent": 1.0,
+      "ssi": 0.828,
+      "cruciality_proxy_p80": 0.0067,
+      "mode": "Hybrid",
+      "cg_code": null,
+      "tornado_sigma_days": 0.7,
+      "tornado_sample_sigma_days": 1.65
+    },
+    {
+      "risk_id": "WT-027",
+      "title": "Substation E&I commissioning slip",
+      "context": "",
+      "days_at_risk_p80": 4.0,
+      "owner": "Substation Lead",
+      "status": "open",
+      "probability": 0.35,
+      "impact_days_emv": 1.4,
+      "criticality_conditioned": 1.0,
+      "criticality_independent": 1.0,
+      "ssi": 0.8414,
+      "cruciality_proxy_p80": 0.0061,
+      "mode": "Parallel",
+      "cg_code": null,
+      "tornado_sigma_days": 0.52,
+      "tornado_sample_sigma_days": 1.26
+    }
+  ],
+  "mitigations": [],
+  "activities": {
+    "top_n_by_ci": 10,
+    "ci_threshold": 0.05,
+    "p_band_derivation_method": "B",
+    "items": [
+      {
+        "activity_id": "1003",
+        "name": "Civil works weather-exposure gate",
+        "p10_start_days": 28.74,
+        "p50_start_days": 33.75,
+        "p90_start_days": 39.51,
+        "p10_finish_days": 33.74,
+        "p50_finish_days": 38.75,
+        "p90_finish_days": 44.51,
+        "det_es_days": 30.0,
+        "det_ef_days": 35.0,
+        "criticality_index": 1.0
+      },
+      {
+        "activity_id": "1004",
+        "name": "Foundation works (controlling)",
+        "p10_start_days": 33.61,
+        "p50_start_days": 38.91,
+        "p90_start_days": 44.43,
+        "p10_finish_days": 121.11,
+        "p50_finish_days": 126.41,
+        "p90_finish_days": 131.93,
+        "det_es_days": 35.0,
+        "det_ef_days": 122.5,
+        "criticality_index": 1.0
+      },
+      {
+        "activity_id": "1005",
+        "name": "Foundations-complete gate",
+        "p10_start_days": 120.51,
+        "p50_start_days": 131.95,
+        "p90_start_days": 144.43,
+        "p10_finish_days": 125.51,
+        "p50_finish_days": 136.95,
+        "p90_finish_days": 149.43,
+        "det_es_days": 122.5,
+        "det_ef_days": 127.5,
+        "criticality_index": 1.0
+      },
+      {
+        "activity_id": "1006",
+        "name": "WTG delivery gate",
+        "p10_start_days": 127.19,
+        "p50_start_days": 145.22,
+        "p90_start_days": 165.71,
+        "p10_finish_days": 132.19,
+        "p50_finish_days": 150.22,
+        "p90_finish_days": 170.71,
+        "det_es_days": 127.5,
+        "det_ef_days": 132.5,
+        "criticality_index": 1.0
+      },
+      {
+        "activity_id": "1007",
+        "name": "Main crane availability gate",
+        "p10_start_days": 134.2,
+        "p50_start_days": 154.97,
+        "p90_start_days": 178.85,
+        "p10_finish_days": 139.2,
+        "p50_finish_days": 159.97,
+        "p90_finish_days": 183.85,
+        "det_es_days": 132.5,
+        "det_ef_days": 137.5,
+        "criticality_index": 1.0
+      },
+      {
+        "activity_id": "1008",
+        "name": "Turbine erection (controlling)",
+        "p10_start_days": 138.83,
+        "p50_start_days": 160.41,
+        "p90_start_days": 183.66,
+        "p10_finish_days": 276.33,
+        "p50_finish_days": 297.91,
+        "p90_finish_days": 321.16,
+        "det_es_days": 137.5,
+        "det_ef_days": 275.0,
+        "criticality_index": 1.0
+      },
+      {
+        "activity_id": "1009",
+        "name": "Array cable trenching",
+        "p10_start_days": 276.3,
+        "p50_start_days": 297.94,
+        "p90_start_days": 321.14,
+        "p10_finish_days": 301.3,
+        "p50_finish_days": 322.94,
+        "p90_finish_days": 346.14,
+        "det_es_days": 275.0,
+        "det_ef_days": 300.0,
+        "criticality_index": 1.0
+      },
+      {
+        "activity_id": "1010",
+        "name": "Array cable pull-in",
+        "p10_start_days": 301.28,
+        "p50_start_days": 322.97,
+        "p90_start_days": 346.13,
+        "p10_finish_days": 321.28,
+        "p50_finish_days": 342.97,
+        "p90_finish_days": 366.13,
+        "det_es_days": 300.0,
+        "det_ef_days": 320.0,
+        "criticality_index": 1.0
+      },
+      {
+        "activity_id": "1011",
+        "name": "Array cable terminations",
+        "p10_start_days": 321.27,
+        "p50_start_days": 342.99,
+        "p90_start_days": 366.12,
+        "p10_finish_days": 336.27,
+        "p50_finish_days": 357.99,
+        "p90_finish_days": 381.12,
+        "det_es_days": 320.0,
+        "det_ef_days": 335.0,
+        "criticality_index": 1.0
+      },
+      {
+        "activity_id": "1012",
+        "name": "HV array cable testing",
+        "p10_start_days": 336.26,
+        "p50_start_days": 358.0,
+        "p90_start_days": 381.11,
+        "p10_finish_days": 346.26,
+        "p50_finish_days": 368.0,
+        "p90_finish_days": 391.11,
+        "det_es_days": 335.0,
+        "det_ef_days": 345.0,
+        "criticality_index": 1.0
+      }
+    ],
+    "mode_summary": {
+      "series": 4,
+      "hybrid": 4,
+      "parallel": 2,
+      "total": 171
+    },
+    "cp_stats": {
+      "activities_on_det_cp": 39,
+      "activities_ci_gt_50": 39,
+      "activities_ci_gt_80": 39,
+      "stochastic_cp_additions": 0,
+      "longest_path_p80_days": 651.4,
+      "zero_float_activities": 3,
+      "mean_activity_float_days": 71.0,
+      "float_sigma_days": 48.1
+    }
+  },
+  "distribution": {
+    "s_curve_points": [
+      {
+        "date": "2026-04-06",
+        "cumulative_prob": 0.0
+      },
+      {
+        "date": "2026-04-20",
+        "cumulative_prob": 0.05
+      },
+      {
+        "date": "2026-04-29",
+        "cumulative_prob": 0.1
+      },
+      {
+        "date": "2026-05-04",
+        "cumulative_prob": 0.15
+      },
+      {
+        "date": "2026-05-08",
+        "cumulative_prob": 0.2
+      },
+      {
+        "date": "2026-05-13",
+        "cumulative_prob": 0.25
+      },
+      {
+        "date": "2026-05-17",
+        "cumulative_prob": 0.3
+      },
+      {
+        "date": "2026-05-22",
+        "cumulative_prob": 0.35
+      },
+      {
+        "date": "2026-05-25",
+        "cumulative_prob": 0.4
+      },
+      {
+        "date": "2026-05-29",
+        "cumulative_prob": 0.45
+      },
+      {
+        "date": "2026-06-02",
+        "cumulative_prob": 0.5
+      },
+      {
+        "date": "2026-06-05",
+        "cumulative_prob": 0.55
+      },
+      {
+        "date": "2026-06-09",
+        "cumulative_prob": 0.6
+      },
+      {
+        "date": "2026-06-14",
+        "cumulative_prob": 0.65
+      },
+      {
+        "date": "2026-06-18",
+        "cumulative_prob": 0.7
+      },
+      {
+        "date": "2026-06-24",
+        "cumulative_prob": 0.75
+      },
+      {
+        "date": "2026-06-30",
+        "cumulative_prob": 0.8
+      },
+      {
+        "date": "2026-07-08",
+        "cumulative_prob": 0.85
+      },
+      {
+        "date": "2026-07-17",
+        "cumulative_prob": 0.9
+      },
+      {
+        "date": "2026-07-28",
+        "cumulative_prob": 0.95
+      },
+      {
+        "date": "2026-09-12",
+        "cumulative_prob": 1.0
+      }
+    ],
+    "histogram_bins": [
+      {
+        "date_range_start": "2026-04-06",
+        "date_range_end": "2026-04-13",
+        "count": 50
+      },
+      {
+        "date_range_start": "2026-04-13",
+        "date_range_end": "2026-04-21",
+        "count": 68
+      },
+      {
+        "date_range_start": "2026-04-21",
+        "date_range_end": "2026-04-29",
+        "count": 101
+      },
+      {
+        "date_range_start": "2026-04-29",
+        "date_range_end": "2026-05-07",
+        "count": 159
+      },
+      {
+        "date_range_start": "2026-05-07",
+        "date_range_end": "2026-05-15",
+        "count": 180
+      },
+      {
+        "date_range_start": "2026-05-15",
+        "date_range_end": "2026-05-23",
+        "count": 197
+      },
+      {
+        "date_range_start": "2026-05-23",
+        "date_range_end": "2026-05-31",
+        "count": 222
+      },
+      {
+        "date_range_start": "2026-05-31",
+        "date_range_end": "2026-06-08",
+        "count": 204
+      },
+      {
+        "date_range_start": "2026-06-08",
+        "date_range_end": "2026-06-16",
+        "count": 171
+      },
+      {
+        "date_range_start": "2026-06-16",
+        "date_range_end": "2026-06-24",
+        "count": 158
+      },
+      {
+        "date_range_start": "2026-06-24",
+        "date_range_end": "2026-07-02",
+        "count": 117
+      },
+      {
+        "date_range_start": "2026-07-02",
+        "date_range_end": "2026-07-10",
+        "count": 95
+      },
+      {
+        "date_range_start": "2026-07-10",
+        "date_range_end": "2026-07-18",
+        "count": 90
+      },
+      {
+        "date_range_start": "2026-07-18",
+        "date_range_end": "2026-07-26",
+        "count": 73
+      },
+      {
+        "date_range_start": "2026-07-26",
+        "date_range_end": "2026-08-03",
+        "count": 53
+      },
+      {
+        "date_range_start": "2026-08-03",
+        "date_range_end": "2026-08-11",
+        "count": 25
+      },
+      {
+        "date_range_start": "2026-08-11",
+        "date_range_end": "2026-08-19",
+        "count": 14
+      },
+      {
+        "date_range_start": "2026-08-19",
+        "date_range_end": "2026-08-27",
+        "count": 13
+      },
+      {
+        "date_range_start": "2026-08-27",
+        "date_range_end": "2026-09-04",
+        "count": 7
+      },
+      {
+        "date_range_start": "2026-09-04",
+        "date_range_end": "2026-09-12",
+        "count": 3
+      }
+    ],
+    "percentile_table": [
+      {
+        "percentile": 10,
+        "days_from_start": 606.5,
+        "date": "2026-04-29",
+        "delta_vs_det": 23
+      },
+      {
+        "percentile": 25,
+        "days_from_start": 616.7,
+        "date": "2026-05-13",
+        "delta_vs_det": 37
+      },
+      {
+        "percentile": 50,
+        "days_from_start": 630.7,
+        "date": "2026-06-02",
+        "delta_vs_det": 57
+      },
+      {
+        "percentile": 75,
+        "days_from_start": 646.5,
+        "date": "2026-06-24",
+        "delta_vs_det": 79
+      },
+      {
+        "percentile": 80,
+        "days_from_start": 651.4,
+        "date": "2026-06-30",
+        "delta_vs_det": 85
+      },
+      {
+        "percentile": 90,
+        "days_from_start": 663.3,
+        "date": "2026-07-17",
+        "delta_vs_det": 102
+      },
+      {
+        "percentile": 95,
+        "days_from_start": 671.4,
+        "date": "2026-07-28",
+        "delta_vs_det": 113
+      }
+    ]
+  },
+  "delta": {
+    "period_0": true,
+    "note": "First period; no prior data for delta"
+  },
+  "audit": {
+    "config": {
+      "engine": "SRA Stage 3 CPM-replay",
+      "iterations": 2000,
+      "sampling_method": "Joint severity uniforms (cost + schedule)",
+      "seed": 42,
+      "cp_rule": "Option Z Hybrid",
+      "p_level_reporting": 80,
+      "cl_mode": "Mode-conditioned"
+    },
+    "calibration_gates": [],
+    "methodology_notes": [
+      {
+        "topic": "per_activity_p_bands",
+        "method": "B",
+        "text": "Per-activity P10/P50/P90 envelopes derived from per-activity Mean and standard deviation of finish day using lognormal moment-fit. The lognormal distribution is fit to the (Mean, std) of each activity's finish day via the standard formulae sigma_sq = ln(1 + (std/Mean)^2), mu = ln(Mean) - sigma_sq/2. Percentiles read off via exp(mu + sigma * Phi-inverse(q)). This captures the right-skew that CPM-replay produces at merge points more faithfully than a normal-approximation. Project-level percentiles in the headline S-curve are direct percentiles from the 100k-iteration project finish distribution and are not affected by this per-activity derivation. Direct per-iteration sampling (AACE 57R-09 Tier 3) is a planned refinement. Methodology aligned with AACE 132R-23 Level 2 / GN3A Risk Factor Model 2.",
+        "queued_for_v1_1": "Per-iteration ES/EF persistence"
+      },
+      {
+        "topic": "counterfactual_iteration_budget",
+        "method": "subsampled",
+        "text": "Counterfactual analyses for proposed mitigations and per-risk days-at-risk computations are run at 500 / 500 iterations respectively (vs 100,000 for the main run). Precision floor on each per-mitigation days_saved estimate is approximately 0.3 days at standard project variance. Insufficient for fine ranking of mitigations within 1 day of each other; sufficient for the top-of-list ranking the dashboard surfaces."
+      },
+      {
+        "topic": "per_risk_tornado_sigma",
+        "method": "sample_leave_one_out_with_pert_fallback",
+        "text": "Per-risk tornado sigma is reported two ways. The PRIMARY is a sample-based sigma_days (tornado_sample_sigma_days), the marginal contribution of each risk to project-finish standard deviation measured by leave-one-out: std(finish) minus std(finish with the risk forced Closed), in working days, off the same 500-iteration re-runs that produce days_at_risk (no additional Monte Carlo cost). Unlike the model-based proxy it responds to per-period status: because the conditional runner removes Fired / Completed-mitigation risks and zeroes Closed risks' probability, a resolved risk's leave-one-out re-run equals baseline and its sample sigma falls to approximately 0, so resolved risks self-correct to the bottom of the tornado with no explicit filter. Caveats: the metric is NON-ADDITIVE (risks interact through the schedule network, so per-risk sigmas do not sum to total project sigma; it is valid for ordering and relative magnitude, not decomposition arithmetic), sits at the 500-iteration precision floor (approximately 0.3 days; differences within the floor, including small negatives from MC noise, should not be over-interpreted - the raw value is stored and the dashboard clamps the bar at 0), and is a marginal-removal definition rather than a within-run variance decomposition. The FALLBACK, retained for back-compat and for any risk outside the evaluated set, is the closed-form PERT proxy tornado_sigma_days: (pess - opt) / 6 weighted by Bernoulli probability, which depends only on register inputs and does not respond to status. The dashboard prefers the sample sigma when present and labels which is shown. The textbook within-run per-iteration variance decomposition (AACE 57R-09 Tier 3) is not yet implemented; it would need engine-side support.",
+        "queued_for_v1_1": "Per-iteration risk-fired persistence"
+      },
+      {
+        "topic": "per_risk_cruciality_proxy",
+        "method": "days_at_risk_normalised",
+        "text": "Per-risk cruciality is reported as a proxy: days_at_risk_p80 / project_finish_p80. True Pearson correlation between per-risk fired indicators and project finish would require per-iteration risk-fired persistence (the same capability the per-iteration variance decomposition needs). The proxy is sufficient for risk ranking; the dashboard labels the field cruciality_proxy_p80 to distinguish."
+      },
+      {
+        "topic": "top_n_activity_filter",
+        "method": "non_zero_variance",
+        "text": "The analyst-view top-N activity table is filtered to activities with non-zero risk-driven finish-time variance (finish_std_hours > 0). Activities with the highest criticality_index but no risks directly mapped to them (e.g. project-finish milestones, schedule anchor points) are excluded because their lognormal P-band collapses to a single point and is uninformative on a stochastic Gantt. This trades CI-completeness for variance-informativeness; a refinement of the filter (e.g. hybrid CI-times-variance ranking) is a planned refinement, alongside the broader question of whether the current Tropic Ridge Wind Farm risk-to-activity mapping needs more coverage of always-critical anchor activities.",
+        "queued_for_v1_1": "Top-N filter refinement + register-coverage review"
+      },
+      {
+        "topic": "delta_attribution_threshold",
+        "method": "presentation_threshold",
+        "text": "Period-over-period per-risk attribution (the What changed page) lists a risk under worse / better only when its days-at-risk P80 moved by more than 1.5 working days versus the prior period. This is a disclosed presentation threshold, not a statistical significance test: it is set roughly 2x the empirical Monte Carlo standard error of a period-over-period days-at-risk difference at the 10,000-iteration days-at-risk precision floor (per-risk sigma about 0.3 to 0.45 working days). Risks that closed this period are always listed, attributed to their full prior days-at-risk."
+      }
+    ],
+    "stage_brief": "Period status run",
+    "reviewer": null,
+    "reviewer_approved_date": null
+  },
+  "integrated": {
+    "basis": "cost + dollarised schedule delay, with risk states pinned from the status workbook on both arms",
+    "day_rate": 35000.0,
+    "deterministic_baseline_days": 590.0,
+    "iterations": 2000,
+    "p50_dollars": 5198699.53,
+    "mean_dollars": 5452085.32,
+    "p80_dollars": 7366574.6,
+    "p90_dollars": 8702610.43,
+    "p95_dollars": 9890973.11,
+    "cost_marginal": {
+      "mean_dollars": 3953376.26,
+      "p80_dollars": 5368652.27
+    },
+    "schedule_marginal": {
+      "mean_delay_days": 42.82,
+      "p80_delay_days": 61.35
+    },
+    "pinning": {
+      "risks_priced": 35,
+      "risks_removed": 0,
+      "risks_closed": 0,
+      "risks_reprobabilised": 0,
+      "removed_risk_ids": [],
+      "closed_risk_ids": [],
+      "reprobabilised_risk_ids": []
+    }
+  }
+}

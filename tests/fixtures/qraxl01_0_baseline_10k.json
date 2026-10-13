@@ -1,0 +1,36 @@
+{
+  "purpose": "REG04 3a.3 10k bit-identity gate - the FAST per-sprint value-neutrality gate (seeded RNG + untouched read path, so 10k proves value-neutrality as exactly as 100k). The 100k fixture qraxl01_0_baseline.json is the milestone/client-release check. Regenerate: python scripts/qraxl01_0_capture_baseline_10k.py",
+  "captured_on": {
+    "engine_sha": "e89751455ad7a7e8471fd07d204fdf72cad73fc3",
+    "branch": "feature/CONFIGTRUTH-01",
+    "tree_dirty_tracked": false
+  },
+  "fingerprint_n": 5,
+  "wind_showcase": {
+    "entry": "scripts.run_wind_showcase.run_integrated (WIND_ITERATIONS=100000)",
+    "seed": 42,
+    "iterations": 10000,
+    "day_rate": 35000.0,
+    "n_dual_coded": 10,
+    "inputs": {
+      "register": {
+        "path": "tests/fixtures/synthetic_wind/wind_register.xlsx",
+        "sha256": "45328342244526f582b8000692ed0b46a56c95427ad552dac0e81f5befd57b5c"
+      },
+      "xer": {
+        "path": "tests/fixtures/synthetic_wind/wind_schedule.xer",
+        "sha256": "2120db0da6469fd4c07b9ab433e02d2ca6958a129dc5f51c28195472a71d2324"
+      }
+    },
+    "cost_dollars_array_first_n": [
+      5300475.695369925,
+      5947165.236738493,
+      3424193.534890775,
+      3435567.1269119876,
+      1771505.2943291022
+    ],
+    "cost_arm_p80": 5429450.685752682,
+    "integrated_total_p80": 7520793.433313529,
+    "integrated_total_mean": 5485481.2287099315
+  }
+}

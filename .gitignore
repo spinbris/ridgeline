@@ -1,0 +1,81 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+dist/
+build/
+.eggs/
+*.egg
+venv/
+.venv/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Contract audit outputs (ephemeral)
+*.contract_audit_raw.json
+
+# Excel and Word temporary and lock files
+~$*.xls*
+~$*.doc*
+*.tmp
+
+# Inputs: large binaries kept locally. A file already tracked stays tracked; a new register or
+# workbook revision needs `git add -f`.
+inputs/
+
+# The confidential golden tier: a confidential project's headline numbers, never committed.
+# The public tier (tests/golden/manifests/) is not ignored.
+tests/golden/local/
+
+# Generated: outputs, run reports and registers
+outputs/
+reports/
+registers/
+
+# Large binary documents
+docs/**/*.docx
+docs/**/*.pdf
+docs/**/*.xlsx
+docs/**/*.xlsm
+docs/**/*.zip
+docs/**/*.xer
+docs/**/*.html
+docs/*.docx
+docs/*.pdf
+docs/*.xlsx
+docs/*.zip
+
+# Jupyter
+.ipynb_checkpoints/
+outputs/.ipynb_checkpoints/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Environment
+.env
+
+# Source workbooks a fixture is built from, kept locally
+tests/fixtures/synthetic_wind/RF01_source_3.zip
+tests/fixtures/synthetic_wind/TR_RiskFactor_Model_3.xlsx
+
+# The client gate's term list is never tracked; scripts/client_gate.py checks that it is ignored.
+terms.local.txt
+
+# Period JSONs are build outputs; the dashboard's build products
+data/*
+!data/.gitkeep
+dashboard/node_modules/
+dashboard/out/
+dashboard/.next/
+dashboard/public/data/
+
+# Git for Windows crash dumps
+*.stackdump

@@ -1,0 +1,77 @@
+# 3d A-1 (D-3 / R-6): the product is pip-installable.
+#
+# The roadmap put 3d before stage 4 so the third-project proof exercises the INSTALLED product
+# rather than a checkout - otherwise the F-H class (literal paths, machine assumptions) stays
+# invisible until a user finds it.
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# RIDGELINE-01 (R-11, R-13): the distribution carries the product's name. Nothing that runs is
+# renamed (D-4): the import package stays `src` and the entry point stays `outturn-gate`.
+name = "ridgeline"
+description = "Ridgeline: quantitative cost and schedule risk analysis for capital projects - cost QRA, SRA, the integrated result, and its management over the project's life."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Stephen Parton" }]
+
+# 3d A-2: read from src/__init__.py, never typed twice. See [tool.setuptools.dynamic].
+dynamic = ["version", "dependencies"]
+
+# Ruled 05/09/2026 (Director), and deliberately narrower than README's historical "3.10+".
+#
+# src/ and tools/ parse clean under 3.10 and use no post-3.10 stdlib, so 3.10 would PROBABLY
+# work - but nothing runs the suite on it, and `requires-python` is enforced by pip at INSTALL.
+# An untested ">=3.10" lets a user install successfully and fail later on their own machine;
+# ">=3.12" refuses them at install with a clear message instead. The asymmetry decides it:
+# widening this floor later breaks nobody, narrowing it breaks everyone who already installed.
+# PY313-01 is this claim having been false once already - the README said 3.10+ while the code
+# used a 3.13 function. Widen the day something actually runs the suite lower.
+requires-python = ">=3.12"
+
+classifiers = [
+    "Private :: Do Not Upload",          # belt and braces: this must not reach PyPI
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: Microsoft :: Windows",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.scripts]
+# What a user actually runs. The deliverable itself is a notebook driven by RUN_FINAL.bat and
+# stays repository-only (it is data, and it reads the repository's own fixtures).
+#
+# REFRETIRE-01 (D-3): `outturn-cost` retired with `main.py`, the legacy Excel/VBA cost entry
+# point. It defaulted the project selection to the retired binding and imported xlwings at
+# module scope, so it could not start without Excel and started on one project when it did. The
+# headless cost run it wrapped lives in `src.tier1_headless.run_headless_from_workbook`, which
+# takes its workbook and its risk-ID prefix as arguments.
+outturn-gate = "src.final.deliverable:_cli"
+
+[tool.setuptools.dynamic]
+version = { attr = "src.__version__" }
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools]
+# Explicit, not auto-discovered: the repository root holds scripts, notebooks, fixtures and
+# dashboards that are emphatically not the package.
+packages = [
+    "src",
+    "src.am",
+    "src.final",
+    "src.final.sections",
+    "src.integrated",
+    "src.sra",
+    "src.sra.cpm",
+    "src.sra.cpm.bindings",
+    "src.sra_strawman",
+    "tools",
+]
+py-modules = []   # REFRETIRE-01: `main.py` retired with the Excel cost entry point
+
+[tool.setuptools.package-data]
+# The register scaffolder reads the shipped template's sibling data at runtime; the template
+# itself is a tracked artefact under templates/ and is NOT packaged - a user gets one by
+# running the scaffolder, which is the D-4 contract.
+"*" = ["*.md"]

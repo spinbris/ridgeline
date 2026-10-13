@@ -1,0 +1,36 @@
+{
+  "purpose": "QRAXL-01.0 bit-identity baselines. The later qra_core extraction must reproduce every value here to the last digit with Layer 1 OFF. Asserted by tests/test_qraxl01_0_bit_identity.py (exact ==, sr19 Gate C pattern).",
+  "captured_on": {
+    "engine_sha": "ed015db114900bf0f6f6ca0e7629513fbe0a1504",
+    "branch": "feature/CONFIGTRUTH-01",
+    "tree_dirty_tracked": false
+  },
+  "fingerprint_n": 5,
+  "wind_showcase": {
+    "entry": "scripts.run_wind_showcase.run_integrated (WIND_ITERATIONS=100000)",
+    "seed": 42,
+    "iterations": 100000,
+    "day_rate": 35000.0,
+    "n_dual_coded": 10,
+    "inputs": {
+      "register": {
+        "path": "tests/fixtures/synthetic_wind/wind_register.xlsx",
+        "sha256": "45328342244526f582b8000692ed0b46a56c95427ad552dac0e81f5befd57b5c"
+      },
+      "xer": {
+        "path": "tests/fixtures/synthetic_wind/wind_schedule.xer",
+        "sha256": "2120db0da6469fd4c07b9ab433e02d2ca6958a129dc5f51c28195472a71d2324"
+      }
+    },
+    "cost_dollars_array_first_n": [
+      2613322.462282592,
+      6141620.151600917,
+      2182188.501609326,
+      1657893.5765854444,
+      3359805.674093428
+    ],
+    "cost_arm_p80": 5420044.997544414,
+    "integrated_total_p80": 7482634.794690012,
+    "integrated_total_mean": 5462693.935995755
+  }
+}

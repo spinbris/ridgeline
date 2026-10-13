@@ -1,0 +1,78 @@
+# The full suite, weekly or on request, on the self-hosted Mac (PROCDIET-01 A2 and A8, as amended by
+# the Director 12/10/2026). It never blocks a merge: it finds where a fault is. A red becomes a register
+# row. The file keeps its first name: tests/test_7d_receive_path_and_render_gate.py reads it.
+#
+# Run it by hand (workflow_dispatch) when the audit lane goes red and the fault needs finding.
+#
+# macOS arm64, so nothing here may assume Windows: bash, POSIX paths, .venv/bin, no .bat. The lock
+# installs off Windows (pywin32 is marked win32-only); the POSIX-only packages it does not pin
+# resolve at install (README.md). Runner setup is the Director's procedure, kept privately.
+name: weekly
+
+on:
+  schedule:
+    - cron: "0 16 * * 6"   # Sunday 02:00 AEST (Saturday 16:00 UTC)
+  workflow_dispatch:
+
+concurrency:
+  group: weekly
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  full-suite:
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 120
+    env:
+      # The desktop-Excel recalc runs here and nowhere else (R3).
+      OUTTURN_DESKTOP_EXCEL: "1"
+
+    steps:
+      # Full history and tags: test_tree_paths checks retired files against the commits that
+      # deleted them, and test_stage_log indexes the tags. A shallow clone skips or reds both.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # python3.12 from the runner's PATH (a runner prerequisite); a fresh venv every night, so a stale
+      # install can never make a red go green.
+      - name: Install the locked environment
+        run: |
+          rm -rf .venv
+          python3.12 -m venv .venv
+          .venv/bin/python -m pip install -q -r requirements-lock-20260901-py312.txt
+
+      # The app-render gate executes in vitest under jsdom, so without Node it skips, and a
+      # run would go green having never rendered the app.
+      #
+      # The version is pinned here and asserted against dashboard/package.json's
+      # engines.node by tests/test_7d_receive_path_and_render_gate.py, so the two cannot
+      # drift apart silently.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      # `ci`, not `install`: it installs the locked closure exactly.
+      - name: Install the dashboard's locked closure
+        working-directory: dashboard
+        run: npm ci
+
+      # The increment lane, with -rs so every skip names its input.
+      - name: Full suite
+        run: .venv/bin/python -m pytest tests/ -m "not wallclock" -q -n 4 --dist loadgroup --durations=25 -rs
+
+      # wallclock runs alone, after the parallel lane, never beside it.
+      - name: Wallclock lane
+        if: always()
+        run: .venv/bin/python -m pytest -m wallclock -q
+
+      - name: Summary
+        if: failure()
+        run: |
+          echo "## Weekly full suite red on $(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Raise a register row; this blocks nothing (A2)." >> "$GITHUB_STEP_SUMMARY"
