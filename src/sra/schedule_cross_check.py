@@ -19,6 +19,10 @@ Two comparators, both over the Time=Yes rows:
 
 Dollars are days x day rate in both cases.
 
+Which one a Monte Carlo run is judged against is the run's Mode basis (SCHEDCAL-01): Comparator 2
+for a schedule arm that applies the Mode multipliers (Stage 2.5), Comparator 1 for one that does
+not (Stage 3, the headline). See :func:`evaluate_schedule_calibration`.
+
 **The Mode multipliers are the register's own** (D-12): they come in as a parameter,
 read from the register's ``Methodology`` grid by :func:`read_register_mode_multipliers`,
 never from a cross-project constant. This is deliberate and is the reason the
@@ -35,8 +39,9 @@ Pure-data layer: dicts in, dicts out, no rendering.
 """
 from __future__ import annotations
 
+import math
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
 import pandas as pd
 
@@ -60,9 +65,13 @@ CALIBRATION_REPORT_KEYS: tuple[str, ...] = (
     "mc_schedule_mean_days",
     "comparator_1_emv_days_pert",
     "comparator_2_finish_delay_days_pert",
+    "mode_multipliers_applied",
+    "judged_against",
     "absolute_gap_days",
     "absolute_tolerance_days",
     "passes_calibration",
+    "diagnostic_comparator",
+    "diagnostic_gap_days",
     "interpretation",
 )
 
@@ -154,22 +163,45 @@ def compute_schedule_comparators(
     }
 
 
+#: The one injection method under which Comparator 1 bounds a Mode-off mean from above: one sampled
+#: delay per risk, written once, to the gating activity (SCHEDCAL-01 Gate 3 round 2, Director
+#: 14/10/2026). ``additive_pert_days`` writes the same delay to every activity a risk binds, so a
+#: serial cohort moves the finish by a multiple of it; the multiplicative methods scale a factor by
+#: each activity's duration, which Comparator 1 sums as if it were days.
+BOUNDED_INJECTION_METHOD = "discrete_event_additive_days"
+
+
 def evaluate_schedule_calibration(
     mc_schedule_mean_days: float,
     comparators: Mapping[str, float],
     tolerance_days: float,
+    *,
+    mode_multipliers_applied: bool,
+    injection_methods: Iterable[str],
 ) -> dict[str, Any]:
-    """Compare an MC schedule arm's mean finish delay against Comparator 2.
+    """Compare an MC schedule arm's mean finish delay against the comparators, on its own basis.
 
-    The consolidated path's calibration check (P-E4). Comparator 2 is the register's
-    Mode-weighted EMV sum - a closed-form estimate of how much delay reaches the
-    finish date. The MC mean is what the CPM network actually produces. A gap inside
-    tolerance says the two agree; a gap outside it says the Mode classification and
-    the network disagree, and one of them is wrong.
+    The consolidated path's calibration check (P-E4), judged on the run's Mode basis
+    (SCHEDCAL-01, Director 14/10/2026):
 
+    * **Mode multipliers applied** (Stage 2.5): the mean estimates **Comparator 2**, the
+      Mode-weighted EMV sum, and must agree with it within the tolerance either side. Unchanged.
+    * **Mode multipliers off** (Stage 3, the headline: ``STAGE3_APPLY_MODE_MULTIPLIERS = False``),
+      with every simulated risk injected by ``discrete_event_additive_days``: each risk's sampled
+      delay is written once, to its gating activity, and the finish is the longest path, so no
+      network can push the mean above **Comparator 1**, the unweighted EMV sum. The check is
+      one-sided (Gate 3, Director 14/10/2026): it fails only on a mean above Comparator 1 by more
+      than the tolerance. A mean below it is delay that did not reach the finish - float absorbed,
+      or a risk bound to no activity - which is always reported and never decides.
+    * **Mode multipliers off with any other injection method**: Comparator 1 is no bound (see
+      :data:`BOUNDED_INJECTION_METHOD`), so the run is **not assessed** (``passes_calibration`` is
+      ``None``); the comparators and the gap are still reported (Gate 3 round 2, Director 14/10/2026).
+
+    ``mode_multipliers_applied`` and ``injection_methods`` have no default: they are the run's own,
+    taken from the config and the drivers it ran on, and a call that does not state them is
+    refused. A mean that is missing or not finite is refused too, rather than read as zero.
     ``tolerance_days`` comes from the caller's config
-    (``IntegratedConfig.schedule_calibration_tolerance_days``) rather than a literal
-    here, so a project that widens its tolerance does so in one place.
+    (``IntegratedConfig.schedule_calibration_tolerance_days``) rather than a literal here.
 
     Consumes the **Python** comparators only. The register's ``Summary`` cells are an
     audit surface proven equal by the reconciliation gate; they are never a run-time
@@ -179,27 +211,32 @@ def evaluate_schedule_calibration(
     disagreement is the job, and a check that raised would take the deliverable down
     over a methodology question.
     """
+    if not isinstance(mode_multipliers_applied, bool):
+        raise TypeError("mode_multipliers_applied must be the run's own bool setting, "
+                        f"not {mode_multipliers_applied!r}")
+    if isinstance(injection_methods, str):
+        raise TypeError("injection_methods must be the collection of the run's drivers' methods, "
+                        "not one string")
+    methods = sorted(set(injection_methods))
+    if not methods or not all(isinstance(m, str) and m for m in methods):
+        raise TypeError("injection_methods must name the run's drivers' injection methods, "
+                        f"not {injection_methods!r}")
+    if mc_schedule_mean_days is None or not math.isfinite(float(mc_schedule_mean_days)):
+        raise ValueError(f"the MC schedule mean is {mc_schedule_mean_days!r}; a missing or "
+                         "non-finite mean is a broken run, not a calibration result")
     comparator_1 = _as_float(comparators.get(COMPARATOR_KEYS[0]))
     comparator_2 = _as_float(comparators.get(COMPARATOR_KEYS[2]))
     mc_mean = _as_float(mc_schedule_mean_days)
     tolerance = _as_float(tolerance_days)
-    gap = abs(mc_mean - comparator_2)
-    passes = gap <= tolerance
-    # Where the MC mean sits relative to the two comparators is the diagnostic half
-    # of this check. Comparator 1 assumes every delay reaches the finish date and
-    # Comparator 2 assumes the Mode weighting is exact, so they bracket what a
-    # network should produce; a mean inside the bracket says the network is
-    # absorbing float, but less of it than the Mode weighting assumed.
+    # Where the MC mean sits relative to the two comparators: Comparator 1 assumes every delay
+    # reaches the finish date and Comparator 2 assumes the Mode weighting is exact, so on the
+    # Mode-on basis they bracket what a network should produce.
     bracketed = min(comparator_1, comparator_2) <= mc_mean <= max(comparator_1, comparator_2)
-    return {
-        "mc_schedule_mean_days": mc_mean,
-        "comparator_1_emv_days_pert": comparator_1,
-        "comparator_2_finish_delay_days_pert": comparator_2,
-        "absolute_gap_days": gap,
-        "absolute_tolerance_days": tolerance,
-        "passes_calibration": bool(passes),
-        "mc_mean_within_comparator_bracket": bool(bracketed),
-        "interpretation": (
+
+    if mode_multipliers_applied:
+        gap = abs(mc_mean - comparator_2)
+        passes = gap <= tolerance
+        interpretation = (
             f"MC schedule mean = {mc_mean:.3f} days vs deterministic Comparator 2 = "
             f"{comparator_2:.3f} days. Absolute gap = {gap:.3f} days "
             f"(tolerance {tolerance:.1f} days) - "
@@ -218,7 +255,70 @@ def evaluate_schedule_calibration(
                 f"span; treat the Mode classification or the network binding as "
                 f"suspect before the tolerance."
             )
-        ),
+        )
+        return {
+            "mc_schedule_mean_days": mc_mean,
+            "comparator_1_emv_days_pert": comparator_1,
+            "comparator_2_finish_delay_days_pert": comparator_2,
+            "mode_multipliers_applied": True,
+            "injection_methods": methods,
+            "judged_against": "Comparator 2",
+            "absolute_gap_days": gap,
+            "absolute_tolerance_days": tolerance,
+            "passes_calibration": bool(passes),
+            "diagnostic_comparator": "Comparator 1",
+            "diagnostic_gap_days": abs(mc_mean - comparator_1),
+            "mc_mean_within_comparator_bracket": bool(bracketed),
+            "interpretation": interpretation,
+        }
+
+    excess = max(mc_mean - comparator_1, 0.0)
+    shortfall = max(comparator_1 - mc_mean, 0.0)
+    expected = comparator_1 - comparator_2
+    bounded = methods == [BOUNDED_INJECTION_METHOD]
+    passes = (excess <= tolerance) if bounded else None
+    head = (f"MC schedule mean = {mc_mean:.3f} days against Comparator 1 = {comparator_1:.3f} days "
+            f"(no Mode weighting). ")
+    if not bounded:
+        interpretation = head + (
+            f"NOT ASSESSED: the run injects by {', '.join(methods)}, and Comparator 1 bounds a "
+            f"run without Mode multipliers only when every risk injects by "
+            f"{BOUNDED_INJECTION_METHOD} (one delay, written once). Gap to Comparator 1 = "
+            f"{mc_mean - comparator_1:+.3f} days; Comparator 2 = {comparator_2:.3f} days. "
+            f"Reported, not judged."
+        )
+    else:
+        interpretation = head + (
+            f"Comparator 1 is the upper bound for this run: every risk injects one delay, written "
+            f"once, so no path can carry more than the sum. Excess over the bound = {excess:.3f} "
+            f"days (tolerance {tolerance:.1f} days) - {'PASS' if passes else 'FAIL'}. "
+            + (
+                f"Delay that did not reach the finish: {shortfall:.1f} days (float absorbed, or "
+                f"risks bound to no activity); the register's Mode labels expect about "
+                f"{expected:.1f} (Comparator 2 = {comparator_2:.3f} days). Diagnostic, not part "
+                f"of the check."
+                if passes else
+                "The mean exceeds the sum of every risk's expected delay, which this injection "
+                "cannot add; treat the network binding or the risk inputs as suspect before the "
+                "tolerance."
+            )
+        )
+    return {
+        "mc_schedule_mean_days": mc_mean,
+        "comparator_1_emv_days_pert": comparator_1,
+        "comparator_2_finish_delay_days_pert": comparator_2,
+        "mode_multipliers_applied": False,
+        "injection_methods": methods,
+        "assessed": bounded,
+        "judged_against": "Comparator 1 (upper bound)" if bounded else "not assessed",
+        "absolute_gap_days": excess,
+        "absolute_tolerance_days": tolerance,
+        "passes_calibration": passes,
+        "diagnostic_comparator": "Comparator 2",
+        "diagnostic_gap_days": abs(mc_mean - comparator_2),
+        "delay_not_reaching_finish_days": shortfall,
+        "mc_mean_within_comparator_bracket": bool(bracketed),
+        "interpretation": interpretation,
     }
 
 

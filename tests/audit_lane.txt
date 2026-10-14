@@ -46,3 +46,13 @@ tests/test_configtruth01_seed.py::test_a_negative_or_non_numeric_seed_is_refused
 tests/test_configtruth01_zero.py::test_the_builder_refuses_a_zero_saying_it_is_zero
 tests/test_configtruth01_env_overrides.py::test_an_iteration_override_that_is_not_a_positive_integer_is_refused_by_name
 
+
+# The shipped showcase set quotes one run (SHOWCASESYNC-01, Director 14/10/2026)
+tests/test_showcase_sync.py
+
+# The schedule cross-check judges a run on its own Mode basis (SCHEDCAL-01, Director 14/10/2026)
+tests/test_sra02_se_calibration_check.py
+
+# The report page: labelled honestly, and one run with the showcase (REPORTPAGE-01, Director 14/10/2026)
+tests/test_label_report_page.py
+tests/test_reportpage_one_run.py

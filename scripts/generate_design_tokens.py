@@ -107,7 +107,7 @@ QUARTO_SCSS = {
     "note": (
         "the engine's actual report template is a Jupyter notebook "
         "(outputs/report_template.ipynb) with inline <style> blocks, not a Quarto qmd pipeline. "
-        "this repository has one standalone qmd (content/tropic_ridge_wind_marketing_summary.qmd) "
+        "this repository has one standalone qmd (content/tropic_ridge_wind_summary.qmd) "
         "and no _quarto.yml project file. T2's qmd scope item needs to target the notebook's inline "
         "styles, not a qmd include."
     ),

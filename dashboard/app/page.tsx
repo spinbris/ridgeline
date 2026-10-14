@@ -53,6 +53,17 @@ function PmPage1Content() {
           Headline forecast versus deterministic baseline. Period end{" "}
           {formatLongDate(m.period_end_date)}.
         </p>
+        {/* REPORTPAGE-01: a plain anchor, not next/link. The report is a static file in
+            public/report/, outside the app router, so client-side navigation would miss it. */}
+        <p className="text-sm mt-2">
+          <a
+            href="/report/"
+            className="underline"
+            style={{ color: "var(--color-accent)" }}
+          >
+            Full technical report
+          </a>
+        </p>
       </header>
 
       {/* Headline P80 — primary number */}

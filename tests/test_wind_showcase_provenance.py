@@ -11,6 +11,7 @@ not here.
 from __future__ import annotations
 
 import hashlib
+import functools
 import importlib.util
 from pathlib import Path
 
@@ -27,7 +28,13 @@ def _load_module():
     return mod
 
 
-rws = _load_module()
+
+@functools.lru_cache(maxsize=None)
+def _rws():
+    """Loaded on first use: importing the script reads the committed showcase record (its seed), so
+    a module-level load errored collection in a clean clone without docs/
+    (tests/test_goldcoll01_collection_guard.py; found by the increment lane of 14/10/2026)."""
+    return _load_module()
 
 
 # ---------------------------------------------------------------------------
@@ -36,21 +43,21 @@ rws = _load_module()
 
 def test_guard_refuses_dirty_tree() -> None:
     with pytest.raises(RuntimeError, match="dirty-tree guard"):
-        rws._check_dirty_guard(True, allow_dirty=False)
+        _rws()._check_dirty_guard(True, allow_dirty=False)
 
 
 def test_guard_allows_dirty_tree_with_flag() -> None:
     # no raise
-    rws._check_dirty_guard(True, allow_dirty=True)
+    _rws()._check_dirty_guard(True, allow_dirty=True)
 
 
 def test_guard_passes_clean_tree() -> None:
-    rws._check_dirty_guard(False, allow_dirty=False)
+    _rws()._check_dirty_guard(False, allow_dirty=False)
 
 
 def test_guard_soft_fail_none_does_not_refuse() -> None:
     # git soft-fail (None) must not block the run.
-    rws._check_dirty_guard(None, allow_dirty=False)
+    _rws()._check_dirty_guard(None, allow_dirty=False)
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +65,7 @@ def test_guard_soft_fail_none_does_not_refuse() -> None:
 # ---------------------------------------------------------------------------
 
 def test_build_provenance_shape() -> None:
-    prov = rws._build_provenance("deadbeef", False)
+    prov = _rws()._build_provenance("deadbeef", False)
     assert prov["engine_sha"] == "deadbeef"
     assert prov["engine_tree_dirty"] is False
     # REG-01: strawman dissolved into the register; the digest set drops it.
@@ -66,10 +73,10 @@ def test_build_provenance_shape() -> None:
 
 
 def test_input_digests_match_hashlib_on_the_fixtures() -> None:
-    prov = rws._build_provenance("x", False)
+    prov = _rws()._build_provenance("x", False)
     expected = {
-        "register": hashlib.sha256(rws.WIND_REGISTER.read_bytes()).hexdigest(),
-        "xer": hashlib.sha256(rws.WIND_XER.read_bytes()).hexdigest(),
+        "register": hashlib.sha256(_rws().WIND_REGISTER.read_bytes()).hexdigest(),
+        "xer": hashlib.sha256(_rws().WIND_XER.read_bytes()).hexdigest(),
     }
     assert prov["input_sha256"] == expected
     # per-file, not concatenated: distinct digests
@@ -79,9 +86,9 @@ def test_input_digests_match_hashlib_on_the_fixtures() -> None:
 def test_sha256_stable_and_one_byte_sensitive(tmp_path: Path) -> None:
     p = tmp_path / "f.bin"
     p.write_bytes(b"payload-vX")
-    before = rws._sha256_file(p)
+    before = _rws()._sha256_file(p)
     q = tmp_path / "g.bin"
     q.write_bytes(b"payload-vX")
-    assert rws._sha256_file(q) == before          # stable for identical bytes
+    assert _rws()._sha256_file(q) == before          # stable for identical bytes
     p.write_bytes(b"payload-vY")                    # one byte differs
-    assert rws._sha256_file(p) != before
+    assert _rws()._sha256_file(p) != before

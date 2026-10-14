@@ -80,7 +80,20 @@ STAGE3_ITERATIONS = N_ITER
 #: adapter sets it from the golden registry row.
 SEED = baseline_seed(BASELINE_META)
 CAPEX_TOTAL = 50_000_000.0
+#: The capex split the showcase text states; held to CAPEX_TOTAL in _quoted_values.
+CAPEX_EPC = 45_000_000.0
+CAPEX_GRID = 5_000_000.0
 DAY_RATE = 35_000.0
+
+# SHOWCASESYNC-01: --publish writes the whole set where it ships, in one run, so no hand copy can
+# leave a figure behind. Anything below the production-scale floor, or over a dirty tree, refuses.
+PRODUCTION_SCALE_FLOOR = 100_000
+SHOWCASE_DIR = REPO_ROOT / "docs" / "showcase"
+PUBLISH_RUN_DIR = SHOWCASE_DIR / "run"
+PUBLISH_FIG_DIR = SHOWCASE_DIR / "figs"
+SUMMARY_QMD = SHOWCASE_DIR / "tropic_ridge_wind_summary.qmd"
+#: The PNG text key every chart carries, naming the run that drew it.
+RUN_ID_KEY = "outturn_run_id"
 
 
 # ---------------------------------------------------------------------------
@@ -423,6 +436,11 @@ def run_integrated() -> dict:
             read_register_day_rate(WIND_REGISTER),
         ),
         int_cfg.schedule_calibration_tolerance_days,
+        # SCHEDCAL-01: judged on this run's own Mode basis, read from the config it ran on.
+        mode_multipliers_applied=bool(s3_cfg.schedule_mc_config.apply_mode_multipliers),
+        # Gate 3 round 2: Comparator 1 bounds only discrete injection, so the check needs the
+        # methods of the drivers this engine ran.
+        injection_methods={d.injection_method for d in drivers.values()},
     )
 
     cost = np.asarray(res.cost_result["cost_dollars_array"], dtype=float)
@@ -647,10 +665,22 @@ def render(cost: dict, sra: dict, s3: dict, integ: dict) -> None:
               f"| Comparator 1, EMV days (no Mode weighting) | {cal['comparator_1_emv_days_pert']:.3f} |",
               f"| MC schedule mean (Stage 3 CPM) | {cal['mc_schedule_mean_days']:.3f} |",
               f"| Comparator 2, Mode-weighted EMV | {cal['comparator_2_finish_delay_days_pert']:.3f} |",
-              f"| Absolute gap | {cal['absolute_gap_days']:.3f} |",
+              f"| Gap tested against the tolerance ({cal['judged_against']}) | "
+              f"{cal['absolute_gap_days']:.3f} |",
               f"| Tolerance | {cal['absolute_tolerance_days']:.1f} |",
-              f"| Result | **{'PASS' if cal['passes_calibration'] else 'FAIL'}** |",
+              f"| Result (judged against {cal['judged_against']}) | "
+              f"**{ {True: 'PASS', False: 'FAIL', None: 'NOT ASSESSED'}[cal['passes_calibration']] }** |",
+              f"| _Diagnostic: gap to {cal['diagnostic_comparator']} (not part of the check)_ | "
+              f"_{cal['diagnostic_gap_days']:.3f}_ |",
               "", cal["interpretation"]]
+    if not cal["mode_multipliers_applied"]:
+        # SCHEDCAL-01 D2 (Director, 14/10/2026): the diagnostic, stated plainly for this schedule.
+        lines += ["", f"Delay that did not reach the finish (float absorbed, or risks bound to no "
+                      f"activity): {cal['delay_not_reaching_finish_days']:.3f} days.",
+                  "", "On this synthetic schedule every risk gates an activity with zero total "
+                      "float (see wind_stage3_cpm.md), so the network absorbs none of the float the "
+                      "register's Hybrid and Parallel labels expect. That is the disclosed "
+                      "simplification of the synthetic network, not a defect in the model."]
     _write(OUT_DIR / "wind_integrated_headline.md", "\n".join(lines) + "\n")
 
 
@@ -721,8 +751,31 @@ def _make_single_panel_criticality_chart(
     return output_path.resolve()
 
 
-def render_charts(cost: dict, sra: dict, s3: dict) -> dict[str, str]:
-    """Emit the themed wind chart suite to ``outputs/wind_showcase/figs``.
+def _stamp_png(path: Path, run_id: str) -> None:
+    """Re-save a chart with the run's id in a PNG text chunk (SHOWCASESYNC-01).
+
+    Lossless: the pixels, the existing text chunks and the dpi are carried over. Compression level
+    9 is PRERELEASE-01 P2's, which keeps chance strings out of the compressed bytes as often as any.
+    """
+    from PIL import Image
+    from PIL.PngImagePlugin import PngInfo
+
+    with Image.open(path) as im:
+        im.load()
+        info = PngInfo()
+        for k, v in im.text.items():
+            if k != RUN_ID_KEY:
+                info.add_text(k, v)
+        info.add_text(RUN_ID_KEY, run_id)
+        kwargs = {"pnginfo": info, "compress_level": 9}
+        if "dpi" in im.info:
+            kwargs["dpi"] = im.info["dpi"]
+        im.save(path, format="PNG", **kwargs)
+
+
+def render_charts(cost: dict, sra: dict, s3: dict, run_id: str) -> dict[str, str]:
+    """Emit the themed wind chart suite to ``FIG_DIR`` (``outputs/wind_showcase/figs``, or
+    ``docs/showcase/figs`` under --publish).
 
     Cost/schedule charts are imported from ``src.final.charts`` and
     consumed exactly as the RefProject composer consumes them (same
@@ -824,6 +877,10 @@ def render_charts(cost: dict, sra: dict, s3: dict) -> dict[str, str]:
     paths["activity_criticality"] = str(p)
     print(f"wrote {p}")
 
+    # SHOWCASESYNC-01: every chart names the run that drew it.
+    for written in paths.values():
+        _stamp_png(Path(written), run_id)
+
     # --- Criticality density Gantt (optional, Director decision 2). The
     #     phase-mapped time-binned heatmap needs RBS Level-1 phase mapping and
     #     dated activity bindings that the wind fixture does not expose in the
@@ -837,7 +894,7 @@ def render_charts(cost: dict, sra: dict, s3: dict) -> dict[str, str]:
 
 def _write_run_meta(
     cost: dict, sra: dict, s3: dict, integ: dict,
-    *, provenance: dict | None = None,
+    *, provenance: dict | None = None, run_identity: dict | None = None,
 ) -> None:
     """WIND-01 §2.3: stamp the run parameters into a JSON meta file so no
     figure can be quoted without its iteration count and methodology basis.
@@ -874,11 +931,107 @@ def _write_run_meta(
         meta["engine_sha"] = provenance["engine_sha"]
         meta["engine_tree_dirty"] = provenance["engine_tree_dirty"]
         meta["input_sha256"] = provenance["input_sha256"]
+    # SHOWCASESYNC-01: the run's identity, which every chart and the quoted values carry too.
+    if run_identity is not None:
+        meta["run_id"] = run_identity["run_id"]
+        meta["run_date"] = run_identity["run_date"]
+        meta["run_timestamp"] = run_identity["run_timestamp"]
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     (OUT_DIR / "wind_run_meta.json").write_text(
         json.dumps(meta, indent=2), encoding="utf-8", newline="\n",
     )
     print(f"wrote {OUT_DIR / 'wind_run_meta.json'}")
+
+
+def _quoted_values(cost: dict, s3: dict, integ: dict) -> dict:
+    """Every value the summary qmd may quote, by name (SHOWCASESYNC-01).
+
+    All Stage 3 (Director, 14/10/2026: "everything should be the current stage 3"): the cost arm
+    and the schedule arm are the integrated engine's, jointly sampled, and the finish bands are
+    the CPM replay's. The Stage 2.5 schedule is not offered here, so the qmd cannot quote it.
+    """
+    if CAPEX_EPC + CAPEX_GRID != CAPEX_TOTAL:
+        raise ValueError("the capex split does not sum to the capex total")
+    v: dict = {"capex_total": CAPEX_TOTAL, "capex_epc": CAPEX_EPC, "capex_grid": CAPEX_GRID,
+               "day_rate": DAY_RATE, "iterations": N_ITER, "seed": SEED}
+
+    cb = cost["bands"]
+    for k in ("mean", "p50", "p80", "p90", "p95"):
+        v[f"cost.{k}"] = cb[k]
+        v[f"cost.{k}_pct"] = cb[k] / CAPEX_TOTAL
+    v["cost.p80_minus_p50"] = cb["p80"] - cb["p50"]
+
+    ranked = cost["ranked"]
+    mean_total = sum(emv for *_, emv in ranked)
+    for i, (rid, desc, cg, emv) in enumerate(ranked[:6], 1):
+        v[f"cost.rank{i}.id"] = rid
+        v[f"cost.rank{i}.desc"] = desc
+        v[f"cost.rank{i}.cg"] = cg
+        v[f"cost.rank{i}.emv"] = emv
+    v["cost.top3_share"] = sum(emv for *_, emv in ranked[:3]) / mean_total
+    cg_id, cg_emv = max(cost["cg_totals"].items(), key=lambda kv: (kv[1], kv[0]))
+    v["cost.cg_top.id"] = cg_id
+    v["cost.cg_top.emv"] = cg_emv
+
+    ig = np.asarray(integ["integrated"], dtype=float)
+    pj = lambda a, q: float(np.percentile(a, q))
+    v["sched.p80_days"] = pj(integ["sched_days"], 80)
+    v["sched.p80_dollars"] = pj(integ["sched_dollars"], 80)
+    v["sched.p80_dollars_pct"] = v["sched.p80_dollars"] / CAPEX_TOTAL
+    v["integrated.mean"] = float(ig.mean())
+    for k, q in (("p50", 50), ("p80", 80), ("p90", 90), ("p95", 95)):
+        v[f"integrated.{k}"] = pj(ig, q)
+    for k in ("mean", "p50", "p80", "p90", "p95"):
+        v[f"integrated.{k}_pct"] = v[f"integrated.{k}"] / CAPEX_TOTAL
+    v["integrated.naive_p80"] = pj(integ["cost"], 80) + v["sched.p80_dollars"]
+    v["integrated.naive_p80_pct"] = v["integrated.naive_p80"] / CAPEX_TOTAL
+    v["integrated.overstatement"] = v["integrated.naive_p80"] - v["integrated.p80"]
+
+    tb = s3["bands"]
+    for k in ("mean", "p50", "p80", "p90", "p95"):
+        v[f"s3.finish.{k}"] = tb[k]
+    v["s3.finish.p95_minus_p50"] = tb["p95"] - tb["p50"]
+    v["s3.n_activities"] = s3["n_activities"]
+    return v
+
+
+def _write_quoted_values(values: dict, run_identity: dict) -> None:
+    import json
+
+    record = {"run_id": run_identity["run_id"], "values": values}
+    p = OUT_DIR / "wind_quoted_values.json"
+    p.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8",
+                 newline="\n")
+    print(f"wrote {p}")
+
+
+def _clear_charts_for_shipping(charts: dict[str, str]) -> None:
+    """SHOWCASESYNC-01 property 7: every chart that ships clears the client gate and the shipped-
+    name checks; one whose compressed bytes trip one by chance is re-encoded losslessly."""
+    from scripts.release.publishable_bytes import clean_png, load_findings
+
+    findings = load_findings()
+    for path in map(Path, charts.values()):
+        name = path.relative_to(REPO_ROOT).as_posix()
+        data = path.read_bytes()
+        cleaned = clean_png(data, name, findings)
+        if cleaned is not data:
+            path.write_bytes(cleaned)
+            print(f"re-encoded {name} losslessly: its bytes tripped a shipped-file check")
+
+
+def _publish_qmd(values: dict, run_identity: dict) -> None:
+    """Rewrite the summary qmd's bound figures and date from this run."""
+    from scripts.showcase_quotes import fill, unbound
+
+    text = SUMMARY_QMD.read_text(encoding="utf-8")
+    left = unbound(text)
+    if left:
+        raise SystemExit("the summary qmd quotes figures no run value binds:\n  "
+                         + "\n  ".join(left))
+    out = fill(text, values, run_identity["run_date"])
+    SUMMARY_QMD.write_bytes(out.encode("utf-8"))
+    print(f"wrote {SUMMARY_QMD}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -895,8 +1048,14 @@ def main(argv: list[str] | None = None) -> int:
         help="The run-meta whose recorded seed this run reproduces (default: the committed "
              "showcase's). A re-cut is compared against the summaries that meta came with.",
     )
+    parser.add_argument(
+        "--publish", action="store_true",
+        help="SHOWCASESYNC-01: write the whole set where it ships - docs/showcase/run/, "
+             "docs/showcase/figs/ and the summary qmd's bound figures - from this one run. "
+             "Refuses below the production-scale floor and over a dirty tree.",
+    )
     args = parser.parse_args(argv)
-    global SEED
+    global SEED, OUT_DIR, FIG_DIR
     SEED = baseline_seed(args.baseline_meta)
 
     # WIND-04: resolve engine identity ONCE, up front, so the guard and the
@@ -904,12 +1063,30 @@ def main(argv: list[str] | None = None) -> int:
     # compute. Mirrors AM09 (no guard/write TOCTOU).
     engine_sha = _resolve_engine_sha()
     engine_tree_dirty = _resolve_tree_dirty()
+    if args.publish:
+        if args.allow_dirty or engine_tree_dirty is not False:
+            raise SystemExit("--publish refuses a dirty tree (and --allow-dirty): what ships must "
+                             "name the commit that made it. Commit first.")
+        if N_ITER < PRODUCTION_SCALE_FLOOR:
+            raise SystemExit(f"--publish refuses {N_ITER:,} iterations, below the "
+                             f"{PRODUCTION_SCALE_FLOOR:,} production-scale floor. "
+                             f"Set WIND_ITERATIONS={PRODUCTION_SCALE_FLOOR}.")
+        OUT_DIR, FIG_DIR = PUBLISH_RUN_DIR, PUBLISH_FIG_DIR
     _check_dirty_guard(engine_tree_dirty, args.allow_dirty)
     if engine_tree_dirty and args.allow_dirty:
         print("WIND-04: outturn tree is DIRTY; proceeding under "
               "--allow-dirty. engine_tree_dirty will be stamped true - this "
               "run is NOT a clean-tree attestation.")
     provenance = _build_provenance(engine_sha, engine_tree_dirty)
+    import uuid
+    from datetime import date, datetime, timezone
+    run_identity = {
+        "run_id": str(uuid.uuid4()),
+        # The date is the run machine's own, as the deliverable's run_date is
+        # (src/final/deliverable.py); the timestamp is UTC, so the two can differ by a day.
+        "run_date": date.today().isoformat(),
+        "run_timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
 
     _activate_wind_binding()
     # WIND-02: the integrated engine runs FIRST - it is the single source of
@@ -926,8 +1103,14 @@ def main(argv: list[str] | None = None) -> int:
     s3 = run_stage3_cpm()
     render(cost, sra, s3, integ)
     print("=== Charts (P5.1) ===")
-    render_charts(cost, sra, s3)
-    _write_run_meta(cost, sra, s3, integ, provenance=provenance)
+    charts = render_charts(cost, sra, s3, run_identity["run_id"])
+    if args.publish:
+        _clear_charts_for_shipping(charts)
+    _write_run_meta(cost, sra, s3, integ, provenance=provenance, run_identity=run_identity)
+    values = _quoted_values(cost, s3, integ)
+    _write_quoted_values(values, run_identity)
+    if args.publish:
+        _publish_qmd(values, run_identity)
     import numpy as _np
     ig = integ["integrated"]
     ip80 = float(_np.percentile(ig, 80))

@@ -82,8 +82,8 @@ ABSENT_BY_DESIGN: tuple[Absent, ...] = (
     Absent("CLAUDE.md", "..._DPReview.xlsx", _VARIANT),  # link-rule: an expected-absent pointer in the agent manual, checked only when the manual is present
     Absent("CLAUDE.md", "..._Hybrid.xlsx", _VARIANT),  # link-rule: an expected-absent pointer in the agent manual, checked only when the manual is present
     Absent("CLAUDE.md", "..._Series.xlsx", _VARIANT),  # link-rule: an expected-absent pointer in the agent manual, checked only when the manual is present
-    Absent("ARCHITECTURE.md", "provenance.json", _RUNTIME),
-    Absent("README.md", "provenance.json", _RUNTIME),
+    # REPORTPAGE-01: `provenance.json` resolves now that the report page commits one beside it
+    # (dashboard/public/report/), so the two RUNTIME entries for it went.
     Absent("ARCHITECTURE.md", "sr9_diagnostic.py", _REPLACED),
     Absent("METHODOLOGY.md", "sra_runner.ipynb", _REPLACED),
     Absent("CLAUDE.md", "global-CLAUDE.md",  # link-rule: an expected-absent pointer in the agent manual, checked only when the manual is present

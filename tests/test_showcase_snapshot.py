@@ -26,9 +26,10 @@ META = SNAPSHOT / "wind_run_meta.json"
 #: WIND_ITERATIONS.
 PRODUCTION_SCALE_FLOOR = 100_000
 
-#: Every file D-2(a) commits. The figures are not here: they were already tracked under
-#: docs/showcase/figs/ by an earlier increment, and the marketing summary references them.
+#: Every file D-2(a) commits, and the quoted values SHOWCASESYNC-01 added. The figures and the
+#: summary's figures are held to the same run by tests/test_showcase_sync.py.
 PROMISED = (
+    "wind_quoted_values.json",
     "wind_run_meta.json",
     "wind_integrated_headline.md",
     "wind_cost_qra.md",
@@ -38,8 +39,8 @@ PROMISED = (
 )
 
 _REGEN = ("Regenerate on a clean tree with\n"
-          "    WIND_ITERATIONS=100000 python scripts/run_wind_showcase.py\n"
-          "then copy outputs/wind_showcase/ into docs/showcase/run/.")
+          "    WIND_ITERATIONS=100000 python scripts/run_wind_showcase.py --publish\n"
+          "which writes the whole set where it ships (SHOWCASESYNC-01).")
 
 
 def _meta() -> dict:

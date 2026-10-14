@@ -93,6 +93,8 @@ def test_no_shipped_file_carries_a_client_identifier():
 @pytest.mark.parametrize("before, after", [
     ("inputs/12-345", "E Project register.xlsx"), ("job 12345", "E"), ("the 12_345 ", "e folder"),
     ("12-345", "E."), ("docs/12345", "eprojectregister_xlsx/"),
+    # Gate 3 (14/10/2026): after a dot that is not a decimal point, still a job number.
+    ("Job No.12345", "E"), ("see ref.21-004", "E"), ("Report.24 017", "E final"), ("x.12345", "E"),
 ])
 def test_red_a_job_number_is_found_by_its_shape(before, after):
     text = before + after
@@ -101,6 +103,7 @@ def test_red_a_job_number_is_found_by_its_shape(before, after):
 
 @pytest.mark.parametrize("text", [
     "color: #92400e;", "0x1.12345e6p+3", "sha 912345e0a", "a12-345E", "2026-10-11 E", "1e-300",
+    "--jp-ui-font-size0: 0.83333em;",
 ])
 def test_green_a_colour_a_float_a_hash_and_a_date_are_not_a_job_number(text):
     assert nc.client_findings("a.css", text.encode()) == []

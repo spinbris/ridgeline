@@ -103,6 +103,10 @@ and uploading the result with `--prebuilt` is the only path that works. `deploy_
 publish module is the one list of the four steps - the clear, `vercel build`, the guard, `vercel
 deploy --prebuilt`; what is printed and what is executed cannot differ.
 
+**Run `vercel build` from Git Bash, not PowerShell** (measured 13/10/2026, CLI 59.1.3, Node 22.15.0): under
+PowerShell it stops at `spawn cmd.exe ENOENT` although PATH and `ComSpec` are correct; under Git Bash the same
+build succeeds. The clear, the guard and `vercel deploy` run from either.
+
 Preview and production are **separate build targets**: `vercel build` and `vercel build --prod`
 produce outputs that cannot be deployed to the other. Rebuild when switching.
 

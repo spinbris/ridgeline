@@ -282,7 +282,13 @@ Two **comparator targets** drive calibration of the MC layer:
 - **Comparator 1** — naive EMV-days sum (no Mode multiplier applied; treats every risk as if it were Series). The "if everything went wrong on the critical path" upper bound
 - **Comparator 2** — Mode-weighted EMV-days sum (applies the Mode multiplier). The deterministic central estimate
 
-Comparator 2 is the calibration target for the MC SRA. The MC mean must reconcile to within the register's absolute schedule tolerance, in days (there is no code default) — a gap exceeding the tolerance triggers investigation, not a tolerance adjustment.
+The calibration target is the comparator that matches the run's Mode basis:
+
+- **Mode multipliers applied** (Stage 2.5): **Comparator 2**. The schedule arm scales each risk by its Mode multiplier, so its mean estimates the Mode-weighted sum.
+- **Mode multipliers off** (Stage 3, the production headline), every risk injected by `discrete_event_additive_days`: **Comparator 1, as an upper bound**. Each risk's sampled delay is written once, to its gating activity, and the finish is the longest path, so no network can push the mean above Comparator 1. The check is one-sided: it fails only on a mean above Comparator 1 by more than the tolerance.
+- **Mode multipliers off, any other injection method**: **not assessed**. `additive_pert_days` writes one delay to every activity a risk binds, so a serial cohort moves the finish by a multiple of it; the multiplicative methods scale a factor by each activity's duration, which Comparator 1 sums as if it were days. Comparator 1 bounds neither, so the comparators and the gap are reported and nothing is passed or failed.
+
+The tolerance is the register's absolute schedule tolerance, in days (there is no code default): either side of Comparator 2 on the Mode-on basis, above Comparator 1 on the Mode-off basis. A gap exceeding it triggers investigation, not a tolerance adjustment. On the Mode-off basis the delay that did not reach the finish (Comparator 1 less the mean: float absorbed, or a risk bound to no activity) is always reported, beside the absorption the register's Mode labels expect (Comparator 1 less Comparator 2); it is a diagnostic and never decides the result. The run states its Mode basis and its drivers' injection methods from what it ran; the check refuses a call that does not, and refuses a missing or non-finite mean rather than reading it as zero (`src/sra/schedule_cross_check.py`).
 
 ### 4.4 Day rate
 

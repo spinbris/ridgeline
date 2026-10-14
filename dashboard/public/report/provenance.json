@@ -1,0 +1,25 @@
+{
+  "project": "synthetic_wind",
+  "run_date": "2026-10-14",
+  "timestamp": "2026-10-14T00:55:01+00:00",
+  "engine_sha": "e36c3e6273935b60504b1131c1f739111db9e515",
+  "engine_tree_dirty": false,
+  "mode": "prod",
+  "seed": 42,
+  "iterations": 100000,
+  "input_sha256": {
+    "register": {
+      "method": "git_blob_oid",
+      "value": "328806c739dbb635786055d2ee2948cee4882b74"
+    },
+    "xer": {
+      "method": "git_blob_oid",
+      "value": "5cbed8f12994c6f82b1c4809dd8791f58add2764"
+    },
+    "strawman": {
+      "method": "git_blob_oid",
+      "value": "328806c739dbb635786055d2ee2948cee4882b74"
+    }
+  },
+  "cross_validation_all_pass": true
+}

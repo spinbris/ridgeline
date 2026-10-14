@@ -69,10 +69,14 @@ class _Hashed:
 
 #: The client's identifiers found by shape or hash. A job number is two digits, three digits and
 #: an E, separated or not, glued to what follows only by a letter that is not hex (a file name made
-#: into a slug), and not after ``#`` (a colour such as ``#92400e``). A register version is a V, a
-#: number and "val".
+#: into a slug), and not after ``#`` (a colour such as ``#92400e``) or a decimal - a digit then a
+#: dot, as in the CSS length ``0.83333em`` nbconvert writes into every report (REPORTPAGE-01,
+#: Director 14/10/2026). Only a decimal is excused: after a dot that follows a letter (``No.``,
+#: ``ref.``, a dotted file name) a job number is still found (Gate 3, 14/10/2026). A register
+#: version is a V, a number and "val".
 CLIENT_SHAPES = {
-    "client job number": re.compile(r"(?<![A-Za-z0-9#])\d{2}[-_ .]?\d{3}[-_ .]?e(?![0-9a-f])", re.I),
+    "client job number": re.compile(r"(?<![A-Za-z0-9#])(?<!\d\.)\d{2}[-_ .]?\d{3}[-_ .]?e(?![0-9a-f])",
+                                    re.I),
     "client register version": re.compile(r"(?<![A-Za-z0-9])v\d{1,2}[-_ .]?val(?![a-z])", re.I),
     "client project acronym": _Hashed("9fc997d079e5e5786048c5acbd2d1e51"
                                       "0333caadf3a75acbb75234703bbee3f6"),
