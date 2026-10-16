@@ -84,8 +84,10 @@ def test_the_package_is_marked_private(project):
 def test_the_licence_is_declared_and_present(project):
     assert project["project"]["license"] == {"file": "LICENSE"}
     licence = (REPO / "LICENSE").read_text(encoding="utf-8")
-    assert "PolyForm Noncommercial License 1.0.0" in licence
-    assert "Required Notice: Copyright (c) 2026 Stephen Parton" in licence
+    assert "Business Source License 1.1" in licence
+    assert "Licensor:             Stephen Parton" in licence
+    assert "Additional Use Grant: None" in licence, "production use is by licence only"
+    assert "PolyForm" not in licence
     assert "MIT License" not in licence
     assert "S" + "JP Consulting" not in licence, "the licence names a holder that is no longer the Director's"
     # The classifier must not claim a licence the file no longer grants.

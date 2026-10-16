@@ -292,7 +292,9 @@ fail loudly if a confidential project's manifest is ever staged.
 
 ## Licence
 
-Ridgeline is source-available under the [PolyForm Noncommercial License 1.0.0](./LICENSE): you may
-read, run, test and modify it for any noncommercial purpose. Commercial use, including running it
-on a paid engagement or offering it as a service, needs a separate licence from the copyright
-holder, Stephen Parton, through CBL Analytics.
+Ridgeline is source-available under the [Business Source License 1.1](./LICENSE). You may read,
+copy, modify and run it for any non-production purpose, such as evaluating, testing or learning
+from it. Any production use, including running it on a real project, on a paid engagement or as a
+service, and including use by government bodies, needs a separate licence from the copyright
+holder, Stephen Parton, through CBL Analytics. Each version converts to the Apache License 2.0
+four years after it is published.
