@@ -35,7 +35,7 @@ classifiers = [
     "Private :: Do Not Upload",          # belt and braces: this must not reach PyPI
     "Programming Language :: Python :: 3.12",
     "Operating System :: Microsoft :: Windows",
-    "License :: OSI Approved :: MIT License",
+    "License :: Other/Proprietary License",
 ]
 
 [project.scripts]
