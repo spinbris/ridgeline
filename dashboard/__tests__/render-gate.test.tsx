@@ -18,7 +18,9 @@ import { AppFooter } from "@/components/AppFooter";
 import { IntegratedOutturnCard } from "@/components/IntegratedOutturnCard";
 import { PeriodFreshnessBanner } from "@/components/PeriodFreshnessBanner";
 import PmPage1 from "@/app/page";
-import { formatLongDate } from "@/lib/formatters";
+import AnalystA1 from "@/app/analyst/page";
+import { JointConfidenceNote } from "@/components/JointConfidenceNote";
+import { formatAud, formatLongDate, formatPercent } from "@/lib/formatters";
 import type { Integrated } from "@/types/period";
 
 function renderInProvider(ui: React.ReactNode) {
@@ -107,6 +109,36 @@ describe("the integrated outturn card (part B, A-2)", () => {
   it("renders nothing at all when there is neither a block nor a reason", () => {
     const { container } = render(<IntegratedOutturnCard />);
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("the integrated S-curve and JCL (contract 1.5, INTSCURVE-01 Part C)", () => {
+  it("draws the integrated S-curve beside the finish one on the Analyst route", async () => {
+    routeState.pathname = "/analyst";
+    renderInProvider(<AnalystA1 />);
+    await waitFor(() =>
+      expect(screen.getByText(/cumulative probability of project finish/)).toBeInTheDocument());
+    expect(screen.getByText(/S-curve: integrated event-risk cost/)).toBeInTheDocument();
+    expect(screen.getByTestId("jcl-note")).toBeInTheDocument();
+  });
+
+  it("carries the engine's 21 curve points, on the finish curve's probabilities", () => {
+    const golden = goldenPeriod() as any;
+    const pts = (golden.integrated as Integrated).curve_points;
+    const finish = golden.distribution.s_curve_points as { cumulative_prob: number }[];
+    expect(pts.map((p) => p.cumulative_prob)).toEqual(finish.map((p) => p.cumulative_prob));
+  });
+
+  it("states the golden's JCL, its budget and its finish, not numbers of its own", () => {
+    const jcl = (goldenPeriod() as any).integrated.jcl as Integrated["jcl"];
+    render(<JointConfidenceNote jcl={jcl} />);
+    const text = screen.getByTestId("jcl-note").textContent ?? "";
+    expect(text).toContain(formatPercent(jcl.jcl, 0));
+    expect(text).toContain(formatAud(jcl.cost_target_dollars));
+    expect(text).toContain(formatLongDate(jcl.finish_target_date));
+    // A literal on purpose, as the conditioning sentence above: it is a statement of method.
+    expect(text).toMatch(/sampled jointly/);
+    expect(text).toMatch(/leaves out delay cost/);
   });
 });
 

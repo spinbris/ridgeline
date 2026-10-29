@@ -105,8 +105,12 @@ def _apply_stage3_headline(composed: dict[str, Any], stage3_beta_result: dict[st
     # (composed["headline_metric"], set by _apply_headline_metric before this runs); the
     # legacy range dict always says P80 (review W5).
     headline_metric = composed.get("headline_metric") or (legacy or {}).get("headline_metric", "P80")
+    # INTSCURVE-01 (D-2): P50 / P80 / P90 everywhere, P95 supporting. Adds the P90 row; no
+    # existing figure moves.
+    from src.final.sections.integrated_total import INTEGRATED_P_LEVELS
     summary["headline_stage3"] = stage3_headline(
-        cost_arr, sched_arr, float(day_rate), p_level=p_level, headline_metric=headline_metric,
+        cost_arr, sched_arr, float(day_rate), p_levels=INTEGRATED_P_LEVELS, p_level=p_level,
+        headline_metric=headline_metric,
     )
     if isinstance(legacy, dict):
         # The Stage 3 standalone artefact rewires DP_Review to the Stage 3 arm before composing

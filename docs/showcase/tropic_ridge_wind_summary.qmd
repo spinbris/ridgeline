@@ -1,7 +1,7 @@
 ---
 title: "Tropic Ridge Wind Farm: what the contingency really is"
 subtitle: 'Upfront integrated cost-and-schedule risk analysis for a 40 MW, ~[$50M]{.run v="capex_total" f="M0"} wind-farm scope'
-date: 2026-10-14
+date: 2026-10-29
 author: "CBL Analytics"
 from: markdown-smart
 format:

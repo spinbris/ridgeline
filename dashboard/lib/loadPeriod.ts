@@ -364,6 +364,17 @@ const integratedSchema: z.ZodType<Integrated> = z.object({
     closed_risk_ids: z.array(z.string()),
     reprobabilised_risk_ids: z.array(z.string()),
   }),
+  // Contract 1.5, INTSCURVE-01 Part C: the integrated S-curve and the JCL.
+  curve_points: z.array(z.object({ dollars: z.number(), cumulative_prob: z.number() })),
+  jcl: z.object({
+    basis: z.string(),
+    jcl: z.number(),
+    cost_target_dollars: z.number(),
+    cost_confidence: z.number(),
+    finish_target_date: z.string(),
+    finish_confidence: z.number(),
+    frontier_level: z.number(),
+  }),
 });
 
 /**
@@ -381,7 +392,7 @@ const integratedSchema: z.ZodType<Integrated> = z.object({
  * semantically changed field passes zod silently. A version-locked app must be redeployed in
  * step with the engine, which under §5.1's static export is already true.
  */
-export const SUPPORTED_SCHEMA_VERSION = "1.4";
+export const SUPPORTED_SCHEMA_VERSION = "1.5";
 
 export const periodDataSchema: z.ZodType<PeriodData> = z.object({
   schema_version: z.string(),

@@ -351,6 +351,28 @@ def run_engines(inputs: DeliverableInputs) -> EngineResults:
         risk_drivers=drivers, xer_tables=xer_tables,
     )
 
+    # --- INTSCURVE-01 P3: integrated leave-one-out at the reporting P-level --------------
+    # One masked Stage 3 replay per Time=Yes risk at the run's own iteration count, seed and
+    # joint sampling (measured 28/10/2026: 2.5 s per replay at n=100,000, ten replays on wind).
+    from src.integrated.leave_one_out import stage3_leave_one_out
+    leave_one_out = stage3_leave_one_out(
+        stage3_result, s3_cfg.schedule_mc_config,
+        day_rate=require_day_rate(config.day_rate, caller="src/final/deliverable.run_engines"),
+        p_level=int(config.reporting_p_level),
+    )
+
+    # --- INTSCURVE-01 Part B: the base layer, on its own stream (Reviewer R1) ------------
+    # Never through config.layer1_config, which run_cost_layer would add into the cost arm and
+    # so into every headline. A separate draw on layer1_generator(seed): every event-risk array
+    # above and below is byte-identical with it on or off. None when the register's
+    # Set_Layer1_Enabled is not TRUE, and the report then renders as Part A.
+    from src.integrated.base_layer import deliverable_base_layer
+    if getattr(config, "layer1_config", None) is not None:
+        raise ValueError(
+            "INTSCURVE-01 R1: the deliverable's IntegratedConfig carries a layer1_config, which "
+            "would add the base into the event-risk cost arm and move the headline")
+    base_layer = deliverable_base_layer(inputs.register_path, n_iter, seed)
+
     # --- F-E: GN3A section 4.1 correlation bounding, against the arm that just ran ------
     # Reproduction, not re-derivation: the same run_integrated_simulation, the same joint
     # severity uniforms, the same risk scope, varying only the CG coefficients. Two extra
@@ -384,8 +406,12 @@ def run_engines(inputs: DeliverableInputs) -> EngineResults:
         schedule_by_scenario=schedule_by_scenario,
         integrated_by_scenario=integrated_by_scenario,
         stage3_result=stage3_result,
-        stage3_beta_result=_stage3_beta_dict(
-            stage3_result, corr_curves=corr_curves if corr_reproduces else None),
+        stage3_beta_result={
+            **_stage3_beta_dict(
+                stage3_result, corr_curves=corr_curves if corr_reproduces else None),
+            "leave_one_out": leave_one_out,
+            "base_layer": base_layer,
+        },
         stage3_config=s3_cfg,
         programme_duration_days=float(programme_days),
     )

@@ -197,6 +197,116 @@ def make_tornado_chart(
     return output_path.resolve()
 
 
+def make_leave_one_out_tornado(
+    rows: list[dict],
+    title: str,
+    output_path: Path | str,
+    top_n: int = 10,
+    method_note: str = "",
+) -> Path:
+    """INTSCURVE-01 P3: integrated leave-one-out bars, each split into cost and delay cost.
+
+    ``rows`` are :func:`src.integrated.leave_one_out.integrated_leave_one_out` rows (dollars),
+    already ranked. Bars are drawn in $M as two stacked segments; the label is the total saved.
+    A negative segment (rare: a removal that lifts the P-level through a reshuffled tail) is
+    drawn left of zero rather than hidden.
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    ranked = list(rows)[:top_n]
+    if not ranked:
+        fig, ax = plt.subplots(figsize=(10, 3))
+        ax.text(0.5, 0.5, "(no risks to rank)", ha="center", va="center", fontsize=12,
+                color="#7F8C8D", transform=ax.transAxes)
+        ax.set_axis_off()
+        fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        return output_path.resolve()
+
+    cost = np.array([float(r["cost_part_dollars"]) for r in ranked]) / 1e6
+    delay = np.array([float(r["delay_part_dollars"]) for r in ranked]) / 1e6
+    saved = np.array([float(r["saved_dollars"]) for r in ranked]) / 1e6
+    height = max(3.0, 0.5 * len(ranked) + 2.0)
+    fig, ax = plt.subplots(figsize=(10, height))
+    y_pos = np.arange(len(ranked))[::-1]
+    ax.barh(y_pos, cost, color="#1F4E79", edgecolor="black", linewidth=0.4,
+            label="Event-risk cost part")
+    ax.barh(y_pos, delay, left=np.where(delay >= 0, np.maximum(cost, 0.0), np.minimum(cost, 0.0)),
+            color="#E67E22", edgecolor="black", linewidth=0.4,
+            label="Delay cost part (float-aware days x day rate)")
+    span = float(max(np.max(np.abs(saved)), 1e-9))
+    for y, total, c, d in zip(y_pos, saved, cost, delay):
+        right = max(c, 0.0) + max(d, 0.0)
+        ax.text(right + 0.01 * span, y, f"${total:.2f}M", va="center", ha="left", fontsize=9)
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels([str(r["risk_id"]) for r in ranked], fontsize=10)
+    ax.set_xlabel("Integrated P80 saved if the risk is removed ($M)", fontsize=11)
+    ax.set_title(title, fontsize=13, pad=12)
+    ax.grid(axis="x", linestyle=":", color="#BDC3C7", zorder=0)
+    ax.set_axisbelow(True)
+    ax.axvline(0.0, color="#7F8C8D", linewidth=0.8)
+    ax.legend(loc="lower right", fontsize=9, framealpha=0.9)
+    left = min(0.0, float(np.min(np.minimum(cost, 0.0) + np.minimum(delay, 0.0))) * 1.1)
+    ax.set_xlim(left=left, right=span * 1.2)
+    if method_note:
+        fig.text(0.01, -0.02, method_note, fontsize=8, color="#566573", wrap=True, ha="left",
+                 va="top")
+    fig.tight_layout()
+    fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return output_path.resolve()
+
+
+def make_jcl_scatter(
+    jcl: dict,
+    title: str,
+    output_path: Path | str,
+    *,
+    finish_label: str = "Project finish (working days from start)",
+    max_points: int = 6000,
+) -> Path:
+    """INTSCURVE-01 P11: cost against finish per iteration, the target crosshair and the JCL.
+
+    ``jcl`` is :func:`src.integrated.jcl.jcl_data`'s dict (cost in dollars, drawn in $M).
+    Iterations that meet both targets are coloured; the rest are grey. At most ``max_points``
+    are drawn, an evenly spaced subset of the run, so the chart is the same at every iteration
+    count; the printed JCL is always the whole run's.
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    cost = np.asarray(jcl["cost_axis"], dtype=float) / 1e6
+    finish = np.asarray(jcl["finish_axis"], dtype=float)
+    meets = np.asarray(jcl["meets_both"], dtype=bool)
+    step = max(1, int(np.ceil(cost.size / max_points)))
+    idx = np.arange(0, cost.size, step)
+    fig, ax = plt.subplots(figsize=(10, 6.5))
+    ax.scatter(finish[idx][~meets[idx]], cost[idx][~meets[idx]], s=6, color="#BDC3C7",
+               alpha=0.6, linewidths=0, label="Misses cost or finish target")
+    ax.scatter(finish[idx][meets[idx]], cost[idx][meets[idx]], s=6, color="#1F4E79",
+               alpha=0.6, linewidths=0, label="Meets both targets")
+    c_t, f_t = jcl["cost_target"] / 1e6, jcl["finish_target"]
+    ax.axhline(c_t, color="#C0392B", linewidth=1.2, linestyle="--")
+    ax.axvline(f_t, color="#C0392B", linewidth=1.2, linestyle="--")
+    frontier = jcl.get("frontier") or []
+    if frontier:
+        ax.plot([f for f, _ in frontier], [c / 1e6 for _, c in frontier], color="#E67E22",
+                linewidth=1.8, label=f"{jcl['level']:.0%} joint-confidence frontier")
+    ax.annotate(f"JCL {jcl['jcl']:.0%}\n(cost {jcl['cost_confidence']:.0%}, "
+                f"finish {jcl['finish_confidence']:.0%} on their own)",
+                xy=(f_t, c_t), xytext=(8, 8), textcoords="offset points", fontsize=10,
+                color="#C0392B", fontweight="bold")
+    ax.set_xlabel(finish_label, fontsize=11)
+    ax.set_ylabel("Cost excluding delay cost ($M)", fontsize=11)
+    ax.set_title(title, fontsize=13, pad=12)
+    ax.grid(linestyle=":", color="#BDC3C7", zorder=0)
+    ax.set_axisbelow(True)
+    ax.legend(loc="lower right", fontsize=9, framealpha=0.9, markerscale=3)
+    fig.tight_layout()
+    fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return output_path.resolve()
+
+
 # ----------------------------------------------------------------------------
 # S-curve chart
 # ----------------------------------------------------------------------------
@@ -214,6 +324,7 @@ def make_s_curve(
     x_axis_label: str = "Schedule slip (days)",
     headline_label: str | None = None,
     value_label_fmt: str | None = None,
+    marker_values: dict[int, float] | None = None,
 ) -> Path:
     """Generate multi-scenario cumulative-probability S-curve.
 
@@ -250,6 +361,11 @@ def make_s_curve(
         are drawn — existing call sites and tests retain their prior
         behaviour. The reference horizontal P-level line + "P80"
         text label is preserved regardless.
+    marker_values : dict or None
+        INTSCURVE-01 P1: ``{percentile: x}`` in the plotted unit. When supplied, the drop-lines
+        and labels sit at these values instead of percentiles recomputed from the plotted array,
+        so a chart drawn in $M marks the headline's own figures (computed in dollars) rather than
+        a rescaled array's, which can differ in the last bit.
 
     Returns
     -------
@@ -360,7 +476,8 @@ def make_s_curve(
         if anchor_label is not None:
             anchor_arr = np.asarray(distributions[anchor_label], dtype=float)
             for pct in percentile_markers:
-                x_value = float(np.percentile(anchor_arr, pct))
+                x_value = (float(marker_values[pct]) if marker_values and pct in marker_values
+                           else float(np.percentile(anchor_arr, pct)))
                 # Vertical drop from curve down to x-axis.
                 ax.plot(
                     [x_value, x_value], [0.0, float(pct)],

@@ -1,23 +1,24 @@
 {
-  "schema_version": "1.4",
+  "schema_version": "1.5",
   "meta": {
     "period_end_date": "2026-02-28",
     "previous_period_end_date": null,
-    "engine_run_date": "2026-10-06T05:13:58Z",
-    "engine_run_hash": "ed4c7248-40dd-4ee2-9180-eac9811ebd01",
+    "engine_run_date": "2026-10-28T07:22:30Z",
+    "engine_run_hash": "feb4051a-3aba-49f9-864b-f6669608b8e3",
     "register_version": "Tropic Ridge Wind Farm",
     "workbook_filename": "wind_period_01.xlsx",
     "xer_filename": "wind_schedule.xer",
     "iterations": 2000,
     "seed": 42,
+    "seed_source": "override",
     "project_key": "synthetic_wind",
     "project_display_name": "Tropic Ridge Wind Farm",
-    "engine_sha": "c082970e5f0ed0ea68b2c4f967dcf194b4fcd4cb",
+    "engine_sha": "ee35f2fd301ece8b5e57623f4e5f19f950967c7f",
     "engine_tree_dirty": false,
     "input_sha256": {
       "register": {
         "method": "git_blob_oid",
-        "value": "e9c7c72bb50dbe749c8ab15634aef14bff901706"
+        "value": "328806c739dbb635786055d2ee2948cee4882b74"
       },
       "xer": {
         "method": "git_blob_oid",
@@ -703,6 +704,101 @@
       "removed_risk_ids": [],
       "closed_risk_ids": [],
       "reprobabilised_risk_ids": []
+    },
+    "curve_points": [
+      {
+        "dollars": 0.0,
+        "cumulative_prob": 0.0
+      },
+      {
+        "dollars": 1977586.47,
+        "cumulative_prob": 0.05
+      },
+      {
+        "dollars": 2528352.49,
+        "cumulative_prob": 0.1
+      },
+      {
+        "dollars": 2969664.2,
+        "cumulative_prob": 0.15
+      },
+      {
+        "dollars": 3373904.78,
+        "cumulative_prob": 0.2
+      },
+      {
+        "dollars": 3674311.78,
+        "cumulative_prob": 0.25
+      },
+      {
+        "dollars": 3993343.36,
+        "cumulative_prob": 0.3
+      },
+      {
+        "dollars": 4273602.74,
+        "cumulative_prob": 0.35
+      },
+      {
+        "dollars": 4591132.47,
+        "cumulative_prob": 0.4
+      },
+      {
+        "dollars": 4889709.28,
+        "cumulative_prob": 0.45
+      },
+      {
+        "dollars": 5198699.53,
+        "cumulative_prob": 0.5
+      },
+      {
+        "dollars": 5552559.41,
+        "cumulative_prob": 0.55
+      },
+      {
+        "dollars": 5852191.85,
+        "cumulative_prob": 0.6
+      },
+      {
+        "dollars": 6169182.16,
+        "cumulative_prob": 0.65
+      },
+      {
+        "dollars": 6542913.56,
+        "cumulative_prob": 0.7
+      },
+      {
+        "dollars": 6978167.97,
+        "cumulative_prob": 0.75
+      },
+      {
+        "dollars": 7366574.6,
+        "cumulative_prob": 0.8
+      },
+      {
+        "dollars": 7931584.32,
+        "cumulative_prob": 0.85
+      },
+      {
+        "dollars": 8702610.43,
+        "cumulative_prob": 0.9
+      },
+      {
+        "dollars": 9890973.11,
+        "cumulative_prob": 0.95
+      },
+      {
+        "dollars": 14645068.25,
+        "cumulative_prob": 1.0
+      }
+    ],
+    "jcl": {
+      "basis": "event-risk cost (delay cost excluded) against project finish; budget = P80 integrated contingency, finish = P80 finish; cost and schedule sampled jointly",
+      "jcl": 0.794,
+      "cost_target_dollars": 7366574.6,
+      "cost_confidence": 0.955,
+      "finish_target_date": "2026-06-30",
+      "finish_confidence": 0.8,
+      "frontier_level": 0.7
     }
   }
 }

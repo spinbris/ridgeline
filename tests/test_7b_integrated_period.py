@@ -189,12 +189,12 @@ class TestJointSampling:
 
 # --- the contract ----------------------------------------------------------------------------
 
-def test_the_contract_is_at_1_4():
+def test_the_contract_is_at_1_5():
     """A literal, not a read of the constant: an assertion that reads what it checks passes
     through any bump and gates nothing."""
     from src.am.json_writer import SCHEMA_VERSION
 
-    assert SCHEMA_VERSION == "1.4"
+    assert SCHEMA_VERSION == "1.5"
 
 
 def test_the_app_pins_the_same_version():
@@ -268,7 +268,7 @@ def period_02(tmp_path_factory: pytest.TempPathFactory) -> dict:
 @pytest.mark.integration
 class TestTheIntegratedArmEndToEnd:
     def test_a_period_carries_the_integrated_block(self, period_01: dict):
-        assert period_01["schema_version"] == "1.4"
+        assert period_01["schema_version"] == "1.5"
         block = period_01["integrated"]
         # The arithmetic is reproducible from the block itself, which is the point of carrying
         # the day rate and the marginals rather than the total alone.

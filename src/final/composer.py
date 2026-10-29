@@ -132,11 +132,26 @@ from src.final.charts import (
     MODE_COLORS,
     make_confidence_waterfall,
     make_density_histogram,
+    make_jcl_scatter,
+    make_leave_one_out_tornado,
     make_methodology_convergence_chart,
     make_risk_matrix,
     make_s_curve,
     make_tornado_chart,
 )
+from src.final.sections.integrated_total import (
+    INTEGRATED_P_LEVELS,
+    base_exclusion_sentence,
+    confidence_curve_display_rows,
+    integrated_range_sentence,
+    integrated_total_data,
+    jcl_sentence,
+    stage3_headline_block,
+    stage3_jcl,
+    total_cost_data,
+    total_cost_rows,
+)
+from src.integrated.integrated_dollars import integrated_dollars_array
 from src.integrated.integrated_simulation import IntegratedConfig
 # read_treatments: composer no longer reads the Treatments sheet directly
 # under SR14a.2; the section builder in
@@ -358,8 +373,18 @@ def _generate_v3_charts(
     indicative_name: str | None = None,
     *,
     seed: int,
+    leave_one_out: dict[str, Any] | None = None,
+    total_cost: dict[str, Any] | None = None,
+    jcl: dict[str, Any] | None = None,
 ) -> dict[str, str]:
     """Generate all v3 chart PNGs and return their paths as strings.
+
+    INTSCURVE-01 Part A: the integrated total (cost + float-aware delay x day rate) on the
+    indicative basis - Stage 3 on a deliverable run - is drawn as an S-curve, a histogram and a
+    cumulative build-up, and the convergence chart samples it. ``leave_one_out`` (from
+    :func:`src.integrated.leave_one_out.stage3_leave_one_out`) draws the integrated tornado.
+    Part B: ``total_cost`` (:func:`src.final.sections.integrated_total.total_cost_data`) draws
+    the total-cost S-curve, base beneath the contingency; ``None`` draws nothing.
 
     Beta-16 Items 1 & 2: ``headline_metric`` (``"P80"`` default, or
     ``"Mean"``) drives the cost-tornado title and x-axis label so they
@@ -511,6 +536,109 @@ def _generate_v3_charts(
         paths["cost_s_curve_path"] = ""
         paths["cost_density_path"] = ""
 
+    # INTSCURVE-01 P1, P2: the integrated total, the lead chart of the Distribution section.
+    # Drop-lines sit at the dollar percentiles integrated_total_data computes, which are the
+    # headline's own (same expression, same np.percentile), not at percentiles recomputed
+    # from the $M array.
+    integrated_arr = indicative_cost.size > 0 and indicative_sched.size == indicative_cost.size
+    paths["integrated_s_curve_path"] = ""
+    paths["integrated_density_path"] = ""
+    paths["buildup_s_curve_path"] = ""
+    if integrated_arr:
+        _tot = integrated_total_data(indicative_cost, indicative_sched, day_rate)
+        _markers_m = {p: v / 1e6 for p, v in _tot["percentiles_dollars"].items()}
+        _total_m = _tot["total_dollars"] / 1e6
+        _total_label = "Integrated total: event-risk cost + delay cost"
+        integrated_s_curve_path = chart_output_dir / "page2_integrated_s_curve.png"
+        make_s_curve(
+            distributions={_total_label: _total_m},
+            percentile_markers=list(_tot["percentiles_dollars"]),
+            title=f"Integrated contingency S-curve - {_indicative_display}",
+            output_path=integrated_s_curve_path,
+            x_axis_label="Integrated contingency, cost plus float-aware delay cost ($M)",
+            color_map={_total_label: SCENARIO_COLORS["Stage3"]},
+            value_label_fmt="${value:.2f}M",
+            marker_values=_markers_m,
+        )
+        paths["integrated_s_curve_path"] = str(integrated_s_curve_path.resolve())
+
+        integrated_density_path = chart_output_dir / "page2_integrated_density.png"
+        make_density_histogram(
+            samples=_total_m,
+            title=f"Integrated contingency distribution - {_indicative_display}",
+            output_path=integrated_density_path,
+            mean_value=_tot["mean_dollars"] / 1e6,
+            percentile_markers=_markers_m,
+            x_axis_label="Integrated contingency ($M)",
+            color=SCENARIO_COLORS["Stage3"],
+            nil_bucket_annotation=False,
+        )
+        paths["integrated_density_path"] = str(integrated_density_path.resolve())
+
+        # Cumulative build-up on one $ axis: event-risk cost alone, then plus delay cost.
+        # Part B adds the base estimate as the first layer.
+        _cost_label = "Event-risk cost alone"
+        buildup_path = chart_output_dir / "page2_integrated_buildup.png"
+        make_s_curve(
+            distributions={_cost_label: _tot["event_cost_dollars"] / 1e6,
+                           _total_label: _total_m},
+            percentile_markers=list(_tot["percentiles_dollars"]),
+            title="Cumulative build-up - event-risk cost, then plus delay cost",
+            output_path=buildup_path,
+            x_axis_label="Contingency ($M)",
+            color_map={_cost_label: "#5DADE2", _total_label: SCENARIO_COLORS["Stage3"]},
+            headline_label=_total_label,
+            value_label_fmt="${value:.2f}M",
+            marker_values=_markers_m,
+        )
+        paths["buildup_s_curve_path"] = str(buildup_path.resolve())
+
+    # INTSCURVE-01 Part B: total cost in layers - base, plus event-risk cost, plus delay cost.
+    # Drop-lines on the total at its own dollar percentiles, as on the contingency curve.
+    paths["total_cost_s_curve_path"] = ""
+    if total_cost:
+        _tc_markers = {p: v / 1e6 for p, v in total_cost["percentiles_dollars"].items()}
+        _base_label = "Base (Layer 1)"
+        _base_cost_label = "Base + event-risk cost"
+        _tc_label = "Total: base + event-risk cost + delay cost"
+        total_cost_path = chart_output_dir / "page2_total_cost_s_curve.png"
+        make_s_curve(
+            distributions={_base_label: total_cost["base_dollars"] / 1e6,
+                           _base_cost_label: total_cost["base_plus_cost_dollars"] / 1e6,
+                           _tc_label: total_cost["total_dollars"] / 1e6},
+            percentile_markers=list(total_cost["percentiles_dollars"]),
+            title=f"Total cost S-curve - {_indicative_display}",
+            output_path=total_cost_path,
+            x_axis_label="Total cost ($M)",
+            color_map={_base_label: "#A9A9A9", _base_cost_label: "#5DADE2",
+                       _tc_label: SCENARIO_COLORS["Stage3"]},
+            headline_label=_tc_label,
+            value_label_fmt="${value:.2f}M",
+            marker_values=_tc_markers,
+        )
+        paths["total_cost_s_curve_path"] = str(total_cost_path.resolve())
+
+    # INTSCURVE-01 Part C: the JCL scatter.
+    paths["jcl_path"] = ""
+    if jcl:
+        jcl_path = chart_output_dir / "page2_jcl_scatter.png"
+        make_jcl_scatter(
+            jcl, title=f"Joint confidence - cost against finish, {_indicative_display}",
+            output_path=jcl_path)
+        paths["jcl_path"] = str(jcl_path.resolve())
+
+    # INTSCURVE-01 P3: integrated tornado, leave-one-out at P80 on the total.
+    paths["integrated_tornado_path"] = ""
+    if leave_one_out and leave_one_out.get("rows"):
+        integrated_tornado_path = chart_output_dir / "page3_integrated_tornado.png"
+        make_leave_one_out_tornado(
+            rows=leave_one_out["rows"],
+            title=(f"Integrated P{leave_one_out['p_level']} saved if each risk is removed "
+                   f"(leave-one-out, {leave_one_out['iterations']:,} iterations)"),
+            output_path=integrated_tornado_path,
+        )
+        paths["integrated_tornado_path"] = str(integrated_tornado_path.resolve())
+
     # Cost tornado.
     # Beta-16 Item 1: title and x-axis label track the headline metric so
     # the chart's framing matches the ranking metric used to build
@@ -562,23 +690,28 @@ def _generate_v3_charts(
         integrated_results_by_scenario, day_rate, indicative_name=_indicative_name)
     make_confidence_waterfall(
         components=waterfall_components,
-        title="Integrated P80 build-up: cost + dollarised schedule + joint adjustment",
+        title=("Integrated P80 build-up: event-risk cost + delay cost + joint-sampling "
+               "adjustment"),
         output_path=waterfall_path,
     )
     paths["waterfall_path"] = str(waterfall_path.resolve())
 
     # Beta-15 Item 2: §7 convergence diagnostic chart. Bootstrap CI on the
-    # integrated cost P80 across iteration counts 1k → 100k. Falls back
+    # integrated P80 across iteration counts 1k → 100k. Falls back
     # gracefully on smoke runs (bootstrap_convergence collapses iter_grid
     # entries above sample size to a single grid point at n_iter).
-    convergence_indicative = integrated_results_by_scenario.get(_indicative_name, {})
-    convergence_cost_arr = np.asarray(
-        convergence_indicative.get("cost_dollars_array", [])
+    # INTSCURVE-01 P5: it sampled the cost arm under an "integrated" title. It now samples the
+    # integrated total on the headline basis, so the title is true.
+    convergence_cost_arr = (
+        integrated_dollars_array(indicative_cost, indicative_sched, day_rate)
+        if integrated_arr else np.asarray([])
     )
+    if indicative_cost.size > 0:
+        # Outside the try, and before the integrated-array check: a missing seed is refused
+        # whenever the run has data to chart, not logged into an absent chart (SEEDZERO-01).
+        seed = require_seed(seed, where="src.final.composer page-7 convergence chart")
     if convergence_cost_arr.size > 0:
         convergence_path = chart_output_dir / "page7_convergence.png"
-        # Outside the try: a missing seed is refused, not logged into an absent chart.
-        seed = require_seed(seed, where="src.final.composer page-7 convergence chart")
         try:
             make_methodology_convergence_chart(
                 sample=convergence_cost_arr,
@@ -1247,6 +1380,19 @@ def compose_final_report_data(
         integrated_results=integrated_dr,
     )["data"]
 
+    # INTSCURVE-01 Part B: the base beneath the headline basis's arrays, or None (Layer 1 off).
+    _ind_arrays = headline_family.get(_indicative_scenario_name) or {}
+    total_cost = total_cost_data(
+        (stage3_beta_result or {}).get("base_layer"),
+        np.asarray(_ind_arrays.get("cost_dollars_array", [])),
+        np.asarray(_ind_arrays.get("schedule_days_array", [])),
+        day_rate,
+    )
+    # INTSCURVE-01 Part C: the JCL on the same run, at the headline's P-level.
+    _p_txt = str(headline_metric).strip().upper()
+    jcl = stage3_jcl(stage3_beta_result, total_cost, day_rate,
+                     p_level=int(_p_txt[1:]) if _p_txt[1:].isdigit() else 80)
+
     # Generate charts
     chart_paths: dict[str, str] = {}
     if chart_output_dir is not None:
@@ -1262,6 +1408,9 @@ def compose_final_report_data(
             variant=_strawman_variant,
             headline_metric=headline_metric,
             seed=config.random_seed,
+            leave_one_out=(stage3_beta_result or {}).get("leave_one_out"),
+            total_cost=total_cost,
+            jcl=jcl,
         )
 
     # Page 1 + Page 5: SR14a.2 — data assembly via section-builders.
@@ -1442,6 +1591,23 @@ def compose_final_report_data(
         **_sc["page2_distribution"],
         "orienting": commentary_text.DISTRIBUTION_ORIENTING,
         "interpretation": format_distribution_interpretation(_tail_risk),
+        # INTSCURVE-01 P1, P2, P4: the integrated total leads the section, and the HTML body
+        # carries what Word's Distribution shape carries - the integrated P-level table and the
+        # cost-arm S-curve - inside the one section the notebook renders.
+        "integrated_orienting": commentary_text.INTEGRATED_TOTAL_ORIENTING,
+        "integrated_s_curve_path": chart_paths.get("integrated_s_curve_path", ""),
+        "integrated_density_path": chart_paths.get("integrated_density_path", ""),
+        "buildup_orienting": commentary_text.INTEGRATED_BUILDUP_ORIENTING,
+        "buildup_s_curve_path": chart_paths.get("buildup_s_curve_path", ""),
+        "confidence_curve_heading": "Confidence curve - integrated contingency by P-level",
+        "confidence_curve_preamble": commentary_text.CONFIDENCE_CURVE_PREAMBLE,
+        "confidence_curve_table": confidence_curve_display_rows(_sc["page2_confidence_curve"]),
+        "confidence_curve_footnote": commentary_text.CONFIDENCE_CURVE_FOOTNOTE,
+        "cost_distribution_heading": "Event-risk cost distribution",
+        "cost_distribution_orienting": commentary_text.COST_DISTRIBUTION_ORIENTING,
+        "cost_s_curve_path": chart_paths.get("cost_s_curve_path", ""),
+        "cost_density_path": chart_paths.get("cost_density_path", ""),
+        "schedule_distribution_heading": "Schedule slip distribution",
     }
     composed["page2_cost_distribution"] = {
         **_sc["page2_cost_distribution"],
@@ -1454,6 +1620,16 @@ def compose_final_report_data(
     # spread narrative pieces in at composer level per Decision D3=A.
     _page3 = dict(_cd["page3_cost_drivers"])
     _page3["tornado_path"] = chart_paths.get("cost_tornado_path", "")
+    # INTSCURVE-01 P3: the integrated leave-one-out tornado leads the drivers. Empty when the run
+    # carries no leave-one-out (a section-seam fixture), so nothing renders rather than a blank.
+    _loo = (stage3_beta_result or {}).get("leave_one_out") or {}
+    _page3["integrated_tornado_heading"] = (
+        f"Integrated drivers - leave-one-out at P{_loo.get('p_level', 80)}")
+    _page3["integrated_tornado_orienting"] = (
+        commentary_text.INTEGRATED_TORNADO_ORIENTING.format(
+            p=_loo.get("p_level", 80), iterations=_loo.get("iterations", 0))
+        if _loo.get("rows") else "")
+    _page3["integrated_tornado_path"] = chart_paths.get("integrated_tornado_path", "")
     cost_metric_label = _page3["metric_name"]
     rbs_l1_cost_metric_name = _page3["rbs_l1_metric_name"]
     composed["page3_cost_drivers"] = {
@@ -1585,6 +1761,9 @@ def compose_final_report_data(
             commentary_text.DISTRIBUTION_SHAPE_EXPLAINER_BULLETS
         ),
         "standards_references": commentary_text.STANDARDS_REFERENCES,
+        # INTSCURVE-01 P7: what a risk's cost impact includes, so time cost is priced once.
+        "delay_cost_convention_heading": "Delay cost and risk cost impacts",
+        "delay_cost_convention": commentary_text.DELAY_COST_CONVENTION,
         "dp_review_caveat": commentary_text.DP_REVIEW_CAVEAT.format(
             n_parallel_dp=n_parallel_dp,
             n_total_dp=n_total_dp,
@@ -1767,5 +1946,89 @@ def compose_final_report_data(
         chart_output_dir=chart_output_dir,
         risk_titles_override=risk_titles,
     )
+    _apply_integrated_summary(composed)
+    _apply_total_cost(composed, total_cost, chart_paths)
+    _apply_jcl(composed, jcl, chart_paths)
 
     return composed
+
+
+def _apply_total_cost(
+    composed: dict[str, Any], total_cost: dict[str, Any] | None, chart_paths: dict[str, str],
+) -> None:
+    """INTSCURVE-01 Part B: the total-cost S-curve leads the Distribution section.
+
+    With Layer 1 off (``total_cost`` is ``None``) the keys are empty and render nothing, so the
+    report is Part A's. With it on, the limitations bullet that said this deliverable never
+    samples Layer 1 is replaced by one that says how it does, and the methodology page names
+    any factor D-4 left out.
+    """
+    from src.sra.cpm.bindings import get_active_binding
+
+    page2 = composed.get("page2_distribution")
+    page7 = composed.get("page7_methodology")
+    if not isinstance(page2, dict):
+        return
+    empty = {"total_cost_heading": "", "total_cost_orienting": "", "total_cost_s_curve_path": "",
+             "total_cost_table": [], "total_cost_basis": ""}
+    if not total_cost:
+        page2.update(empty)
+        if isinstance(page7, dict):
+            page7["base_layer_exclusion"] = ""
+        return
+    illustrative = getattr(get_active_binding(), "illustrative_base", False)
+    page2.update({
+        "total_cost_heading": "Total cost - base, event-risk cost and delay cost",
+        "total_cost_orienting": commentary_text.TOTAL_COST_ORIENTING,
+        "total_cost_s_curve_path": chart_paths.get("total_cost_s_curve_path", ""),
+        "total_cost_table": total_cost_rows(total_cost),
+        "total_cost_basis": commentary_text.TOTAL_COST_BASIS.format(
+            base=f"${total_cost['base_total_dollars'] / 1e6:.2f}M",
+            illustrative=commentary_text.ILLUSTRATIVE_BASE if illustrative else "").strip(),
+    })
+    if isinstance(page7, dict):
+        page7["base_layer_exclusion"] = base_exclusion_sentence(total_cost["excluded_factors"])
+        page7["limitations_current"] = [
+            commentary_text.L1_BASE_DRAWN_CAVEAT_BULLET
+            if b == commentary_text.L1_SYSTEMIC_CAVEAT_BULLET else b
+            for b in page7.get("limitations_current") or []]
+
+
+def _apply_jcl(
+    composed: dict[str, Any], jcl: dict[str, Any] | None, chart_paths: dict[str, str],
+) -> None:
+    """INTSCURVE-01 Part C: the JCL scatter and its sentence, in the Distribution section."""
+    page2 = composed.get("page2_distribution")
+    if not isinstance(page2, dict):
+        return
+    if not jcl:
+        page2.update({"jcl_heading": "", "jcl_orienting": "", "jcl_path": "",
+                      "jcl_sentence": "", "jcl_basis": ""})
+        return
+    page2.update({
+        "jcl_heading": "Joint confidence - cost and finish together",
+        "jcl_orienting": commentary_text.JCL_ORIENTING,
+        "jcl_path": chart_paths.get("jcl_path", ""),
+        "jcl_sentence": jcl_sentence(jcl),
+        "jcl_basis": commentary_text.JCL_BASIS,
+    })
+
+
+def _apply_integrated_summary(composed: dict[str, Any]) -> None:
+    """INTSCURVE-01 P4, P6: the executive summary leads with the integrated range in $.
+
+    Reads the Stage 3 headline block ``_apply_stage3_headline`` wrote, so the range and the
+    HTML copy of the block are the headline's own numbers. A compose with no Stage 3 result
+    (a section-seam fixture) gains empty keys, which render nothing.
+    """
+    from src.final import contract_terms
+
+    headline = (composed.get("executive_summary") or {}).get("headline_stage3")
+    if not isinstance(headline, dict):
+        composed["page1_headline_integrated_range"] = ""
+        composed["page1_stage3_headline"] = {}
+        return
+    metric = str(headline.get("headline_metric", "P80"))
+    composed["page1_headline_integrated_range"] = integrated_range_sentence(headline, metric)
+    heading = f"{contract_terms.term('headline_contingency_label')} ({metric}, Stage 3)"
+    composed["page1_stage3_headline"] = stage3_headline_block(headline, heading)

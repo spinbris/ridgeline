@@ -164,6 +164,8 @@ SYNTHETIC_WIND_BINDING: ProjectBinding = register_binding(
         # RELEASE-01 D-5: the one project this release publishes (Tropic Ridge), and public.
         publish=True,
         confidential=False,
+        # INTSCURVE-01 Part B: the register's base is a synthetic project's, so illustrative.
+        illustrative_base=True,
         default_filenames=DEFAULT_FILENAMES,
         data_dirs=DATA_DIRS,
         # ROAD-01 §5.3: these were module constants in `src/am/project_binding.py`,

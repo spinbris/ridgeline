@@ -27,7 +27,16 @@ from dataclasses import dataclass, field
 #:       artefacts the two shipped projects actually render.
 #: 1.1 - DELIVFIX-01, 22/09/2026: how the HTML body presents what is inside a section - each
 #:       composed key's treatment and written label, and each page's order (``HTML_FIELDS``).
-CONTRACT_VERSION = "1.1"
+#: 1.2 - INTSCURVE-01 Part A, 28/10/2026: the integrated total leads the Distribution section;
+#:       the HTML body gains what Word carried alone (the Stage 3 headline block, the integrated
+#:       P-level table, the cost-arm S-curve), the integrated leave-one-out tornado leads the
+#:       drivers, and the methodology states the delay-cost convention.
+#: 1.3 - INTSCURVE-01 Part B, 28/10/2026: the total-cost S-curve (base + event-risk cost + delay
+#:       cost) and its contingency table lead the Distribution section when the register's
+#:       Layer 1 is on; the methodology names any Layer 1 factor D-4 leaves out of the base.
+#: 1.4 - INTSCURVE-01 Part C, 28/10/2026: the joint confidence level (cost against finish, with
+#:       its targets and the 70% frontier) follows the total-cost S-curve in Distribution.
+CONTRACT_VERSION = "1.4"
 
 
 @dataclass(frozen=True)
@@ -191,11 +200,30 @@ HTML_FIELDS: dict[str, Field] = {
         "convergence_chart_path", "drivers_table", "rbs_l1_breakdown_table",
         "mode_sensitivity_table", "mode_sensitivity_summary", "table", "comparison_table",
         "cross_validation_panel", "treatment_roi_table",
+        # INTSCURVE-01 Part A
+        "integrated_orienting", "integrated_s_curve_path", "integrated_density_path",
+        "buildup_orienting", "buildup_s_curve_path", "confidence_curve_preamble",
+        "confidence_curve_table", "confidence_curve_footnote", "cost_distribution_orienting",
+        "cost_s_curve_path", "cost_density_path", "integrated_tornado_orienting",
+        "integrated_tornado_path", "delay_cost_convention", "stage3_headline_heading",
+        "stage3_headline_lead", "stage3_headline_table", "stage3_headline_basis",
+        # INTSCURVE-01 Part B
+        "total_cost_orienting", "total_cost_s_curve_path", "total_cost_table",
+        "total_cost_basis", "base_layer_exclusion",
+        # INTSCURVE-01 Part C
+        "jcl_orienting", "jcl_path", "jcl_sentence", "jcl_basis",
     )},
     # headings carried as data
     "why_mc_matters_title": Field(HEADING, heads="why_mc_matters"),
     "how_ages_well_title": Field(HEADING, heads="how_ages_well"),
     "rbs_l1_heading": Field(HEADING, heads="rbs_l1_breakdown_table"),
+    "confidence_curve_heading": Field(HEADING, heads="confidence_curve_table"),
+    "cost_distribution_heading": Field(HEADING, heads="cost_s_curve_path"),
+    "schedule_distribution_heading": Field(HEADING, heads="s_curve_path"),
+    "integrated_tornado_heading": Field(HEADING, heads="integrated_tornado_path"),
+    "delay_cost_convention_heading": Field(HEADING, heads="delay_cost_convention"),
+    "total_cost_heading": Field(HEADING, heads="total_cost_s_curve_path"),
+    "jcl_heading": Field(HEADING, heads="jcl_path"),
     # renderer settings, and what the Word renderer deliberately leaves out
     **{k: _X for k in (
         "metric_name", "value_column_header", "rbs_l1_metric_name", "bold_row_index",
@@ -242,9 +270,21 @@ VALUE_LABELS: dict[str, str] = {
 #: Each page's order, from the Word renderer's. Keys not listed follow, in composed order, so a
 #: new key is shown rather than lost.
 HTML_ORDER: dict[str, tuple[str, ...]] = {
-    "page2_distribution": ("orienting", "s_curve_path", "density_path", "interpretation",
-                           "waterfall_path", "waterfall_caption"),
-    "page3_cost_drivers": ("orienting", "tornado_path", "drivers_table", "mode_independence_note",
+    "page2_distribution": ("total_cost_heading", "total_cost_orienting",
+                           "total_cost_s_curve_path", "total_cost_table", "total_cost_basis",
+                           "jcl_heading", "jcl_orienting", "jcl_path", "jcl_sentence",
+                           "jcl_basis",
+                           "integrated_orienting", "integrated_s_curve_path",
+                           "integrated_density_path", "buildup_orienting",
+                           "buildup_s_curve_path", "confidence_curve_heading",
+                           "confidence_curve_preamble", "confidence_curve_table",
+                           "confidence_curve_footnote", "waterfall_caption", "waterfall_path",
+                           "cost_distribution_heading", "cost_distribution_orienting",
+                           "cost_s_curve_path", "cost_density_path",
+                           "schedule_distribution_heading", "orienting", "s_curve_path",
+                           "density_path", "interpretation"),
+    "page3_cost_drivers": ("integrated_tornado_heading", "integrated_tornado_orienting",
+                           "integrated_tornado_path", "orienting", "tornado_path", "drivers_table", "mode_independence_note",
                            "interpretation", "rbs_l1_heading", "rbs_l1_orienting",
                            "rbs_l1_breakdown_table"),
     "page4_schedule_drivers": ("orienting_tornado", "tornado_path", "drivers_table",
@@ -261,7 +301,9 @@ HTML_ORDER: dict[str, tuple[str, ...]] = {
                                   "recommendations"),
     "page7_methodology": ("summary_paragraphs", "distribution_shape_explainer_intro",
                           "distribution_shape_explainer_bullets", "mode_sensitivity_summary",
-                          "standards_references", "convergence_chart_path", "convergence_caption",
+                          "standards_references", "delay_cost_convention_heading",
+                          "delay_cost_convention", "base_layer_exclusion",
+                          "convergence_chart_path", "convergence_caption",
                           "convergence_caveat", "dp_review_caveat",
                           "cg_drivers_orienting_paragraphs", "cg_drivers_table",
                           "limitations_current", "limitations_closing", "single_iteration_intro",

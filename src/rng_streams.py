@@ -20,6 +20,12 @@ import numpy as np
 #: Stage 3 number.
 SEVERITY_STREAM = 0x5E7E1
 
+#: Entropy word for the deliverable's Layer 1 base draw (INTSCURVE-01 Part B, Reviewer R1). The
+#: base is drawn on a stream of its own so that adding it moves no event-risk draw: the cost arm
+#: never sees it. **Must not be 0** (the fire stream) **nor ``SEVERITY_STREAM``**. Changing it
+#: moves the base layer and the total, never the event-risk contingency.
+LAYER1_STREAM = 0xBA5E1
+
 
 def _seed(seed: int) -> int:
     """The run seed as one 32-bit entropy word, or a refusal.
@@ -53,6 +59,16 @@ def severity_generator(seed: int) -> np.random.Generator:
     kernel's batch 0.
     """
     return np.random.default_rng(np.random.SeedSequence([_seed(seed), SEVERITY_STREAM]))
+
+
+def layer1_generator(seed: int) -> np.random.Generator:
+    """The deliverable's Layer 1 base stream, independent of the fire, severity and kernel streams.
+
+    Entropy ``[seed, LAYER1_STREAM]``, as ``severity_generator`` is built, so it is none of the
+    others. The Tier 1 owner view still draws Layer 1 on the fire stream after the event draws
+    (``run_cost_layer``); this stream is for the deliverable's separate base array only.
+    """
+    return np.random.default_rng(np.random.SeedSequence([_seed(seed), LAYER1_STREAM]))
 
 
 def kernel_generator(seed: int) -> np.random.Generator:
