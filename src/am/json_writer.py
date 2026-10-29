@@ -62,7 +62,7 @@ logger = logging.getLogger(__name__)
 # risks[].divergence_flag field (Doc 3 contract v2.4 -> v2.5). A field
 # removal must move the version so a consumer can detect it; zod accepts
 # the new value. Structural-major stays 1; this is a contract-minor bump.
-SCHEMA_VERSION = "1.4"  # stage 7 part B: the optional top-level `integrated` block
+SCHEMA_VERSION = "1.5"  # INTSCURVE-01 Part C: `integrated.curve_points` and `integrated.jcl`
 # 1.3 = PROVCRLF01 (input_sha256 values became {method, value} records).
 # 1.4 = stage 7 part B / SPEC §5.2 decision C2, ruled 05/09/2026: the integrated
 # cost-plus-schedule result reaches the cycle, in a NEW top-level block rather than inside
@@ -71,6 +71,11 @@ SCHEMA_VERSION = "1.4"  # stage 7 part B: the optional top-level `integrated` bl
 # OPTIONAL, so every 1.3 artefact stays valid and a register that cannot dollarise days
 # still produces a period. Part C adds `meta.project_key` WITHIN 1.4 - additive, no second
 # bump, sound because §5.2 ruled the key optional too.
+# 1.5 = INTSCURVE-01 Part C (Director, 28/10/2026): the app follows the report. The optional
+# `integrated` block gains `curve_points` (21 quantiles of the integrated dollars, the shape of
+# `distribution.s_curve_points`) and `jcl` (the joint confidence level at the D-3 target pair).
+# Additive inside an optional block, but bumped because the app checks equality and a 1.4 app
+# would draw nothing from fields it does not know.
 HOURS_PER_DAY = 8.0
 
 # AM08 / AIA-01: presentation threshold for period-over-period per-risk
@@ -718,8 +723,8 @@ def _build_trend(*, data_dir: Path, current_p80: str, current_period_end: str) -
     return {"periods": periods}
 
 
-def _build_integrated(result: Any) -> dict[str, Any]:
-    """Stage 7 part B: the `integrated` block (contract 1.4, decision C2).
+def _build_integrated(result: Any, project_start: _dt.date) -> dict[str, Any]:
+    """Stage 7 part B: the `integrated` block (contract 1.4, decision C2; 1.5 INTSCURVE-01 C).
 
     Percentiles of the integrated dollars distribution, plus the two marginals it was built
     from and the pinning that conditioned them. The day rate and the deterministic baseline are
@@ -732,6 +737,7 @@ def _build_integrated(result: Any) -> dict[str, Any]:
     from src.integrated.run_config_contract import require_day_rate
 
     integrated = result.integrated_dollars_array
+    probs = np.linspace(0.0, 1.0, 21)
     return {
         "basis": "cost + dollarised schedule delay, with risk states pinned from the status workbook on both arms",
         # Re-asserted at the point of PUBLICATION, not merely at the point of calculation. The
@@ -765,6 +771,42 @@ def _build_integrated(result: Any) -> dict[str, Any]:
             "closed_risk_ids": list(result.pinning.closed_risk_ids),
             "reprobabilised_risk_ids": list(result.pinning.reprobabilised_risk_ids),
         },
+        # 1.5: the integrated S-curve, as `distribution.s_curve_points` is the finish one.
+        "curve_points": [
+            {"dollars": round(float(np.quantile(integrated, p)), 2),
+             "cumulative_prob": round(float(p), 2)}
+            for p in probs
+        ],
+        "jcl": _build_jcl(result, project_start),
+    }
+
+
+def _build_jcl(result: Any, project_start: _dt.date) -> dict[str, Any]:
+    """1.5: the joint confidence level at the D-3 target pair (INTSCURVE-01 Part C).
+
+    Cost axis: event-risk cost alone, delay cost EXCLUDED - delay is already on the finish axis.
+    The period route draws no base, so the cost target is the P80 integrated contingency on its
+    own. Finish axis: the baseline plus each iteration's delay, paired with the cost arm by index
+    (the two arms run on the same fire record). Finish target: the P80 finish.
+    """
+    from src.integrated.jcl import JCL_FRONTIER_LEVEL, jcl_data
+
+    finish_days = float(result.deterministic_baseline_days) + np.asarray(
+        result.schedule_days_array, dtype=float)
+    out = jcl_data(
+        result.cost_dollars_array, finish_days,
+        cost_target=float(np.percentile(result.integrated_dollars_array, 80)),
+        finish_target=float(np.percentile(finish_days, 80)), level=JCL_FRONTIER_LEVEL)
+    return {
+        "basis": "event-risk cost (delay cost excluded) against project finish; budget = P80 "
+                 "integrated contingency, finish = P80 finish; cost and schedule sampled jointly",
+        "jcl": round(out["jcl"], 4),
+        "cost_target_dollars": round(out["cost_target"], 2),
+        "cost_confidence": round(out["cost_confidence"], 4),
+        "finish_target_date": _isoformat_date(
+            _working_days_to_calendar_date(project_start, out["finish_target"])),
+        "finish_confidence": round(out["finish_confidence"], 4),
+        "frontier_level": out["level"],
     }
 
 
@@ -1071,7 +1113,7 @@ def write_period_json(
     # silently missing - absent-and-unexplained is the state this repository keeps finding
     # and calling a defect.
     if integrated_result is not None:
-        doc["integrated"] = _build_integrated(integrated_result)
+        doc["integrated"] = _build_integrated(integrated_result, project_start)
     elif integrated_unavailable_reason:
         audit["integrated_unavailable"] = integrated_unavailable_reason
 

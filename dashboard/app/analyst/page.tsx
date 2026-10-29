@@ -4,7 +4,8 @@
  * Mockup reference: #analyst-page-1.
  *
  * Sections:
- * - S-curve: 21-point cumulative-probability line chart
+ * - S-curve: 21-point cumulative-probability line chart, with the integrated
+ *   cost S-curve beside it and the joint confidence level (contract 1.5)
  * - Histogram: 20-bin finish-date distribution
  * - Percentile table: P10-P95 with days_from_start, calendar date,
  *   and delta_vs_det column
@@ -13,6 +14,8 @@
 "use client";
 
 import { SCurveChart } from "@/components/charts/SCurveChart";
+import { IntegratedSCurveChart } from "@/components/charts/IntegratedSCurveChart";
+import { JointConfidenceNote } from "@/components/JointConfidenceNote";
 import { HistogramChart } from "@/components/charts/HistogramChart";
 import { Card } from "@/components/Card";
 import { PeriodGate } from "@/components/PeriodGate";
@@ -33,7 +36,7 @@ export default function AnalystA1() {
 function AnalystA1Content() {
   const { status } = usePeriodContext();
   if (status.kind !== "ready") return null;
-  const { distribution, meta } = status.data;
+  const { distribution, meta, integrated } = status.data;
 
   return (
     <main className="px-6 py-6 space-y-5 max-w-7xl mx-auto">
@@ -50,9 +53,24 @@ function AnalystA1Content() {
         </p>
       </header>
 
-      <Card title="S-curve: cumulative probability of project finish">
-        <SCurveChart points={distribution.s_curve_points} />
-      </Card>
+      {/* Contract 1.5 (INTSCURVE-01 Part C): the integrated cost S-curve beside the finish
+          one, as the report draws them. Absent block, finish curve alone. */}
+      <div className={integrated ? "grid gap-5 lg:grid-cols-2" : ""}>
+        <Card title="S-curve: cumulative probability of project finish">
+          <SCurveChart points={distribution.s_curve_points} />
+        </Card>
+        {integrated && (
+          <Card title="S-curve: integrated event-risk cost (cost + delay cost)">
+            <IntegratedSCurveChart points={integrated.curve_points} />
+          </Card>
+        )}
+      </div>
+
+      {integrated && (
+        <Card title="Joint confidence: cost and finish together">
+          <JointConfidenceNote jcl={integrated.jcl} />
+        </Card>
+      )}
 
       <Card title="Histogram: project finish distribution">
         <HistogramChart bins={distribution.histogram_bins} />

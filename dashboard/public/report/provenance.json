@@ -1,8 +1,8 @@
 {
   "project": "synthetic_wind",
-  "run_date": "2026-10-14",
-  "timestamp": "2026-10-14T00:55:01+00:00",
-  "engine_sha": "e36c3e6273935b60504b1131c1f739111db9e515",
+  "run_date": "2026-10-29",
+  "timestamp": "2026-10-28T21:46:55+00:00",
+  "engine_sha": "ab3d0c6a10d49a93f5f6f75606f3d2c9b6243539",
   "engine_tree_dirty": false,
   "mode": "prod",
   "seed": 42,

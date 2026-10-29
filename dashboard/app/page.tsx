@@ -44,26 +44,28 @@ function PmPage1Content() {
 
   return (
     <main className="px-6 py-6 space-y-5 max-w-7xl mx-auto">
-      <header>
-        <h2 className="text-xl font-semibold">Where we are</h2>
-        <p
-          className="text-sm mt-1"
-          style={{ color: "var(--color-muted)" }}
-        >
-          Headline forecast versus deterministic baseline. Period end{" "}
-          {formatLongDate(m.period_end_date)}.
-        </p>
-        {/* REPORTPAGE-01: a plain anchor, not next/link. The report is a static file in
-            public/report/, outside the app router, so client-side navigation would miss it. */}
-        <p className="text-sm mt-2">
-          <a
-            href="/report/"
-            className="underline"
-            style={{ color: "var(--color-accent)" }}
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">Where we are</h2>
+          <p
+            className="text-sm mt-1"
+            style={{ color: "var(--color-muted)" }}
           >
-            Full technical report
-          </a>
-        </p>
+            Headline forecast versus deterministic baseline. Period end{" "}
+            {formatLongDate(m.period_end_date)}.
+          </p>
+        </div>
+        {/* REPORTPAGE-01: a plain anchor, not next/link. The report is a static file in
+            public/report/, outside the app router, so client-side navigation would miss it.
+            Styled as a call to action (REPORTLINK-01); its accessible name stays the label alone. */}
+        <a
+          href="/report/"
+          className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          style={{ background: "var(--color-accent)" }}
+        >
+          Full technical report
+          <span aria-hidden="true">→</span>
+        </a>
       </header>
 
       {/* Headline P80 — primary number */}

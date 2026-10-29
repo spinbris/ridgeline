@@ -234,6 +234,7 @@ only once they are filled. **Where each workshop fact goes, where the workbook d
 | `MC_Params` C2, C5 | iterations 100000, reporting P-level 80 | The deliverable (step 5) reads these from `MC_Params`, not `Settings`; 100,000 is the canonical count |
 | `MC_Params` C3 | seed 42 | Recorded on the sheet. The deliverable does not read it: `SR9_SEED` sets its seed |
 | `MC_Params` C11 | the workshop's cost of delay, $ per working day | Only the named range `MC_day_rate` says the value column is C |
+| `Risk Register` cost three-points (low / most likely / high $) | the risk's direct cost only, without preliminaries or site overheads | Risk cost impacts exclude project time-related costs (preliminaries and site overheads). The model prices those once, through the day rate, on the finish delay that survives float in each iteration. Event-specific standby (idle plant or crew, demobilise / remobilise) is a direct cost and stays in the risk's cost impact. The day rate itself covers preliminaries and site overheads only, with no standby, so the same cost cannot enter through both the day rate and a risk's cost impact. |
 | `MC_Params` C12, C13, C14 | seasons (1 unless seasonal), the float threshold in days, programme duration in weeks | Position-only rows |
 | `MC_Params` C15 | the count of Time = Yes risks you will enter | Recorded for the reader; nothing checks it, so count carefully |
 | `MC_Params` C4, C7 to C10 | leave blank | Stakeholder view and the cascade parameters are not read from a scaffolded register |

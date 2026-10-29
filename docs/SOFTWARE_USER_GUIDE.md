@@ -469,14 +469,16 @@ not printed to the console and not in the HTML.
 Eleven level-1 sections, in this order. This list and
 `src/final/presentation_contract.py` are the same list, checked by the same test
 (`tests/test_presentation_contract.py`): if one moves without the other, both go red.
-Contract version **1.1**.
+Contract version **1.4**.
 
 1. **Executive summary** - the recommended contingency, one sentence, with the basis named.
 2. **Headline contingency (P80, Stage 3)** - the percentile block, and the comparison against
    first-principles rules of thumb. A project whose binding declares a target-cost contract reads
    *Headline TOC contingency*; the wording follows the contract shape, not the project.
-3. **Distribution shape** - the confidence curve, the confidence-band waterfall, and the cost and
-   schedule distributions.
+3. **Distribution shape** - led, where the register enables Layer 1, by the total-cost S-curve
+   (base + event-risk cost + delay cost) and its contingency table; then the integrated
+   contingency S-curve and build-up, the confidence curve, the confidence-band waterfall, and the
+   cost and schedule distributions.
 4. **Main report** - the body.
 5. **Risk drivers - cost** - the cost tornado and the ranked contributors.
 6. **Risk drivers - schedule** - the schedule drivers, the Mode sensitivity and the RBS breakdown.

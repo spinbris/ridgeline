@@ -305,6 +305,89 @@ COST_TORNADO_INTERPRETATION = (
 # cost arm is Mode-independent so a single curve is correct (brief
 # Decision 4). No P(no slip) callout, cost MC has no zero spike.
 
+# INTSCURVE-01 P1: the lead chart of the Distribution section.
+INTEGRATED_TOTAL_ORIENTING = (
+    "The integrated contingency is the headline distribution: in each iteration, the event-risk "
+    "cost plus the finish delay that survives float, priced at the day rate. The S-curve gives "
+    "the probability that the contingency needed is at or below any dollar value, with P50, "
+    "P80, P90 and P95 marked; the recommended contingency is read off it at P80. The histogram "
+    "below shows the same distribution's shape."
+)
+
+# INTSCURVE-01 P2: the cumulative build-up.
+INTEGRATED_BUILDUP_ORIENTING = (
+    "The build-up draws the same total in layers on one dollar axis: event-risk cost alone, then "
+    "with delay cost added. The gap between the two curves at any probability is what schedule "
+    "delay adds at that confidence level. Because the two arms are sampled jointly, the gap at "
+    "P80 is not the delay cost's own P80; the P80 build-up further down shows the difference as "
+    "the joint-sampling adjustment."
+)
+
+# INTSCURVE-01 Part B: the total-cost S-curve, base beneath the contingency.
+TOTAL_COST_ORIENTING = (
+    "The total-cost S-curve puts the base estimate beneath the contingency, in layers on one "
+    "dollar axis: the base with its systemic (Layer 1) uncertainty, then plus event-risk cost, "
+    "then plus delay cost. Contingency at any confidence level is the total at that level less "
+    "the declared base. Read that way it also carries the base's own uncertainty, so it is "
+    "larger than the event-risk contingency the headline recommends, which this chart does not "
+    "replace: it shows where that contingency sits on the project's whole cost."
+)
+
+TOTAL_COST_BASIS = (
+    "Base: the register's Layer 1 estimate of {base}, sampled with its systemic factors on a "
+    "random stream of its own, so the event-risk figures above are unchanged by it, and "
+    "independent of the event risks. {illustrative}"
+)
+
+#: Said wherever a synthetic project's base is drawn (Part B property 9).
+ILLUSTRATIVE_BASE = "The base is illustrative: this is a synthetic project."
+
+#: Replaces ``L1_SYSTEMIC_CAVEAT_BULLET`` when the run draws the base layer (Part B).
+L1_BASE_DRAWN_CAVEAT_BULLET = (
+    "The headline presents the event-risk contingency (Layer 2) on an input base estimate. The "
+    "total-cost S-curve adds that base with its systemic uncertainty (Layer 1), sampled "
+    "independently of the event risks; the base estimate itself remains an input, not an "
+    "estimate this product makes."
+)
+
+# INTSCURVE-01 Part C: the joint confidence level.
+JCL_ORIENTING = (
+    "Each dot is one iteration: its cost on the vertical axis and its finish on the horizontal. "
+    "The dashed lines are the budget and the P80 finish; the dark dots meet both. The cost axis "
+    "leaves out delay cost, because delay is already on the finish axis and would otherwise be "
+    "counted twice. The orange line is where 70% of iterations meet both (the NASA reference "
+    "norm); no Australian guidance requires a joint confidence level, so it is shown beside the "
+    "headline, not as one."
+)
+
+JCL_BASIS = (
+    "Cost and schedule are sampled jointly: a risk that fires raises cost and delays the finish "
+    "in the same iteration. That pulls the dots toward one diagonal, so the JCL is higher than "
+    "it would be if the two were drawn independently."
+)
+
+# INTSCURVE-01 P3: the integrated tornado.
+INTEGRATED_TORNADO_ORIENTING = (
+    "Each bar is the integrated P{p} saved if that one risk were removed, with every other "
+    "risk's draws held fixed ({iterations:,} iterations, the run's own seed and joint sampling). "
+    "It is a leave-one-out figure, not a contribution: the bars do not add up to the total, "
+    "because removing two risks together is not the same as removing each alone. Each bar is "
+    "split into the risk's cost and the delay cost its removal saves, which is zero for a risk "
+    "with no time impact and can be small for one whose delay float absorbs. A chain child keeps "
+    "the fire state the run gave it when its parent is removed."
+)
+
+# INTSCURVE-01 P7 (Director, 28/10/2026; last sentence the Reviewer's, Director-approved the
+# same day): the delay-cost convention, word for word in the register instructions, the playbook, METHODOLOGY.md section 4.4 and the report caveats.
+DELAY_COST_CONVENTION = (
+    "Risk cost impacts exclude project time-related costs (preliminaries and site overheads). "
+    "The model prices those once, through the day rate, on the finish delay that survives float "
+    "in each iteration. Event-specific standby (idle plant or crew, demobilise / remobilise) is "
+    "a direct cost and stays in the risk's cost impact. The day rate itself covers "
+    "preliminaries and site overheads only, with no standby, so the same cost cannot enter "
+    "through both the day rate and a risk's cost impact."
+)
+
 COST_DISTRIBUTION_ORIENTING = (
     "The event-risk cost distribution shows the per-iteration total "
     "event-risk cost from the integrated Monte Carlo simulation. The "

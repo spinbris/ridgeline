@@ -355,6 +355,26 @@ export interface IntegratedPinning {
   reprobabilised_risk_ids: string[];
 }
 
+/** Contract 1.5 (INTSCURVE-01 Part C): one point of the integrated S-curve. */
+export interface IntegratedCurvePoint {
+  dollars: number;
+  cumulative_prob: number;
+}
+
+/**
+ * Contract 1.5: the joint confidence level - the share of iterations that meet the cost target
+ * AND the finish target together. Cost axis excludes delay cost (delay is on the finish axis).
+ */
+export interface IntegratedJcl {
+  basis: string;
+  jcl: number;
+  cost_target_dollars: number;
+  cost_confidence: number;
+  finish_target_date: string; // YYYY-MM-DD
+  finish_confidence: number;
+  frontier_level: number;
+}
+
 export interface Integrated {
   basis: string;
   day_rate: number;
@@ -368,6 +388,9 @@ export interface Integrated {
   cost_marginal: { mean_dollars: number; p80_dollars: number };
   schedule_marginal: { mean_delay_days: number; p80_delay_days: number };
   pinning: IntegratedPinning;
+  // Contract 1.5
+  curve_points: IntegratedCurvePoint[];
+  jcl: IntegratedJcl;
 }
 
 export interface PeriodData {

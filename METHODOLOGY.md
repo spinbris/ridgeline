@@ -301,6 +301,12 @@ Working days per week             = 5             [standard construction working
 Day rate ($/wd) = <weekly_prelims> x <programme_weeks> / <programme_days>
 ```
 
+**Delay-cost convention.** Risk cost impacts exclude project time-related costs (preliminaries and site overheads). The model prices those once, through the day rate, on the finish delay that survives float in each iteration. Event-specific standby (idle plant or crew, demobilise / remobilise) is a direct cost and stays in the risk's cost impact. The day rate itself covers preliminaries and site overheads only, with no standby, so the same cost cannot enter through both the day rate and a risk's cost impact.
+
+**Base beneath the total.** Where the register enables Layer 1, the deliverable draws the base with its systemic factors as a separate array, on a random stream of its own, so every event-risk figure is byte-identical with it on or off. The total-cost S-curve is base + event-risk cost + delay cost per iteration, and contingency read off it is the P-value less the declared base, which carries the base's own uncertainty as well. A Layer 1 factor whose driver prices project duration is left out of that base, because the delay cost already prices time through the schedule replay; the report names it, and the register is not edited, so the Tier 1 owner view is unchanged.
+
+**Joint confidence level.** The report and the app print the share of iterations that meet a budget AND a finish together. The budget is the declared base (where one is drawn) plus the event-risk contingency at the headline P-level; the finish is the P80 finish. The cost axis is base + event-risk cost and **leaves out delay cost**, because delay is already on the finish axis and would otherwise be counted twice. The 70% frontier (the cheapest budget for each finish that 70% of iterations meet) is drawn for reference, after the NASA norm; no Australian guidance requires a JCL, so it sits beside the headline and never replaces it. Because cost and schedule share each risk's fire decision and severity, the JCL is higher than it would be if they were drawn independently.
+
 The day rate is read from the project's run settings (the register's `MC_Params` sheet when the strawman is part of the register, as in both shipped projects, or a separate strawman's `Run_Config_Preview`) by `src/integrated/run_config_contract.resolve_day_rate`, and the deliverable needs it. To change it, change the run settings, not the code.
 
 ---

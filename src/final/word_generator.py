@@ -1611,6 +1611,10 @@ def _render_v3_executive_summary(
         run = para.add_run(headline_integrated)
         run.bold = True
         run.font.size = Pt(13)
+    # INTSCURVE-01 P6: the integrated range in $ leads; schedule days come after.
+    integrated_range = composed.get("page1_headline_integrated_range", "")
+    if integrated_range:
+        doc.add_paragraph(integrated_range)
     # STAGE3HEADLINE-01: the Stage 3 percentile block, when the composer supplied one.
     _stage3_headline = (composed.get("executive_summary") or {}).get("headline_stage3")
     if isinstance(_stage3_headline, dict):
@@ -1751,6 +1755,35 @@ def _render_v3_executive_summary(
     # ---- Page 2: Distribution shape (v3.1: confidence curve precedes) ----
     doc.add_heading("Distribution shape", level=1)
 
+    # INTSCURVE-01 P1, P2: the integrated total leads the section - S-curve, histogram, then
+    # the cumulative build-up - ahead of the confidence-curve table read off it.
+    p2_lead = composed.get("page2_distribution", {})
+    # INTSCURVE-01 Part B: with Layer 1 on, the total-cost S-curve leads, base beneath.
+    if p2_lead.get("total_cost_s_curve_path"):
+        doc.add_heading(p2_lead.get("total_cost_heading") or "Total cost", level=2)
+        _add_orienting(doc, p2_lead.get("total_cost_orienting", ""))
+        _add_picture_centered(doc, p2_lead.get("total_cost_s_curve_path", ""))
+        _add_dict_list_table(doc, p2_lead.get("total_cost_table", []))
+        if p2_lead.get("total_cost_basis"):
+            doc.add_paragraph(p2_lead["total_cost_basis"])
+    # INTSCURVE-01 Part C: the joint confidence level, after the total it is read against.
+    if p2_lead.get("jcl_path"):
+        doc.add_heading(p2_lead.get("jcl_heading") or "Joint confidence", level=2)
+        _add_orienting(doc, p2_lead.get("jcl_orienting", ""))
+        _add_picture_centered(doc, p2_lead.get("jcl_path", ""))
+        for key in ("jcl_sentence", "jcl_basis"):
+            if p2_lead.get(key):
+                doc.add_paragraph(p2_lead[key])
+    if p2_lead.get("integrated_s_curve_path"):
+        doc.add_heading("Integrated contingency distribution", level=2)
+        _add_orienting(doc, p2_lead.get("integrated_orienting", ""))
+        _add_picture_centered(doc, p2_lead.get("integrated_s_curve_path", ""))
+        _add_picture_centered(doc, p2_lead.get("integrated_density_path", ""))
+    if p2_lead.get("buildup_s_curve_path"):
+        doc.add_heading("Cumulative build-up", level=2)
+        _add_orienting(doc, p2_lead.get("buildup_orienting", ""))
+        _add_picture_centered(doc, p2_lead.get("buildup_s_curve_path", ""))
+
     # v3.1 D11: confidence curve table at top of Page 2.
     cc_preamble = composed.get("page2_confidence_curve_preamble", "")
     cc_rows = composed.get("page2_confidence_curve", [])
@@ -1816,6 +1849,11 @@ def _render_v3_executive_summary(
     # ---- Page 3: Cost drivers (v3.1: D2 trimmed table, D6 mode-independence note) ----
     p3 = composed.get("page3_cost_drivers", {})
     doc.add_heading("Risk drivers - cost", level=1)
+    # INTSCURVE-01 P3: the integrated leave-one-out tornado leads the drivers.
+    if p3.get("integrated_tornado_path"):
+        doc.add_heading(p3.get("integrated_tornado_heading", "Integrated drivers"), level=2)
+        _add_orienting(doc, p3.get("integrated_tornado_orienting", ""))
+        _add_picture_centered(doc, p3.get("integrated_tornado_path", ""))
     _add_orienting(doc, p3.get("orienting", ""))
     _add_picture_centered(doc, p3.get("tornado_path", ""))
     _add_dict_list_table(doc, p3.get("drivers_table", []))
@@ -2007,6 +2045,15 @@ def _render_v3_executive_summary(
     refs = p7.get("standards_references", "")
     if refs:
         doc.add_paragraph(refs)
+
+    # INTSCURVE-01 P7: the delay-cost convention, in the Director's words.
+    convention = p7.get("delay_cost_convention", "")
+    if convention:
+        doc.add_heading(p7.get("delay_cost_convention_heading", "Delay cost"), level=2)
+        doc.add_paragraph(convention)
+        # INTSCURVE-01 Part B, D-4 (a): any Layer 1 factor left out of the base, named.
+        if p7.get("base_layer_exclusion"):
+            doc.add_paragraph(p7["base_layer_exclusion"])
 
     # Beta-15 Item 2: convergence diagnostic chart + caveat. Sits after
     # Standards references (methodology-validation artefact about

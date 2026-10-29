@@ -230,7 +230,7 @@ def test_write_period_json_produces_validated_doc(tmp_path: Path) -> None:
     assert out_path.name == "period_20260522.json"
     with out_path.open("r", encoding="utf-8") as fh:
         doc = json.load(fh)
-    assert doc["schema_version"] == "1.4"  # stage 7 part B: the optional top-level `integrated` block
+    assert doc["schema_version"] == "1.5"  # INTSCURVE-01 Part C: integrated curve points and JCL
     # A LITERAL on purpose, not SCHEMA_VERSION - a version assertion that reads the
     # constant it is checking passes through any bump and gates nothing. 1.3 was
     # PROVCRLF01 ({method, value} digests); 1.4 is C2, ruled 05/09/2026.

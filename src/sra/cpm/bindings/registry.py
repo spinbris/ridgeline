@@ -160,6 +160,10 @@ class ProjectBinding:
         ``confidential=False`` as well as ``publish=True`` before anything ships. The second
         lock: a confidential project is refused even with ``publish`` set. It must agree with
         the golden registry's ``confidential``, which is not itself the publish gate.
+    illustrative_base:
+        Whether the register's base estimate is illustrative rather than a real estimate: a
+        synthetic project's. **Default ``False``.** Where the report draws the base beneath the
+        contingency (INTSCURVE-01 Part B), it says "illustrative" when this is ``True``.
     """
 
     name: str
@@ -179,10 +183,11 @@ class ProjectBinding:
     headless_config: Mapping[str, object] | None = None
     publish: bool = False
     confidential: bool = True
+    illustrative_base: bool = False
 
     def __post_init__(self) -> None:
         # DASHGATE-01 round 1, N7: the two publish locks are real booleans, never truthy stand-ins.
-        for lock in ("publish", "confidential"):
+        for lock in ("publish", "confidential", "illustrative_base"):
             if type(getattr(self, lock)) is not bool:
                 raise TypeError(f"binding {self.name!r}: {lock} must be a bool, "
                                 f"not {type(getattr(self, lock)).__name__}")

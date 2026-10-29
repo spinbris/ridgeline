@@ -91,6 +91,8 @@ SYNTHETIC_ROAD_BINDING: ProjectBinding = register_binding(
         project_name=PROJECT_NAME,
         # Synthetic, so not confidential; but not published until it is named (RELEASE-01 D-5).
         confidential=False,
+        # INTSCURVE-01 Part B: the register's base is a synthetic project's, so illustrative.
+        illustrative_base=True,
         default_filenames=DEFAULT_FILENAMES,
         data_dirs=DATA_DIRS,
         #: ROAD-01 §5.3. Declared per project since these stopped being wind's constants

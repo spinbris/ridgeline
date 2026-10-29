@@ -33,6 +33,7 @@ if str(REPO_ROOT) not in sys.path:
 
 import openpyxl  # noqa: E402
 from src.final.product import MAKER  # noqa: E402
+from src.final.commentary_text import DELAY_COST_CONVENTION  # noqa: E402
 from openpyxl.chart import BarChart, Reference  # noqa: E402
 from openpyxl.chart.data_source import AxDataSource, StrRef  # noqa: E402
 from openpyxl.styles import (  # noqa: E402
@@ -1542,6 +1543,8 @@ _UNITS_AND_BASIS = (
     "When Layer 1 is on, each base cell is multiplied by (1 + factor) for every factor bound to "
     "it (rows via Layer1_Allocation, columns via Column_Scope) - the factor three-points are "
     "proportional deltas, 0.05 meaning +5% - and the result is added to the event total.",
+    # INTSCURVE-01 P7: the Director's delay-cost convention, the same text the report prints.
+    "COST IMPACT AND DELAY. " + DELAY_COST_CONVENTION,
     "RECORDED, NOT READ. Effectiveness_Confidence, Default_Mapping_Confidence and "
     "Assignment_Confidence are kept for a reviewer and never used by the engine: any scale, or "
     "blank.",

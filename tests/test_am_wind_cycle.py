@@ -72,7 +72,7 @@ def wind_json(tmp_path_factory: pytest.TempPathFactory) -> dict:
 
 
 def test_wind_cycle_completes_with_valid_schema(wind_json: dict) -> None:
-    assert wind_json["schema_version"] == "1.4"  # stage 7 part B: the optional top-level `integrated` block
+    assert wind_json["schema_version"] == "1.5"  # INTSCURVE-01 Part C: integrated curve points and JCL
     # A LITERAL on purpose, not SCHEMA_VERSION - a version assertion that reads the
     # constant it is checking passes through any bump and gates nothing. 1.3 was
     # PROVCRLF01 ({method, value} digests); 1.4 is C2, ruled 05/09/2026.
