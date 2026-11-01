@@ -39,6 +39,7 @@ from scripts.build_wind_am_periods import (  # noqa: E402 - the one statement of
     AM_INCLUDE_COL, AM_INCLUDE_FIRST_ROW, AM_MILESTONES_SHEET, AM_MITIGATION_SHEET,
     AM_STATUS_FIRST_DATA_ROW, AM_STATUS_HEADER_ROW, AM_STATUS_SHEET, MILESTONE_COLUMNS,
     MITIGATION_COLUMNS, PERIOD_METADATA_RANGES, RISK_REGISTER_SHEET, RISK_STATUS_COLUMNS,
+    write_contingency_frame,
 )
 from src.am.workbook_reader import (  # noqa: E402 - the reader scans a bounded row range
     AM_MILESTONES_HEADER_ROW, AM_MILESTONES_MAX_DATA_ROW, AM_PERIOD_STATUS_MAX_DATA_ROW,
@@ -162,7 +163,7 @@ def parse_milestone(spec: str) -> Milestone:
 
 
 def _write_frame(wb: Workbook) -> tuple:
-    """The four sheets, headers and named ranges - the contract, with no period in it."""
+    """The sheets, headers and named ranges - the contract, with no period in it."""
     rr = wb.active
     rr.title = RISK_REGISTER_SHEET
     rr.cell(row=4, column=1, value="Risk ID")
@@ -183,6 +184,10 @@ def _write_frame(wb: Workbook) -> tuple:
     mt = wb.create_sheet(AM_MITIGATION_SHEET)
     for c, colname in enumerate(MITIGATION_COLUMNS, start=1):
         mt.cell(row=4, column=c, value=colname)
+
+    # INTVIEW-01 stage 2b: left blank, so the period reads "recommended at P80" until the
+    # budget is committed and the commitment date and opening amount are entered.
+    write_contingency_frame(wb)
     return rr, ps, ms, mt
 
 

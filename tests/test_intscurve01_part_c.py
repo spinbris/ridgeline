@@ -178,9 +178,12 @@ class TestThePeriodJsonCarriesTheIntegratedCurveAndJcl:
         assert at[0.9] == b["p90_dollars"] and at[0.95] == b["p95_dollars"]
 
     def test_the_jcl_is_at_the_d3_pair_and_below_either_confidence(self, period_01: dict):
+        """1.6 (INTVIEW-01 stage 2): the period draws the base, so the budget is the declared
+        base plus the P80 contingency, as the report's ``stage3_jcl``."""
         b = period_01["integrated"]
         j = b["jcl"]
-        assert j["cost_target_dollars"] == b["p80_dollars"]
+        assert j["base_drawn"] is True
+        assert j["cost_target_dollars"] == round(j["declared_base_dollars"] + b["p80_dollars"], 2)
         finish_p80 = {p["cumulative_prob"]: p["date"]
                       for p in period_01["distribution"]["s_curve_points"]}[0.8]
         assert j["finish_target_date"] == finish_p80
@@ -199,7 +202,9 @@ def test_the_period_jcl_leaves_delay_cost_off_its_cost_axis():
     result = SimpleNamespace(
         cost_dollars_array=np.zeros(days.size), schedule_days_array=days,
         integrated_dollars_array=integrated_dollars_array(np.zeros(days.size), days, DAY_RATE),
-        deterministic_baseline_days=300.0)
-    j = _build_jcl(result, _dt.date(2024, 1, 1))
+        deterministic_baseline_days=300.0, project_finish_days=300.0 + days, day_rate=DAY_RATE)
+    # No base drawn (Layer 1 off): the cost axis is event cost alone.
+    j = _build_jcl(result, _dt.date(2024, 1, 1), None)
+    assert j["base_drawn"] is False
     assert j["cost_confidence"] == 1.0
     assert j["jcl"] == j["finish_confidence"]

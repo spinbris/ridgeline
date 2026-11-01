@@ -635,7 +635,7 @@ It selects every register risk that is Open **and** Time Impact = Yes, and refus
 missing header, on zero tracked risks, on a blank `Probability`, or on overflow: at most
 **16 tracked risks** and **26 milestones**, because the reader scans exactly those rows.
 
-Four sheets:
+Five sheets:
 
 | Sheet | What you edit each period |
 |---|---|
@@ -643,6 +643,16 @@ Four sheets:
 | `AM_Period_Status` | The metadata block in B1 to B8 - period end, previous period, phase, analyst, reviewer, notes - and then one row per tracked risk from row 15: status this period, dates, and the probability and Mode overrides |
 | `AM_Milestones` | Status and per cent complete, from row 5 |
 | `AM_Mitigation_Log` | Proposed mitigations with cost, lead time and estimated days saved |
+| `AM_Contingency` (optional) | From the date the budget is committed: the commitment date and opening amount held, then every draw and release to date (date, `Draw` or `Release`, amount, `Approved` or `Pending`, risk ID, note) |
+
+Without `AM_Contingency`, or with its commitment date blank, the dashboard shows the contingency
+as **recommended at P80**, never as funded. From the commitment date it shows **held against
+required**: held is the opening amount less approved draws plus approved releases, dated from
+commitment to the period end; pending draws are shown apart and not taken off. A commitment date
+with no opening amount is refused. The cells are found by their labels in column A
+(`Commitment date`, `Opening held (AUD)`, `Illustrative`) and the table by its header row, so
+their positions can move. The generator writes the sheet blank; fill it in when the budget is
+committed. The Tropic Ridge showcase carries an illustrative one in periods 02 to 04.
 
 A risk newly entered in the register this period is added here as a row with its risk ID. The
 register remains the source of truth for the risk itself.
@@ -699,7 +709,7 @@ data.
 
 | Route | What it shows |
 |---|---|
-| `/` | Where we are: the P80 forecast finish against the deterministic baseline, the percentile row, open, fired and closed counts, the integrated event-risk cost, near-critical milestones, and the P80 trend |
+| `/` | How much and when: the risk contingency at P80 (with P50 and P90), the P80 forecast finish against the deterministic baseline, the contingency and finish movement since last period, the chance of meeting both the budget (base plus P80 contingency) and the P80 date, how the contingency is made up, the P80 trend, the contingency position (recommended at P80 before the budget is committed, then held against required), open, fired and closed counts, and near-critical milestones |
 | `/risks/` | What is driving risk: the risk table with per-risk detail |
 | `/mitigations/` | What we could do: baseline against mitigated, with mitigation cards |
 | `/changes/` | What changed: P80 movement, and what got worse, better or new |

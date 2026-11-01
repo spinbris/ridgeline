@@ -145,6 +145,14 @@ class ConditionalRunResult:
     #: built here for exactly that contract (see the comment at the build site); before this
     #: they simply had no way out of the function, and the first integrated arm drew its own.
     severity_uniforms_by_risk_id: dict[str, Any] = field(default_factory=dict)
+    #: INTVIEW-01 stage 2 (property 3): what a masked replay of THIS run needs - the graph,
+    #: the pinned drivers in the order the kernel saw them, the kernel config, and the fire
+    #: record the kernel ran under. ``replay_schedule_days`` reads them; the unmasked replay
+    #: reproduces ``schedule_result`` bit for bit, which is the positive control.
+    schedule_graph: Any = None
+    pinned_drivers: dict[str, Any] = field(default_factory=dict)
+    schedule_mc_config: Any = None
+    fire_mask: Any = None
 
 
 # ---------------------------------------------------------------------------
@@ -514,6 +522,14 @@ def run_conditional_mc(inputs: ConditionalRunInputs) -> ConditionalRunResult:
     )
 
     # ----- Run the schedule MC -----
+    fire_mask = period_fire_mask(
+        risks=risks,
+        pinned_states=pinned_states,
+        schedule_risk_ids=schedule_risk_ids,
+        register_path=inputs.register_path,
+        n_iter=sched_cfg.n_iter,
+        seed=seed,
+    )
     schedule_result = run_schedule_mc(
         graph=schedule_graph,
         risk_drivers=pinned_drivers,
@@ -521,14 +537,7 @@ def run_conditional_mc(inputs: ConditionalRunInputs) -> ConditionalRunResult:
         severity_uniforms=schedule_severity_uniforms,
         rng=master_rng,
         criticality_measurement_mode=inputs.criticality_measurement_mode,
-        fire_mask=period_fire_mask(
-            risks=risks,
-            pinned_states=pinned_states,
-            schedule_risk_ids=schedule_risk_ids,
-            register_path=inputs.register_path,
-            n_iter=sched_cfg.n_iter,
-            seed=seed,
-        ),
+        fire_mask=fire_mask,
     )
 
     config_summary: dict[str, Any] = {
@@ -544,8 +553,46 @@ def run_conditional_mc(inputs: ConditionalRunInputs) -> ConditionalRunResult:
     return ConditionalRunResult(
         schedule_result=schedule_result,
         severity_uniforms_by_risk_id=severity_uniforms_by_risk_id,
+        schedule_graph=schedule_graph,
+        pinned_drivers=dict(pinned_drivers),
+        schedule_mc_config=sched_cfg,
+        fire_mask=fire_mask,
         pinned_states=tuple(pinned_states),
         fired_baseline_uplift_days=fired_uplift_days,
         excluded_risk_ids=excluded_risk_ids,
         config_summary=config_summary,
     )
+
+
+def replay_schedule_days(
+    cond_result: ConditionalRunResult,
+    fire_mask: np.ndarray,
+    deterministic_finish_days: float,
+) -> np.ndarray:
+    """Delay days for this run replayed under ``fire_mask``, every other draw held fixed.
+
+    INTVIEW-01 stage 2 (property 3): the period route's masked replay, as
+    ``src.integrated.leave_one_out.stage3_leave_one_out`` is the report's. Same graph, pinned
+    drivers, kernel config and severity uniforms, and a fresh ``kernel_generator(seed)`` - the
+    parent the run's own kernel spawned from - so the unmasked replay IS the run. The delay is
+    computed exactly as ``run_integrated_period`` computes it (finish less the zero-risk pass,
+    floored at zero), so a replay pairs with the integrated arm by index.
+    """
+    r = cond_result
+    if r.schedule_graph is None or r.schedule_mc_config is None or not r.pinned_drivers:
+        raise ValueError(
+            "this conditional run carries no replay inputs (graph, pinned drivers, kernel "
+            "config), so a masked replay cannot hold its draws fixed")
+    ids = tuple(r.pinned_drivers.keys())
+    severity = np.stack([r.severity_uniforms_by_risk_id[k] for k in ids], axis=1)
+    out = run_schedule_mc(
+        graph=r.schedule_graph,
+        risk_drivers=r.pinned_drivers,
+        config=r.schedule_mc_config,
+        severity_uniforms=severity,
+        rng=kernel_generator(int(r.schedule_mc_config.seed)),
+        criticality_measurement_mode=r.config_summary.get("criticality_measurement_mode", "both"),
+        fire_mask=np.asarray(fire_mask, dtype=bool),
+    )
+    finish = np.asarray(out.project_finish_days, dtype=float)
+    return np.maximum(finish - float(deterministic_finish_days), 0.0)
