@@ -34,6 +34,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, replace
 from pathlib import Path
+from collections.abc import Callable
 from typing import Any, Sequence
 
 import numpy as np
@@ -69,6 +70,26 @@ class IntegratedPeriodResult:
     deterministic_baseline_days: float
     iterations: int
     pinning: PinningEffect
+    #: INTVIEW-01 stage 2 (contract 1.6). The cost arm's per-risk record and the run's own
+    #: finish array, so the period route can do what the report does with them: leave-one-out
+    #: by masking (property 3), and the JCL with ``stage3_jcl`` itself (property 1). Optional,
+    #: so a result built without them still writes a 1.6 period with those parts null.
+    per_risk_cost_array: np.ndarray | None = None
+    risk_ids_all: tuple[str, ...] = ()
+    project_finish_days: np.ndarray | None = None
+    #: Filled by ``run_period`` after the arm runs: the base drawn on its own stream
+    #: (``deliverable_base_layer``), the masked leave-one-out, and the run-config inputs to the
+    #: day-rate derivation. ``None`` means not computed, and the writer says so.
+    base_layer: dict[str, Any] | None = None
+    leave_one_out: dict[str, Any] | None = None
+    run_config: dict[str, Any] | None = None
+    #: INTVIEW-01 stage 2b (property 11). The probability each priced risk ran at, written to
+    #: the period JSON so the next period can rebuild where it came from; and a re-pricing of
+    #: this run's own draws at other probabilities, for the bridge. ``reprice`` returns
+    #: ``(cost_dollars_array, fired_array)``, columns in ``risk_ids_all`` order.
+    priced_probabilities: dict[str, float] | None = None
+    reprice: Callable[[dict[str, float]], tuple[np.ndarray, np.ndarray]] | None = None
+    bridge: dict[str, Any] | None = None
 
 
 #: Pinning actions that REMOVE a risk from the schedule arm. `conditional_runner` records these
@@ -268,6 +289,25 @@ def run_integrated_period(
     )
     cost_dollars = np.asarray(cost_result["cost_dollars_array"], dtype=float)
 
+    def reprice(probabilities: dict[str, float]) -> tuple[np.ndarray, np.ndarray]:
+        """This cost arm again, every draw the same, each risk at the probability given.
+
+        A fire is ``uniform < probability`` on uniforms that do not depend on the probability
+        (``draw_fire_matrix``), and the severity uniforms are the schedule run's, so only the
+        fire decisions of the risks whose probability changes can move. A probability of zero
+        is the mask the leave-one-out uses.
+        """
+        unknown = sorted(set(probabilities) - {r.risk_id for r in priced_risks})
+        if unknown:
+            raise ValueError(f"reprice: {unknown} are not priced by this period")
+        risks_at = [replace(r, probability=float(probabilities.get(r.risk_id, r.probability)))
+                    for r in priced_risks]
+        rerun = run_integrated_simulation(
+            config=config, risks=risks_at, risk_scope_df=risk_scope,
+            precomputed_severity_uniforms=severity_uniforms_by_risk_id)
+        return (np.asarray(rerun["cost_dollars_array"], dtype=float),
+                np.asarray(rerun["fired_array"], dtype=bool))
+
     finish_days = np.asarray(project_finish_days, dtype=float)
     schedule_days = finish_days - float(deterministic_finish_days)
     # A conditional run can finish EARLIER than the zero-risk pass only if the baseline itself
@@ -299,4 +339,9 @@ def run_integrated_period(
         deterministic_baseline_days=float(deterministic_finish_days),
         iterations=int(iterations),
         pinning=pinning,
+        per_risk_cost_array=np.asarray(cost_result["per_risk_cost_array"], dtype=float),
+        risk_ids_all=tuple(str(r) for r in cost_result["risk_ids_all"]),
+        project_finish_days=finish_days,
+        priced_probabilities={str(r.risk_id): float(r.probability or 0.0) for r in priced_risks},
+        reprice=reprice,
     )

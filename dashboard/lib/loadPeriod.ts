@@ -27,6 +27,7 @@ import type {
   Audit,
   AuditConfig,
   CalibrationGate,
+  Contingency,
   CpStats,
   Delta,
   DeltaEntry,
@@ -95,6 +96,8 @@ const metaSchema: z.ZodType<Meta> = z.object({
   // quietly stopped describing anything - it reads as a contract while gating nothing.
   engine_sha: z.string().nullable().optional(),
   engine_tree_dirty: z.boolean().nullable().optional(),
+  // 1.6, stage 2b: true when the contingency held figures are illustrative.
+  contingency_illustrative: z.boolean().optional(),
   // PROVCRLF01 (schema 1.3): {method, value} records, not bare strings. A 1.2
   // artefact no longer validates here, which is intended - the served set is
   // re-stamped in the same stage, and silently accepting both shapes would put
@@ -128,6 +131,7 @@ const headlineSchema: z.ZodType<Headline> = z.object({
 const trendPointSchema: z.ZodType<TrendPoint> = z.object({
   period_end: isoDate,
   p80_finish: isoDate,
+  contingency_p80_dollars: z.number().nullable(),
 });
 
 const trendSchema: z.ZodType<Trend> = z.object({
@@ -168,6 +172,11 @@ const riskSchema: z.ZodType<Risk> = z.object({
   // negatives are legitimate MC noise at the 10k-iter precision floor; the
   // chart clamps the bar length and the tooltip shows the raw figure.
   tornado_sample_sigma_days: z.number().nullable(),
+  // 1.6: masked leave-one-out dollars; null with no integrated result.
+  cost_p80_contribution_dollars: z.number().nullable(),
+  cost_part_dollars: z.number().nullable(),
+  delay_part_dollars: z.number().nullable(),
+  delay_days_saved_p80: z.number().nullable(),
 });
 
 const mitigationSchema: z.ZodType<Mitigation> = z.object({
@@ -180,6 +189,15 @@ const mitigationSchema: z.ZodType<Mitigation> = z.object({
   status: z.string(),
   days_saved_p80: z.number(),
   p80_finish_with_mitigation: isoDate,
+  dollars_saved_p80: z.number().nullable(),
+  within_noise: z
+    .object({
+      dollars: z.boolean(),
+      days: z.boolean(),
+      noise_dollars: z.number().nullable(),
+      noise_days: z.number().nullable(),
+    })
+    .nullable(),
 });
 
 const pBandMethodSchema: z.ZodType<PBandDerivationMethod> = z.enum([
@@ -277,16 +295,19 @@ const deltaEntrySchema: z.ZodType<DeltaEntry> = z.object({
   description: z.string(),
   change_meta: z.string(),
   delta_days: z.number(),
+  delta_dollars: z.number().nullable(),
 });
 
 const deltaPeriod0Schema: z.ZodType<DeltaPeriod0> = z.object({
   period_0: z.literal(true),
   note: z.string(),
+  p80_delta_dollars: z.null(),
 });
 
 const deltaSubsequentSchema: z.ZodType<DeltaSubsequent> = z.object({
   period_0: z.literal(false).optional(),
   p80_delta_days: z.number(),
+  p80_delta_dollars: z.number().nullable(),
   p80_previous: isoDate,
   p80_current: isoDate,
   worse: z.array(deltaEntrySchema),
@@ -363,6 +384,7 @@ const integratedSchema: z.ZodType<Integrated> = z.object({
     removed_risk_ids: z.array(z.string()),
     closed_risk_ids: z.array(z.string()),
     reprobabilised_risk_ids: z.array(z.string()),
+    priced_probabilities: z.record(z.string(), z.number()).nullable().optional(),
   }),
   // Contract 1.5, INTSCURVE-01 Part C: the integrated S-curve and the JCL.
   curve_points: z.array(z.object({ dollars: z.number(), cumulative_prob: z.number() })),
@@ -370,11 +392,114 @@ const integratedSchema: z.ZodType<Integrated> = z.object({
     basis: z.string(),
     jcl: z.number(),
     cost_target_dollars: z.number(),
+    // 1.6: the report's basis (INTVIEW-01 stage 2).
+    declared_base_dollars: z.number(),
+    base_drawn: z.boolean(),
     cost_confidence: z.number(),
     finish_target_date: z.string(),
     finish_confidence: z.number(),
+    p_level: z.number(),
     frontier_level: z.number(),
   }),
+  // Contract 1.6, INTVIEW-01 stage 2: every dollar the pages show, from the engine.
+  build_up: z.array(
+    z.object({
+      p_level: z.number(),
+      event_cost_dollars: z.number(),
+      delay_days: z.number(),
+      delay_cost_dollars: z.number(),
+      standalone_sum_dollars: z.number(),
+      joint_contingency_dollars: z.number(),
+      diversification_dollars: z.number(),
+    }),
+  ),
+  what_counts_where: z.string(),
+  day_rate_derivation: z.object({
+    day_rate_used: z.number(),
+    day_rate_stated: z.number(),
+    avg_prelims_weekly: z.number().nullable(),
+    schedule_duration_weeks: z.number().nullable(),
+    programme_working_days: z.number(),
+    day_rate_derived: z.number().nullable(),
+    gap_dollars: z.number().nullable(),
+    gap_flagged: z.boolean(),
+    note: z.string(),
+  }),
+  total_cost: z
+    .object({
+      label: z.string(),
+      declared_base_dollars: z.number(),
+      mean_dollars: z.number(),
+      rows: z.array(
+        z.object({
+          p_level: z.number(),
+          total_dollars: z.number(),
+          contingency_dollars: z.number(),
+        }),
+      ),
+      excluded_base_factors: z.array(z.string()),
+    })
+    .nullable(),
+  leave_one_out: z
+    .object({
+      p_level: z.number(),
+      iterations: z.number(),
+      replays: z.number(),
+      method: z.string(),
+    })
+    .nullable(),
+});
+
+const bridgeStepSchema = z.object({
+  key: z.enum(["closed", "new", "reassessed", "mitigations", "other"]),
+  label: z.string(),
+  dollars: z.number(),
+  risk_ids: z.array(z.string()),
+});
+
+const bridgeSchema = z.union([
+  z.object({
+    available: z.literal(true),
+    prior_period_end_date: isoDate.nullable(),
+    prior_p80_dollars: z.number(),
+    current_p80_dollars: z.number(),
+    order: z.array(z.string()),
+    steps: z.array(bridgeStepSchema),
+    method: z.string(),
+  }),
+  z.object({
+    available: z.literal(false),
+    reason: z.string(),
+    prior_period_end_date: isoDate.nullable(),
+  }),
+]);
+
+/** Contract 1.6: "recommended" before commitment; "held" from it (stage 2b). */
+const contingencySchema: z.ZodType<Contingency> = z.object({
+  phase: z.enum(["recommended", "held"]),
+  label: z.string(),
+  required_p80_dollars: z.number(),
+  held_dollars: z.number().nullable(),
+  commitment_date: isoDate.nullable(),
+  opening_held_dollars: z.number().nullable(),
+  approved_draws_dollars: z.number().nullable(),
+  pending_draws_dollars: z.number().nullable(),
+  releases_dollars: z.number().nullable(),
+  shortfall_dollars: z.number().nullable(),
+  jcl_against_held: z.number().nullable(),
+  cost_confidence_against_held: z.number().nullable(),
+  movements: z.array(
+    z.object({
+      date: isoDate,
+      type: z.enum(["Draw", "Release"]),
+      amount_dollars: z.number(),
+      status: z.enum(["Approved", "Pending"]),
+      risk_id: z.string().nullable(),
+      note: z.string().nullable(),
+    }),
+  ),
+  illustrative: z.boolean(),
+  bridge: bridgeSchema.nullable(),
 });
 
 /**
@@ -392,7 +517,7 @@ const integratedSchema: z.ZodType<Integrated> = z.object({
  * semantically changed field passes zod silently. A version-locked app must be redeployed in
  * step with the engine, which under §5.1's static export is already true.
  */
-export const SUPPORTED_SCHEMA_VERSION = "1.5";
+export const SUPPORTED_SCHEMA_VERSION = "1.6";
 
 export const periodDataSchema: z.ZodType<PeriodData> = z.object({
   schema_version: z.string(),
@@ -406,6 +531,8 @@ export const periodDataSchema: z.ZodType<PeriodData> = z.object({
   delta: deltaSchema,
   audit: auditSchema,
   integrated: integratedSchema.optional(),
+  // 1.6: present whenever `integrated` is.
+  contingency: contingencySchema.optional(),
 });
 
 export const projectIndexSchema = z.object({
@@ -513,6 +640,15 @@ export async function loadPeriodIndex(project: string): Promise<PeriodIndex> {
   return parsed.data;
 }
 
+function versionMismatchMessage(url: string, declared: string): string {
+  return (
+    `loadPeriod: ${url} declares period-JSON contract ${declared}, but ` +
+    `this build of the dashboard was written against ${SUPPORTED_SCHEMA_VERSION}. The ` +
+    `engine and the app must be deployed in step - rebuild and redeploy the dashboard ` +
+    `from the same commit as the engine that produced this period.`
+  );
+}
+
 /**
  * Fetch a single period JSON by filename (e.g. "period_20260528.json").
  * Returns the validated `PeriodData` shape.
@@ -532,6 +668,19 @@ export async function loadPeriod(project: string, filename: string): Promise<Per
     );
   }
   const raw = (await res.json()) as unknown;
+  // §5.2 decision A1: refuse a period this build was not written against, rather than
+  // render it and hope. A document that DECLARES another version is refused on that before
+  // its shape is checked (INTVIEW-01 stage 2): a 1.5 period read by the 1.6 app lacks every
+  // 1.6 field, and listing those as validation failures would report the symptom of the
+  // version rather than the version. A document whose declared version matches is still
+  // shape-checked first, so a malformed one reports its actual defect.
+  const declared =
+    raw !== null && typeof raw === "object"
+      ? (raw as { schema_version?: unknown }).schema_version
+      : undefined;
+  if (typeof declared === "string" && declared !== SUPPORTED_SCHEMA_VERSION) {
+    throw new Error(versionMismatchMessage(url, declared));
+  }
   const parsed = periodDataSchema.safeParse(raw);
   if (!parsed.success) {
     throw new Error(
@@ -540,16 +689,8 @@ export async function loadPeriod(project: string, filename: string): Promise<Per
       )}`,
     );
   }
-  // §5.2 decision A1: refuse a period this build was not written against, rather than
-  // render it and hope. Checked AFTER shape validation so a malformed document reports its
-  // actual defect rather than a version mismatch that is a symptom of it.
   if (parsed.data.schema_version !== SUPPORTED_SCHEMA_VERSION) {
-    throw new Error(
-      `loadPeriod: ${url} declares period-JSON contract ${parsed.data.schema_version}, but ` +
-        `this build of the dashboard was written against ${SUPPORTED_SCHEMA_VERSION}. The ` +
-        `engine and the app must be deployed in step - rebuild and redeploy the dashboard ` +
-        `from the same commit as the engine that produced this period.`,
-    );
+    throw new Error(versionMismatchMessage(url, parsed.data.schema_version));
   }
   // Part C (B-2): the document's own key must agree with the directory it came from.
   assertProjectKeyAgrees(parsed.data, project, url);

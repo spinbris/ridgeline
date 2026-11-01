@@ -73,6 +73,23 @@ export function formatAud(n: number): string {
   });
 }
 
+/**
+ * 7366574.6 -> "$7.37M". Display scaling only (INTVIEW-01): the tile reads the way the report
+ * headline does, and the expander beneath it carries the same figure to the dollar.
+ */
+export function formatAudMillions(n: number): string {
+  return `$${(n / 1_000_000).toFixed(2)}M`;
+}
+
+/**
+ * A signed movement in millions: 875398.11 -> "+$0.88M", -1211325 -> "-$1.21M", 0 -> "no change".
+ * Display only (INTVIEW-01 stage 2): the engine computes the movement; the app prints its sign.
+ */
+export function formatAudMillionsDelta(n: number): string {
+  if (n === 0) return "no change";
+  return `${n > 0 ? "+" : "-"}${formatAudMillions(Math.abs(n))}`;
+}
+
 /** "Open" -> badge-class suffix "open"; mitigation statuses have their own keys. */
 export function statusBadgeKey(
   status: string,

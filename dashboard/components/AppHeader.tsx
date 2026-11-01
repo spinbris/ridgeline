@@ -37,7 +37,7 @@ const ROLE_ROUTES: Record<Role, string> = {
 // - period date). Kept as a separate small lookup here rather than a shared
 // import, to avoid touching PageNav's existing working nav logic.
 const PAGE_TITLES: Record<string, string> = {
-  "/": "Where we are",
+  "/": "How much and when",
   "/risks": "What's driving risk",
   "/mitigations": "What we could do",
   "/changes": "What changed",
@@ -98,7 +98,7 @@ export function AppHeader({
 
   return (
     <header
-      className="flex items-center justify-between px-6 py-3 text-white print:hidden"
+      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-3 text-white print:hidden"
       style={{
         background: "var(--color-header)",
         borderBottom: "3px solid var(--color-accent)",
@@ -122,7 +122,8 @@ export function AppHeader({
         </Link>
       </div>
 
-      <div className="flex items-center gap-4">
+      {/* INTVIEW-01 property 10: below sm the title, period picker and role toggle stack. */}
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
         {/* Period picker */}
         {availablePeriods.length > 0 && (
           <label className="flex items-center gap-2 text-xs">

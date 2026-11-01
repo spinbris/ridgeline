@@ -50,6 +50,8 @@ export interface Meta {
   // until contract 1.4 removes them", and part A removes them ahead of the 1.4 bump
   // because keeping a dead field costs a reader more than the sequencing saves.
   engine_tree_dirty?: boolean | null;
+  // 1.6, stage 2b: present and true when the contingency held figures are illustrative.
+  contingency_illustrative?: boolean;
   // PROVCRLF01 (schema 1.3): each digest carries the method that produced it.
   // A tracked input is identified by its git blob OID, which is normalised for
   // line endings and therefore identical on every machine at the same commit;
@@ -99,6 +101,8 @@ export interface Headline {
 export interface TrendPoint {
   period_end: string; // YYYY-MM-DD
   p80_finish: string; // YYYY-MM-DD
+  /** 1.6: the period's risk contingency P80; null for a prior period that carried none. */
+  contingency_p80_dollars: number | null;
 }
 
 export interface Trend {
@@ -150,6 +154,14 @@ export interface Risk {
   // when non-null; null for risks outside the evaluated set or with a
   // skipped re-run (the chart falls back to tornado_sigma_days).
   tornado_sample_sigma_days: number | null;
+  /**
+   * 1.6 (INTVIEW-01 stage 2): masked leave-one-out on the integrated P80, split cost then delay.
+   * Null when the period has no integrated result; zero for a risk the period removed.
+   */
+  cost_p80_contribution_dollars: number | null;
+  cost_part_dollars: number | null;
+  delay_part_dollars: number | null;
+  delay_days_saved_p80: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -173,6 +185,17 @@ export interface Mitigation {
   status: MitigationStatus | string;
   days_saved_p80: number;
   p80_finish_with_mitigation: string; // YYYY-MM-DD
+  /** 1.6: saving on the integrated P80 (Proposed rows only, as days_saved_p80), else null. */
+  dollars_saved_p80: number | null;
+  within_noise: MitigationNoise | null;
+}
+
+/** 1.6: a saving below twice the batch standard error of its own replay, per arm. */
+export interface MitigationNoise {
+  dollars: boolean;
+  days: boolean;
+  noise_dollars: number | null;
+  noise_days: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -262,6 +285,8 @@ export interface DeltaEntry {
   description: string;
   change_meta: string;
   delta_days: number;
+  /** 1.6: the risk's P80 contribution movement; null when either period lacks it. */
+  delta_dollars: number | null;
 }
 
 /**
@@ -273,11 +298,14 @@ export interface DeltaEntry {
 export interface DeltaPeriod0 {
   period_0: true;
   note: string;
+  p80_delta_dollars: null;
 }
 
 export interface DeltaSubsequent {
   period_0?: false;
   p80_delta_days: number;
+  /** 1.6: contingency P80 against the prior period; null when the prior carried none. */
+  p80_delta_dollars: number | null;
   p80_previous: string;
   p80_current: string;
   worse: DeltaEntry[];
@@ -353,6 +381,9 @@ export interface IntegratedPinning {
   removed_risk_ids: string[];
   closed_risk_ids: string[];
   reprobabilised_risk_ids: string[];
+  // 1.6, stage 2b: the probability each priced risk ran at, so the next period's bridge can
+  // rebuild this one. Null on a file written before 2b.
+  priced_probabilities?: Record<string, number> | null;
 }
 
 /** Contract 1.5 (INTSCURVE-01 Part C): one point of the integrated S-curve. */
@@ -369,10 +400,109 @@ export interface IntegratedJcl {
   basis: string;
   jcl: number;
   cost_target_dollars: number;
+  /** 1.6: the report's basis. Budget = declared base + P80 contingency when base_drawn. */
+  declared_base_dollars: number;
+  base_drawn: boolean;
   cost_confidence: number;
   finish_target_date: string; // YYYY-MM-DD
   finish_confidence: number;
+  p_level: number;
   frontier_level: number;
+}
+
+/** 1.6: one P-level of the build-up. Every figure is the engine's; the app adds nothing. */
+export interface BuildUpRow {
+  p_level: number;
+  event_cost_dollars: number;
+  delay_days: number;
+  delay_cost_dollars: number;
+  standalone_sum_dollars: number;
+  joint_contingency_dollars: number;
+  diversification_dollars: number;
+}
+
+export interface DayRateDerivation {
+  day_rate_used: number;
+  day_rate_stated: number;
+  avg_prelims_weekly: number | null;
+  schedule_duration_weeks: number | null;
+  programme_working_days: number;
+  day_rate_derived: number | null;
+  gap_dollars: number | null;
+  gap_flagged: boolean;
+  note: string;
+}
+
+/** 1.6: analyst only (D-2). */
+export interface TotalCost {
+  label: string;
+  declared_base_dollars: number;
+  mean_dollars: number;
+  rows: { p_level: number; total_dollars: number; contingency_dollars: number }[];
+  excluded_base_factors: string[];
+}
+
+export interface LeaveOneOutNote {
+  p_level: number;
+  iterations: number;
+  replays: number;
+  method: string;
+}
+
+/** 1.6, stage 2b: one draw or release in the contingency ledger, from commitment to period end. */
+export interface ContingencyMovement {
+  date: string; // YYYY-MM-DD
+  type: "Draw" | "Release";
+  amount_dollars: number;
+  status: "Approved" | "Pending";
+  risk_id: string | null;
+  note: string | null;
+}
+
+/** 1.6, stage 2b: one bar of the P80 bridge. "other" is what the replay could not rebuild. */
+export interface BridgeStep {
+  key: "closed" | "new" | "reassessed" | "mitigations" | "other";
+  label: string;
+  dollars: number;
+  risk_ids: string[];
+}
+
+/**
+ * 1.6, stage 2b: last period's P80 to this one's (D-5). `null` at period 0; `available: false`
+ * with a reason when last period's file cannot seed it.
+ */
+export type ContingencyBridge =
+  | {
+      available: true;
+      prior_period_end_date: string | null;
+      prior_p80_dollars: number;
+      current_p80_dollars: number;
+      order: string[];
+      steps: BridgeStep[];
+      method: string;
+    }
+  | { available: false; reason: string; prior_period_end_date: string | null };
+
+/**
+ * 1.6 top-level. Phase "recommended" before commitment (every held field null); phase "held"
+ * from the commitment date. `shortfall_dollars` is required less held, so negative is headroom.
+ */
+export interface Contingency {
+  phase: "recommended" | "held";
+  label: string;
+  required_p80_dollars: number;
+  held_dollars: number | null;
+  commitment_date: string | null;
+  opening_held_dollars: number | null;
+  approved_draws_dollars: number | null;
+  pending_draws_dollars: number | null;
+  releases_dollars: number | null;
+  shortfall_dollars: number | null;
+  jcl_against_held: number | null;
+  cost_confidence_against_held: number | null;
+  movements: ContingencyMovement[];
+  illustrative: boolean;
+  bridge: ContingencyBridge | null;
 }
 
 export interface Integrated {
@@ -391,6 +521,11 @@ export interface Integrated {
   // Contract 1.5
   curve_points: IntegratedCurvePoint[];
   jcl: IntegratedJcl;
+  build_up: BuildUpRow[];
+  what_counts_where: string;
+  day_rate_derivation: DayRateDerivation;
+  total_cost: TotalCost | null;
+  leave_one_out: LeaveOneOutNote | null;
 }
 
 export interface PeriodData {
@@ -405,6 +540,7 @@ export interface PeriodData {
   delta: Delta;
   audit: Audit;
   integrated?: Integrated;
+  contingency?: Contingency;
 }
 
 /**

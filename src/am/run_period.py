@@ -28,9 +28,11 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import hashlib
+import json
 import logging
 import sys
 from pathlib import Path
+from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
@@ -54,7 +56,7 @@ from src.am.conditional_runner import (
     ConditionalRunInputs,
     run_conditional_mc,
 )
-from src.am.json_writer import write_period_json
+from src.am.json_writer import previous_period_json, write_period_json
 from src.am.metrics import (
     AMMetrics,
     DEFAULT_CI_THRESHOLD,
@@ -216,6 +218,73 @@ def _period_seed(seed: int | None, project: str) -> tuple[int, str]:
             f"project {project!r} declares no period_seed in its binding, and no --seed was "
             f"given. A period run has no default seed: declare one in the binding, or pass --seed.")
     return parse_seed(declared, where=f"binding {project!r} period_seed"), SEED_SOURCE_BINDING
+
+
+def _attach_report_basis(
+    integrated_result: Any,
+    *,
+    cond_result: Any,
+    register_path: Path,
+    strawman_path: Path,
+    deterministic_finish_days: float,
+    iterations: int,
+    seed: int,
+    prior_period_path: Path | None = None,
+    mitigations: Sequence[dict[str, Any]] = (),
+) -> Any:
+    """INTVIEW-01 stage 2 (contract 1.6): what the period needs to report on the report's basis.
+
+    The base, drawn by ``deliverable_base_layer`` on its own stream at the period's seed and
+    iterations, so no event-risk array moves (property 1); the report's masked leave-one-out,
+    replayed on the period kernel (property 3); and the run-config inputs to the day-rate
+    derivation (property 2). A replay that fails its positive control raises: the brief rules no
+    fallback to the force-close re-run.
+    """
+    from dataclasses import replace as dc_replace
+
+    from src.am.conditional_runner import replay_schedule_days
+    from src.am.integrated_views import (
+        MITIGATION_STEP_STATUSES, SAVING_P_LEVEL, bridge_p80_evaluator, period_bridge,
+        period_leave_one_out,
+    )
+    from src.integrated.base_layer import deliverable_base_layer
+    from src.sra.strawman_reader import read_run_config
+
+    base_layer = deliverable_base_layer(register_path, int(iterations), int(seed))
+    loo = period_leave_one_out(
+        integrated_result,
+        schedule_risk_ids=tuple(cond_result.pinned_drivers.keys()),
+        fire_mask=cond_result.fire_mask,
+        replay_delay_days=lambda mask: replay_schedule_days(
+            cond_result, mask, deterministic_finish_days),
+    )
+    try:
+        run_config = dict(read_run_config(str(strawman_path)) or {})
+    except Exception as exc:  # the derivation is explanatory; its absence is stated, not fatal
+        logger.warning("Run config unreadable for the day-rate derivation: %s", exc)
+        run_config = None
+    # Stage 2b property 11: the P80 bridge from last period, on this run's own draws.
+    bridge = None
+    if prior_period_path is not None:
+        prior_doc = json.loads(Path(prior_period_path).read_text(encoding="utf-8"))
+        schedule_ids = tuple(cond_result.pinned_drivers.keys())
+        bridge = period_bridge(
+            current_p80_dollars=float(np.percentile(
+                integrated_result.integrated_dollars_array, SAVING_P_LEVEL)),
+            prior_doc=prior_doc,
+            current_probabilities=dict(integrated_result.priced_probabilities or {}),
+            closed_risk_ids=integrated_result.pinning.closed_risk_ids,
+            mitigated_risk_ids=[
+                m["risk_id"] for m in mitigations
+                if m.get("risk_id") and str(m.get("status") or "").strip().lower()
+                in MITIGATION_STEP_STATUSES],
+            p80_at=bridge_p80_evaluator(
+                integrated_result, schedule_risk_ids=schedule_ids,
+                replay_delay_days=lambda mask: replay_schedule_days(
+                    cond_result, mask, deterministic_finish_days)),
+        )
+    return dc_replace(integrated_result, base_layer=base_layer, leave_one_out=loo,
+                      run_config=run_config, bridge=bridge)
 
 
 def run_period(
@@ -409,6 +478,19 @@ def run_period(
         # it. Recorded in the audit block and logged, never silently absent.
         integrated_unavailable_reason = str(exc)
         logger.warning("Integrated result unavailable for this period: %s", exc)
+
+    if integrated_result is not None:
+        integrated_result = _attach_report_basis(
+            integrated_result,
+            cond_result=cond_result,
+            register_path=register_path,
+            strawman_path=pinputs.strawman_path,
+            deterministic_finish_days=deterministic_finish_h / hours_per_day,
+            iterations=main_iterations,
+            seed=seed,
+            prior_period_path=previous_period_json(output_dir, period_end),
+            mitigations=workbook_data.mitigations,
+        )
 
     # Metrics layer.
     logger.info("Computing AM metrics")

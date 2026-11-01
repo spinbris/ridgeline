@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.5",
+  "schema_version": "1.6",
   "meta": {
     "period_end_date": "2026-02-28",
     "previous_period_end_date": null,
-    "engine_run_date": "2026-10-28T07:22:30Z",
-    "engine_run_hash": "feb4051a-3aba-49f9-864b-f6669608b8e3",
+    "engine_run_date": "2026-10-30T07:32:24Z",
+    "engine_run_hash": "26b6f7a7-090a-412b-9bbc-fdb6da0c9e75",
     "register_version": "Tropic Ridge Wind Farm",
     "workbook_filename": "wind_period_01.xlsx",
     "xer_filename": "wind_schedule.xer",
@@ -13,7 +13,7 @@
     "seed_source": "override",
     "project_key": "synthetic_wind",
     "project_display_name": "Tropic Ridge Wind Farm",
-    "engine_sha": "ee35f2fd301ece8b5e57623f4e5f19f950967c7f",
+    "engine_sha": "795ef3b8cda739ea716b3d490e0e8044725201d6",
     "engine_tree_dirty": false,
     "input_sha256": {
       "register": {
@@ -50,7 +50,8 @@
     "periods": [
       {
         "period_end": "2026-02-28",
-        "p80_finish": "2026-06-30"
+        "p80_finish": "2026-06-30",
+        "contingency_p80_dollars": 7366574.6
       }
     ]
   },
@@ -71,7 +72,11 @@
       "mode": "Series",
       "cg_code": null,
       "tornado_sigma_days": 2.47,
-      "tornado_sample_sigma_days": 5.21
+      "tornado_sample_sigma_days": 5.21,
+      "cost_p80_contribution_dollars": 823087.32,
+      "cost_part_dollars": 400377.36,
+      "delay_part_dollars": 422709.96,
+      "delay_days_saved_p80": 13.02
     },
     {
       "risk_id": "WT-031",
@@ -89,7 +94,11 @@
       "mode": "Series",
       "cg_code": null,
       "tornado_sigma_days": 1.25,
-      "tornado_sample_sigma_days": 2.57
+      "tornado_sample_sigma_days": 2.57,
+      "cost_p80_contribution_dollars": 357484.66,
+      "cost_part_dollars": 206826.65,
+      "delay_part_dollars": 150658.01,
+      "delay_days_saved_p80": 5.24
     },
     {
       "risk_id": "WT-001",
@@ -107,7 +116,11 @@
       "mode": "Series",
       "cg_code": null,
       "tornado_sigma_days": 1.43,
-      "tornado_sample_sigma_days": 2.98
+      "tornado_sample_sigma_days": 2.98,
+      "cost_p80_contribution_dollars": 406273.13,
+      "cost_part_dollars": 161132.57,
+      "delay_part_dollars": 245140.56,
+      "delay_days_saved_p80": 6.5
     },
     {
       "risk_id": "WT-009",
@@ -125,7 +138,11 @@
       "mode": "Hybrid",
       "cg_code": null,
       "tornado_sigma_days": 1.5,
-      "tornado_sample_sigma_days": 2.68
+      "tornado_sample_sigma_days": 2.68,
+      "cost_p80_contribution_dollars": 537372.39,
+      "cost_part_dollars": 354444.41,
+      "delay_part_dollars": 182927.98,
+      "delay_days_saved_p80": 6.22
     },
     {
       "risk_id": "WT-021",
@@ -143,7 +160,11 @@
       "mode": "Series",
       "cg_code": null,
       "tornado_sigma_days": 1.45,
-      "tornado_sample_sigma_days": 2.72
+      "tornado_sample_sigma_days": 2.72,
+      "cost_p80_contribution_dollars": 357484.66,
+      "cost_part_dollars": 199571.56,
+      "delay_part_dollars": 157913.1,
+      "delay_days_saved_p80": 6.98
     },
     {
       "risk_id": "WT-032",
@@ -161,7 +182,11 @@
       "mode": "Hybrid",
       "cg_code": null,
       "tornado_sigma_days": 0.97,
-      "tornado_sample_sigma_days": 1.95
+      "tornado_sample_sigma_days": 1.95,
+      "cost_p80_contribution_dollars": 324574.86,
+      "cost_part_dollars": 178417.41,
+      "delay_part_dollars": 146157.45,
+      "delay_days_saved_p80": 4.03
     },
     {
       "risk_id": "WT-002",
@@ -179,7 +204,11 @@
       "mode": "Hybrid",
       "cg_code": null,
       "tornado_sigma_days": 1.08,
-      "tornado_sample_sigma_days": 1.91
+      "tornado_sample_sigma_days": 1.91,
+      "cost_p80_contribution_dollars": 284684.15,
+      "cost_part_dollars": 138653.89,
+      "delay_part_dollars": 146030.26,
+      "delay_days_saved_p80": 4.94
     },
     {
       "risk_id": "WT-020",
@@ -197,7 +226,11 @@
       "mode": "Parallel",
       "cg_code": null,
       "tornado_sigma_days": 0.52,
-      "tornado_sample_sigma_days": 1.31
+      "tornado_sample_sigma_days": 1.31,
+      "cost_p80_contribution_dollars": 108931.0,
+      "cost_part_dollars": 47325.58,
+      "delay_part_dollars": 61605.42,
+      "delay_days_saved_p80": 1.62
     },
     {
       "risk_id": "WT-026",
@@ -215,7 +248,11 @@
       "mode": "Hybrid",
       "cg_code": null,
       "tornado_sigma_days": 0.7,
-      "tornado_sample_sigma_days": 1.65
+      "tornado_sample_sigma_days": 1.65,
+      "cost_p80_contribution_dollars": 129570.46,
+      "cost_part_dollars": 57729.85,
+      "delay_part_dollars": 71840.61,
+      "delay_days_saved_p80": 2.58
     },
     {
       "risk_id": "WT-027",
@@ -233,7 +270,11 @@
       "mode": "Parallel",
       "cg_code": null,
       "tornado_sigma_days": 0.52,
-      "tornado_sample_sigma_days": 1.26
+      "tornado_sample_sigma_days": 1.26,
+      "cost_p80_contribution_dollars": 77320.77,
+      "cost_part_dollars": 57729.85,
+      "delay_part_dollars": 19590.91,
+      "delay_days_saved_p80": 1.3
     }
   ],
   "mitigations": [],
@@ -626,7 +667,8 @@
   },
   "delta": {
     "period_0": true,
-    "note": "First period; no prior data for delta"
+    "note": "First period; no prior data for delta",
+    "p80_delta_dollars": null
   },
   "audit": {
     "config": {
@@ -703,7 +745,44 @@
       "risks_reprobabilised": 0,
       "removed_risk_ids": [],
       "closed_risk_ids": [],
-      "reprobabilised_risk_ids": []
+      "reprobabilised_risk_ids": [],
+      "priced_probabilities": {
+        "WT-001": 0.45,
+        "WT-002": 0.5,
+        "WT-003": 0.35,
+        "WT-004": 0.25,
+        "WT-005": 0.55,
+        "WT-006": 0.3,
+        "WT-007": 0.4,
+        "WT-008": 0.4,
+        "WT-009": 0.45,
+        "WT-010": 0.3,
+        "WT-011": 0.25,
+        "WT-012": 0.6,
+        "WT-013": 0.35,
+        "WT-014": 0.2,
+        "WT-015": 0.15,
+        "WT-016": 0.45,
+        "WT-017": 0.4,
+        "WT-018": 0.3,
+        "WT-019": 0.25,
+        "WT-020": 0.35,
+        "WT-021": 0.3,
+        "WT-022": 0.4,
+        "WT-023": 0.3,
+        "WT-024": 0.25,
+        "WT-025": 0.2,
+        "WT-026": 0.35,
+        "WT-027": 0.35,
+        "WT-028": 0.25,
+        "WT-029": 0.3,
+        "WT-030": 0.25,
+        "WT-031": 0.5,
+        "WT-032": 0.45,
+        "WT-033": 0.3,
+        "WT-034": 0.25,
+        "WT-035": 0.4
+      }
     },
     "curve_points": [
       {
@@ -792,13 +871,105 @@
       }
     ],
     "jcl": {
-      "basis": "event-risk cost (delay cost excluded) against project finish; budget = P80 integrated contingency, finish = P80 finish; cost and schedule sampled jointly",
-      "jcl": 0.794,
-      "cost_target_dollars": 7366574.6,
-      "cost_confidence": 0.955,
+      "basis": "budget = the declared base ($50.00M) plus the P80 contingency, cost axis = base drawn + event-risk cost; delay cost excluded from the cost axis because delay is on the finish axis; finish = P80 finish; cost and schedule sampled jointly. The report's basis.",
+      "jcl": 0.5105,
+      "cost_target_dollars": 57366574.6,
+      "declared_base_dollars": 50000000.0,
+      "base_drawn": true,
+      "cost_confidence": 0.594,
       "finish_target_date": "2026-06-30",
       "finish_confidence": 0.8,
+      "p_level": 80,
       "frontier_level": 0.7
+    },
+    "build_up": [
+      {
+        "p_level": 50,
+        "event_cost_dollars": 3746844.02,
+        "delay_days": 40.733,
+        "delay_cost_dollars": 1425643.31,
+        "standalone_sum_dollars": 5172487.33,
+        "joint_contingency_dollars": 5198699.53,
+        "diversification_dollars": -26212.2
+      },
+      {
+        "p_level": 80,
+        "event_cost_dollars": 5368652.27,
+        "delay_days": 61.352,
+        "delay_cost_dollars": 2147322.63,
+        "standalone_sum_dollars": 7515974.91,
+        "joint_contingency_dollars": 7366574.6,
+        "diversification_dollars": 149400.3
+      },
+      {
+        "p_level": 90,
+        "event_cost_dollars": 6346720.99,
+        "delay_days": 73.324,
+        "delay_cost_dollars": 2566341.25,
+        "standalone_sum_dollars": 8913062.24,
+        "joint_contingency_dollars": 8702610.43,
+        "diversification_dollars": 210451.81
+      }
+    ],
+    "what_counts_where": "Risk event costs exclude site running costs (prelims, site overheads) while the job runs late. Those are priced once, on the delay line, and only for delay that survives float. Standby caused by a specific event, such as a crane stood down waiting on wind or a demobilise and remobilise, stays in that risk's own cost.",
+    "day_rate_derivation": {
+      "day_rate_used": 35000.0,
+      "day_rate_stated": 35000.0,
+      "avg_prelims_weekly": null,
+      "schedule_duration_weeks": 90.0,
+      "programme_working_days": 590.0,
+      "day_rate_derived": null,
+      "gap_dollars": null,
+      "gap_flagged": false,
+      "note": "The register does not state average prelims per week, so the rate is shown as stated and not derived."
+    },
+    "total_cost": {
+      "label": "Total cost = base estimate drawn + event-risk cost + delay cost, as the report's total-cost table. Analyst view only (D-2).",
+      "declared_base_dollars": 50000000.0,
+      "mean_dollars": 58192798.61,
+      "rows": [
+        {
+          "p_level": 50,
+          "total_dollars": 57922475.07,
+          "contingency_dollars": 7922475.07
+        },
+        {
+          "p_level": 80,
+          "total_dollars": 61604494.92,
+          "contingency_dollars": 11604494.92
+        },
+        {
+          "p_level": 90,
+          "total_dollars": 63620341.16,
+          "contingency_dollars": 13620341.16
+        }
+      ],
+      "excluded_base_factors": [
+        "Duration"
+      ]
+    },
+    "leave_one_out": {
+      "p_level": 80,
+      "iterations": 2000,
+      "replays": 10,
+      "method": "Per-risk dollars are leave-one-out at P80 on the integrated total, by masking: the risk's fire record is switched off and only the schedule kernel is replayed, every other risk's draws held fixed (the report's method). Cost is removed first, then delay; the split is stated, not unique. Bars do not sum to the total."
     }
+  },
+  "contingency": {
+    "phase": "recommended",
+    "label": "Recommended at P80",
+    "required_p80_dollars": 7366574.6,
+    "held_dollars": null,
+    "commitment_date": null,
+    "opening_held_dollars": null,
+    "approved_draws_dollars": null,
+    "pending_draws_dollars": null,
+    "releases_dollars": null,
+    "shortfall_dollars": null,
+    "jcl_against_held": null,
+    "cost_confidence_against_held": null,
+    "movements": [],
+    "illustrative": false,
+    "bridge": null
   }
 }

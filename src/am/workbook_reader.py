@@ -35,6 +35,7 @@ Discipline:
 
 from __future__ import annotations
 
+import datetime as _dt
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -122,6 +123,26 @@ MITIGATION_COLUMNS: tuple[str, ...] = (
 
 # Doc 2 v2.2 §"Engine reading notes" item 4: blank Owner -> "Unassigned"
 UNASSIGNED_OWNER = "Unassigned"
+
+#: INTVIEW-01 stage 2b (property 9): the optional contingency sheet. Two labelled cells -
+#: found by their label in column A, never by row - and a movements table found by its header
+#: row. An absent sheet, or a blank commitment date, means the project has not committed a
+#: budget yet: the period reports contingency as "recommended at P80", never as funded.
+AM_CONTINGENCY_SHEET = "AM_Contingency"
+CONTINGENCY_LABELS: dict[str, str] = {
+    "commitment_date": "Commitment date",
+    "opening_held": "Opening held (AUD)",
+    "illustrative": "Illustrative",
+}
+CONTINGENCY_COLUMNS: tuple[str, ...] = (
+    "Date", "Type", "Amount_AUD", "Status", "Risk_ID", "Note",
+)
+CONTINGENCY_TYPES: frozenset[str] = frozenset({"Draw", "Release"})
+CONTINGENCY_STATUSES: frozenset[str] = frozenset({"Approved", "Pending"})
+#: How far down the sheet the reader looks for the labels and the header row, and how many
+#: movement rows it reads below the header.
+CONTINGENCY_SCAN_ROWS = 20
+CONTINGENCY_MAX_MOVEMENTS = 200
 
 # Doc 2 v2.2 §4: "Claude" sheet is leftover working notes; ignore.
 IGNORED_SHEETS: frozenset[str] = frozenset({"Claude"})
@@ -504,6 +525,107 @@ def _read_mitigations(wb: Workbook) -> list[dict[str, Any]]:
 
 
 # ---------------------------------------------------------------------------
+# Contingency (INTVIEW-01 stage 2b)
+# ---------------------------------------------------------------------------
+
+def _as_date(value: Any, where: str) -> _dt.date | None:
+    if value in (None, ""):
+        return None
+    if isinstance(value, _dt.datetime):
+        return value.date()
+    if isinstance(value, _dt.date):
+        return value
+    try:
+        return _dt.date.fromisoformat(str(value).strip())
+    except ValueError as exc:
+        raise WorkbookReaderError(f"{AM_CONTINGENCY_SHEET} {where}: {value!r} is not a date") from exc
+
+
+def _as_amount(value: Any, where: str) -> float:
+    try:
+        amount = float(value)
+    except (TypeError, ValueError) as exc:
+        raise WorkbookReaderError(
+            f"{AM_CONTINGENCY_SHEET} {where}: {value!r} is not an amount") from exc
+    if amount < 0:
+        raise WorkbookReaderError(
+            f"{AM_CONTINGENCY_SHEET} {where}: {amount} is negative. Record a release as a "
+            f"Release row, not a negative draw")
+    return amount
+
+
+def _read_contingency(wb: Workbook) -> dict[str, Any] | None:
+    """The contingency inputs, or ``None`` when the workbook carries no contingency sheet.
+
+    Header-driven (invariant 10): the two scalars sit beside their labels in column A wherever
+    those are, and the movements table starts below whichever row carries all six headers.
+    A commitment date with no opening amount is refused: it would read as committed and unfunded.
+    """
+    if AM_CONTINGENCY_SHEET not in wb.sheetnames:
+        return None
+    ws = wb[AM_CONTINGENCY_SHEET]
+
+    labelled: dict[str, Any] = {}
+    header_row: int | None = None
+    columns: dict[str, int] = {}
+    for row in range(1, CONTINGENCY_SCAN_ROWS + 1):
+        label = ws.cell(row=row, column=1).value
+        for key, text in CONTINGENCY_LABELS.items():
+            if label is not None and str(label).strip() == text:
+                labelled[key] = ws.cell(row=row, column=2).value
+        found = {str(c.value).strip(): c.column for c in ws[row] if c.value is not None}
+        if header_row is None and all(h in found for h in CONTINGENCY_COLUMNS):
+            header_row, columns = row, found
+    if header_row is None:
+        raise WorkbookReaderError(
+            f"{AM_CONTINGENCY_SHEET} has no movements header row (needs {list(CONTINGENCY_COLUMNS)} "
+            f"within the first {CONTINGENCY_SCAN_ROWS} rows)")
+
+    commitment = _as_date(labelled.get("commitment_date"), "Commitment date")
+    opening_raw = labelled.get("opening_held")
+    opening = None if opening_raw in (None, "") else _as_amount(opening_raw, "Opening held (AUD)")
+    if commitment is not None and opening is None:
+        raise WorkbookReaderError(
+            f"{AM_CONTINGENCY_SHEET}: a commitment date is entered but no opening held amount. "
+            f"Enter the amount committed at that date, or clear the date to stay at 'recommended'")
+    illustrative = str(labelled.get("illustrative") or "").strip().lower() in ("yes", "true", "y")
+
+    movements: list[dict[str, Any]] = []
+    for row in range(header_row + 1, header_row + 1 + CONTINGENCY_MAX_MOVEMENTS):
+        raw = {name: ws.cell(row=row, column=columns[name]).value for name in CONTINGENCY_COLUMNS}
+        if all(v in (None, "") for v in raw.values()):
+            continue
+        where = f"row {row}"
+        kind = str(raw["Type"] or "").strip().capitalize()
+        status = str(raw["Status"] or "").strip().capitalize()
+        if kind not in CONTINGENCY_TYPES:
+            raise WorkbookReaderError(
+                f"{AM_CONTINGENCY_SHEET} {where}: Type {raw['Type']!r} is not one of "
+                f"{sorted(CONTINGENCY_TYPES)}")
+        if status not in CONTINGENCY_STATUSES:
+            raise WorkbookReaderError(
+                f"{AM_CONTINGENCY_SHEET} {where}: Status {raw['Status']!r} is not one of "
+                f"{sorted(CONTINGENCY_STATUSES)}")
+        date = _as_date(raw["Date"], where)
+        if date is None:
+            raise WorkbookReaderError(f"{AM_CONTINGENCY_SHEET} {where}: the movement has no date")
+        movements.append({
+            "date": date,
+            "type": kind,
+            "amount": _as_amount(raw["Amount_AUD"], where),
+            "status": status,
+            "risk_id": str(raw["Risk_ID"]).strip() if raw["Risk_ID"] not in (None, "") else None,
+            "note": str(raw["Note"]).strip() if raw["Note"] not in (None, "") else None,
+        })
+    return {
+        "commitment_date": commitment,
+        "opening_held": opening,
+        "illustrative": illustrative,
+        "movements": movements,
+    }
+
+
+# ---------------------------------------------------------------------------
 # am_risk_ids -- the AM in-scope set from the AM_Include helper column
 # ---------------------------------------------------------------------------
 #
@@ -619,6 +741,8 @@ class WorkbookData:
     milestones: list[dict[str, Any]]
     mitigations: list[dict[str, Any]]
     am_risk_ids: list[str]  # AM in-scope set; register-sourced (AM06)
+    #: INTVIEW-01 stage 2b: ``None`` when the workbook has no contingency sheet.
+    contingency: dict[str, Any] | None = None
 
 
 def read_workbook(
@@ -685,4 +809,5 @@ def read_workbook(
         milestones=_read_milestones(wb),
         mitigations=_read_mitigations(wb),
         am_risk_ids=am_risk_ids,
+        contingency=_read_contingency(wb),
     )

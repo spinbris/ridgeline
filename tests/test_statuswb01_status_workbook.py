@@ -170,7 +170,9 @@ def test_tracked_template_is_what_the_builder_produces(tmp_path):
 def test_template_carries_the_contract_and_no_rows(tmp_path):
     p = build_template(tmp_path / "t.xlsx")
     wb = openpyxl.load_workbook(p)
-    assert wb.sheetnames == ["Risk Register", "AM_Period_Status", "AM_Milestones", "AM_Mitigation_Log"]
+    # INTVIEW-01 stage 2b adds the optional AM_Contingency sheet, blank (= not committed).
+    assert wb.sheetnames == ["Risk Register", "AM_Period_Status", "AM_Milestones",
+                             "AM_Mitigation_Log", "AM_Contingency"]
     assert set(wb.defined_names) >= {"am_period_end", "am_previous_period", "am_period_notes"}
     ps = wb["AM_Period_Status"]
     assert ps.cell(row=14, column=1).value == "Risk_ID"

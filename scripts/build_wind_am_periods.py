@@ -69,6 +69,9 @@ AM_STATUS_FIRST_DATA_ROW = 15
 AM_MILESTONES_SHEET = "AM_Milestones"
 AM_MITIGATION_SHEET = "AM_Mitigation_Log"
 RISK_REGISTER_SHEET = "Risk Register"
+AM_CONTINGENCY_SHEET = "AM_Contingency"
+CONTINGENCY_COLUMNS = ("Date", "Type", "Amount_AUD", "Status", "Risk_ID", "Note")
+CONTINGENCY_HEADER_ROW = 6
 AM_INCLUDE_COL = 69  # column BQ
 AM_INCLUDE_FIRST_ROW = 5
 
@@ -94,6 +97,43 @@ MILESTONES = [
     ("WM-03", "Grid connection energised", _dt.date(2026, 5, 31)),
     ("WM-04", "Commissioning complete", _dt.date(2026, 6, 30)),
 ]
+
+
+# ---------------------------------------------------------------------------
+# Illustrative contingency held (INTVIEW-01 stage 2b, property 12)
+# ---------------------------------------------------------------------------
+# ILLUSTRATIVE, and labelled so in the workbook and in the period JSON's meta: Tropic Ridge is a
+# synthetic project with no cost controller. The owner commits the budget mid-March (between
+# periods 01 and 02), opening held at about the P80 recommended at that point; period 01 is
+# before commitment and shows "Recommended at P80". The ledger is cumulative - each period lists
+# every movement to date - as a cost controller's would be.
+
+COMMITMENT_DATE = _dt.date(2026, 3, 16)
+OPENING_HELD = 7_500_000
+CONTINGENCY_LEDGER = {
+    2: [
+        (_dt.date(2026, 3, 27), "Draw", 450000, "Approved", "WT-008",
+         "Vessel standby while the delivery window is re-secured"),
+    ],
+    3: [
+        (_dt.date(2026, 3, 27), "Draw", 450000, "Approved", "WT-008",
+         "Vessel standby while the delivery window is re-secured"),
+        (_dt.date(2026, 4, 14), "Draw", 280000, "Approved", "WT-009",
+         "Backup crane mobilisation"),
+        (_dt.date(2026, 4, 28), "Draw", 600000, "Pending", "WT-021",
+         "Grid connection redesign variation, under assessment"),
+    ],
+    4: [
+        (_dt.date(2026, 3, 27), "Draw", 450000, "Approved", "WT-008",
+         "Vessel standby while the delivery window is re-secured"),
+        (_dt.date(2026, 4, 14), "Draw", 280000, "Approved", "WT-009",
+         "Backup crane mobilisation"),
+        (_dt.date(2026, 5, 12), "Draw", 520000, "Approved", "WT-021",
+         "Grid connection redesign variation, agreed at assessment"),
+        (_dt.date(2026, 5, 20), "Release", 200000, "Approved", "WT-009",
+         "Crane risk closed; unused allowance returned"),
+    ],
+}
 
 
 # ---------------------------------------------------------------------------
@@ -213,6 +253,15 @@ def _add_defined_name(wb: Workbook, name: str, ref: str) -> None:
     wb.defined_names[name] = DefinedName(name, attr_text=ref)
 
 
+def write_contingency_frame(wb: Workbook):
+    """The optional ``AM_Contingency`` sheet, labels and header only: blank = not committed."""
+    ct = wb.create_sheet(AM_CONTINGENCY_SHEET)
+    ct["A1"], ct["A2"], ct["A3"] = "Commitment date", "Opening held (AUD)", "Illustrative"
+    for c, col in enumerate(CONTINGENCY_COLUMNS, start=1):
+        ct.cell(row=CONTINGENCY_HEADER_ROW, column=c, value=col)
+    return ct
+
+
 def _build_workbook(spec: dict | None) -> Workbook:
     """Build one wind AM workbook. ``spec=None`` builds the empty template."""
     wb = Workbook()
@@ -307,6 +356,17 @@ def _build_workbook(spec: dict | None) -> Workbook:
         for c, col in enumerate(MITIGATION_COLUMNS, start=1):
             mt.cell(row=row, column=c, value=vals[col])
 
+    # --- AM_Contingency (illustrative; from commitment only) ---
+    ledger = (spec or {}).get("contingency")
+    if ledger is not None:
+        ct = write_contingency_frame(wb)
+        ct["B1"], ct["B2"], ct["B3"] = COMMITMENT_DATE, OPENING_HELD, "Yes"
+        ct["A4"] = ("ILLUSTRATIVE: Tropic Ridge is synthetic. These held, drawn and released "
+                    "amounts are invented to show the contingency panel, not a cost record.")
+        for i, entry in enumerate(ledger, start=1):
+            for c, value in enumerate(entry, start=1):
+                ct.cell(row=CONTINGENCY_HEADER_ROW + i, column=c, value=value)
+
     return wb
 
 
@@ -317,6 +377,8 @@ def main() -> int:
     tmpl.save(tmpl_path)
     print(f"wrote {tmpl_path}")
     for i, spec in enumerate(PERIODS, start=1):
+        if i in CONTINGENCY_LEDGER:
+            spec = {**spec, "contingency": CONTINGENCY_LEDGER[i]}
         wb = _build_workbook(spec)
         path = OUT_DIR / f"wind_period_{i:02d}.xlsx"
         wb.save(path)

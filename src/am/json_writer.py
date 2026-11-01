@@ -62,7 +62,7 @@ logger = logging.getLogger(__name__)
 # risks[].divergence_flag field (Doc 3 contract v2.4 -> v2.5). A field
 # removal must move the version so a consumer can detect it; zod accepts
 # the new value. Structural-major stays 1; this is a contract-minor bump.
-SCHEMA_VERSION = "1.5"  # INTSCURVE-01 Part C: `integrated.curve_points` and `integrated.jcl`
+SCHEMA_VERSION = "1.6"  # INTVIEW-01 stage 2: integrated numbers on the report basis
 # 1.3 = PROVCRLF01 (input_sha256 values became {method, value} records).
 # 1.4 = stage 7 part B / SPEC §5.2 decision C2, ruled 05/09/2026: the integrated
 # cost-plus-schedule result reaches the cycle, in a NEW top-level block rather than inside
@@ -76,6 +76,12 @@ SCHEMA_VERSION = "1.5"  # INTSCURVE-01 Part C: `integrated.curve_points` and `in
 # `distribution.s_curve_points`) and `jcl` (the joint confidence level at the D-3 target pair).
 # Additive inside an optional block, but bumped because the app checks equality and a 1.4 app
 # would draw nothing from fields it does not know.
+# 1.6 = INTVIEW-01 stage 2 (Director, 29/10/2026): every dollar the app shows comes from here.
+# `integrated.jcl` moves to the report's basis (base drawn, `stage3_jcl` itself); `integrated`
+# gains `build_up`, `day_rate_derivation`, `total_cost` and `leave_one_out`; each `risks[]` row
+# its masked leave-one-out dollars; each `mitigations[]` row its dollars saved and noise flag;
+# `delta` and `trend` the contingency movement; and a top-level `contingency` block, phase 1
+# ("recommended") only, its shape fixed so stage 2b fills it without a second bump.
 HOURS_PER_DAY = 8.0
 
 # AM08 / AIA-01: presentation threshold for period-over-period per-risk
@@ -279,8 +285,14 @@ def _build_risks(
     workbook_data: WorkbookData,
     am_metrics: AMMetrics,
     project_finish_p80_days: float,
+    leave_one_out: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """Per-risk dashboard rows. Sorted by days_at_risk_p80 descending."""
+    """Per-risk dashboard rows. Sorted by days_at_risk_p80 descending.
+
+    1.6: each row carries its masked leave-one-out dollars when the integrated arm ran, null
+    when it did not. A risk the period removed from the cost arm contributes nothing, so zero.
+    """
+    loo_rows = (leave_one_out or {}).get("rows") if leave_one_out else None
     by_id = {ps.risk_id: ps for ps in pinned_states}
     ws_by_id = {r["risk_id"]: r for r in workbook_data.risk_status}
 
@@ -356,10 +368,61 @@ def _build_risks(
                 float(am_metrics.tornado_sigma_days_per_risk.get(rid, 0.0)), 2
             ),
             "tornado_sample_sigma_days": tornado_sample_sigma_days,
+            **_risk_dollars(loo_rows, rid),
         })
 
     rows.sort(key=lambda r: r["days_at_risk_p80"], reverse=True)
     return rows
+
+
+def _risk_dollars(loo_rows: dict[str, Any] | None, rid: str) -> dict[str, Any]:
+    """1.6 property 3: a risk's masked leave-one-out dollars, split, and its delay days saved."""
+    keys = ("cost_p80_contribution_dollars", "cost_part_dollars", "delay_part_dollars",
+            "delay_days_saved_p80")
+    if loo_rows is None:
+        return dict.fromkeys(keys)
+    r = loo_rows.get(rid)
+    if r is None:
+        return dict.fromkeys(keys, 0.0)
+    return {
+        "cost_p80_contribution_dollars": round(float(r["saved_dollars"]), 2),
+        "cost_part_dollars": round(float(r["cost_part_dollars"]), 2),
+        "delay_part_dollars": round(float(r["delay_part_dollars"]), 2),
+        "delay_days_saved_p80": round(float(r["delay_days_saved"]), 2),
+    }
+
+
+def _mitigation_dollars(
+    loo_rows: dict[str, Any] | None, risk_id: Any, status: Any,
+) -> dict[str, Any]:
+    """1.6 property 4: a mitigation's saving on the integrated total, and the noise flag.
+
+    A mitigation's counterfactual removes its linked risk (``_apply_counterfactual_mitigation``),
+    so its saving at P80 is that risk's masked leave-one-out. Carried for the rows that have a
+    counterfactual at all - ``Proposed``, as ``days_saved_p80`` is - so no row reads "0 days
+    saved" beside a dollar saving; the others are null. ``within_noise`` is judged on both
+    arms, the dollars and the delay days, each against twice the batch standard error of the
+    same replay (``integrated_views.NOISE_BATCHES``).
+    """
+    from src.am.integrated_views import within_noise
+
+    r = (loo_rows or {}).get(str(risk_id)) if risk_id is not None else None
+    if r is None or status != "Proposed":
+        return {"dollars_saved_p80": None, "within_noise": None}
+    return {
+        "dollars_saved_p80": round(float(r["saved_dollars"]), 2),
+        "within_noise": {
+            "dollars": within_noise(r["saved_dollars"], r["noise_dollars"]),
+            "days": within_noise(r["delay_days_saved"], r["noise_days"]),
+            "noise_dollars": _round_or_none(r["noise_dollars"], 2),
+            "noise_days": _round_or_none(r["noise_days"], 2),
+        },
+    }
+
+
+def _round_or_none(v: Any, nd: int) -> float | None:
+    f = float(v)
+    return round(f, nd) if math.isfinite(f) else None
 
 
 def _build_mitigations(
@@ -368,7 +431,9 @@ def _build_mitigations(
     am_metrics: AMMetrics,
     project_start: _dt.date,
     baseline_p80_hours: float,
+    leave_one_out: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    loo_rows = (leave_one_out or {}).get("rows") if leave_one_out else None
     rows: list[dict[str, Any]] = []
     for m in workbook_data.mitigations:
         mit_id = m.get("mitigation_id")
@@ -391,6 +456,7 @@ def _build_mitigations(
             "status": (m.get("status") or "").lower(),
             "days_saved_p80": round(days_saved, 1),
             "p80_finish_with_mitigation": _isoformat_date(p80_with_mit_date),
+            **_mitigation_dollars(loo_rows, m.get("risk_id"), m.get("status")),
         })
     rows.sort(key=lambda r: r["days_saved_p80"], reverse=True)
     return rows
@@ -598,14 +664,26 @@ def _delta_net_summary(
     return sentence
 
 
+def _contribution(r: dict[str, Any] | None) -> float | None:
+    v = (r or {}).get("cost_p80_contribution_dollars")
+    return float(v) if isinstance(v, (int, float)) else None
+
+
+def _dollar_move(curr: float | None, prev: float | None) -> float | None:
+    """1.6: a dollar movement, null unless both periods carry the figure (a 1.5 prior does not)."""
+    return None if curr is None or prev is None else round(curr - prev, 2)
+
+
 def _build_delta(
     *,
     headline: dict[str, Any],
     current_risks: list[dict[str, Any]],
     previous_period_path: Path | None,
+    current_p80_dollars: float | None = None,
 ) -> dict[str, Any]:
     if previous_period_path is None:
-        return {"period_0": True, "note": "First period; no prior data for delta"}
+        return {"period_0": True, "note": "First period; no prior data for delta",
+                "p80_delta_dollars": None}
     try:
         with previous_period_path.open("r", encoding="utf-8") as fh:
             prev = json.load(fh)
@@ -614,10 +692,12 @@ def _build_delta(
             "Could not load previous-period JSON at %s: %s; delta skipped",
             previous_period_path, exc,
         )
-        return {"period_0": False, "note": "Previous JSON unreadable; delta skipped"}
+        return {"period_0": False, "note": "Previous JSON unreadable; delta skipped",
+                "p80_delta_dollars": None}
     prev_p80 = prev.get("headline", {}).get("p80_finish")
     if prev_p80 is None:
-        return {"period_0": False, "note": "Previous JSON missing p80_finish"}
+        return {"period_0": False, "note": "Previous JSON missing p80_finish",
+                "p80_delta_dollars": None}
     prev_p80_date = _dt.date.fromisoformat(prev_p80)
     curr_p80_date = _dt.date.fromisoformat(headline["p80_finish"])
     delta_days = int((curr_p80_date - prev_p80_date).days)
@@ -646,6 +726,7 @@ def _build_delta(
                 "risk_id": rid, "description": title,
                 "change_meta": f"New this period; {curr_d:.1f} days at risk",
                 "delta_days": round(curr_d, 1),
+                "delta_dollars": _dollar_move(_contribution(curr_r), 0.0),
             })
             continue
         prev_d = max(0.0, float(prev_r.get("days_at_risk_p80", 0.0) or 0.0))
@@ -656,6 +737,7 @@ def _build_delta(
                 "risk_id": rid, "description": title,
                 "change_meta": f"Closed this period; was {prev_d:.1f} days at risk",
                 "delta_days": round(-prev_d, 1),
+                "delta_dollars": _dollar_move(0.0, _contribution(prev_r)),
             })
             continue
         move = curr_d - prev_d
@@ -664,12 +746,14 @@ def _build_delta(
                 "risk_id": rid, "description": title,
                 "change_meta": _delta_change_meta(prev_r, curr_r),
                 "delta_days": round(move, 1),
+                "delta_dollars": _dollar_move(_contribution(curr_r), _contribution(prev_r)),
             })
         elif move <= -t:
             better.append({
                 "risk_id": rid, "description": title,
                 "change_meta": _delta_change_meta(prev_r, curr_r),
                 "delta_days": round(move, 1),
+                "delta_dollars": _dollar_move(_contribution(curr_r), _contribution(prev_r)),
             })
 
     # Risks present last period but absent this period (removed from the run).
@@ -682,6 +766,7 @@ def _build_delta(
                 "risk_id": rid, "description": prev_r.get("title") or rid,
                 "change_meta": f"Removed this period; was {prev_d:.1f} days at risk",
                 "delta_days": round(-prev_d, 1),
+                "delta_dollars": _dollar_move(0.0, _contribution(prev_r)),
             })
 
     # Sort by magnitude, cap 3 each side, degrade to actual count (D3).
@@ -690,8 +775,13 @@ def _build_delta(
     worse = worse[:3]
     better = better[:3]
 
+    prev_dollars = (prev.get("integrated") or {}).get("p80_dollars")
     return {
         "p80_delta_days": delta_days,
+        # 1.6 property 5: the contingency P80 against the prior period's JSON.
+        "p80_delta_dollars": _dollar_move(
+            current_p80_dollars,
+            float(prev_dollars) if isinstance(prev_dollars, (int, float)) else None),
         "p80_previous": prev_p80,
         "p80_current": headline["p80_finish"],
         "worse": worse,
@@ -701,8 +791,11 @@ def _build_delta(
     }
 
 
-def _build_trend(*, data_dir: Path, current_p80: str, current_period_end: str) -> dict[str, Any]:
-    """Last 5 prior periods + current."""
+def _build_trend(
+    *, data_dir: Path, current_p80: str, current_period_end: str,
+    current_p80_dollars: float | None = None,
+) -> dict[str, Any]:
+    """Last 5 prior periods + current. 1.6: each with its contingency P80, null when absent."""
     periods: list[dict[str, str]] = []
     if data_dir.is_dir():
         prior = sorted(
@@ -713,13 +806,17 @@ def _build_trend(*, data_dir: Path, current_p80: str, current_period_end: str) -
             try:
                 with p.open("r", encoding="utf-8") as fh:
                     d = json.load(fh)
+                dollars = (d.get("integrated") or {}).get("p80_dollars")
                 periods.append({
                     "period_end": d["meta"]["period_end_date"],
                     "p80_finish": d["headline"]["p80_finish"],
+                    "contingency_p80_dollars": (
+                        float(dollars) if isinstance(dollars, (int, float)) else None),
                 })
             except (OSError, json.JSONDecodeError, KeyError):
                 continue
-    periods.append({"period_end": current_period_end, "p80_finish": current_p80})
+    periods.append({"period_end": current_period_end, "p80_finish": current_p80,
+                    "contingency_p80_dollars": current_p80_dollars})
     return {"periods": periods}
 
 
@@ -736,8 +833,13 @@ def _build_integrated(result: Any, project_start: _dt.date) -> dict[str, Any]:
 
     from src.integrated.run_config_contract import require_day_rate
 
+    from src.am.integrated_views import (
+        WHAT_COUNTS_WHERE, build_up, day_rate_derivation, period_total_cost, total_cost_block,
+    )
+
     integrated = result.integrated_dollars_array
     probs = np.linspace(0.0, 1.0, 21)
+    total_cost = period_total_cost(result)
     return {
         "basis": "cost + dollarised schedule delay, with risk states pinned from the status workbook on both arms",
         # Re-asserted at the point of PUBLICATION, not merely at the point of calculation. The
@@ -770,6 +872,11 @@ def _build_integrated(result: Any, project_start: _dt.date) -> dict[str, Any]:
             "removed_risk_ids": list(result.pinning.removed_risk_ids),
             "closed_risk_ids": list(result.pinning.closed_risk_ids),
             "reprobabilised_risk_ids": list(result.pinning.reprobabilised_risk_ids),
+            # 1.6 (stage 2b): what each priced risk ran at, so the next period's bridge can
+            # rebuild this one. Unrounded: the bridge replays fires against it.
+            "priced_probabilities": (
+                None if getattr(result, "priced_probabilities", None) is None
+                else dict(result.priced_probabilities)),
         },
         # 1.5: the integrated S-curve, as `distribution.s_curve_points` is the finish one.
         "curve_points": [
@@ -777,36 +884,79 @@ def _build_integrated(result: Any, project_start: _dt.date) -> dict[str, Any]:
              "cumulative_prob": round(float(p), 2)}
             for p in probs
         ],
-        "jcl": _build_jcl(result, project_start),
+        "jcl": _build_jcl(result, project_start, total_cost),
+        # 1.6 property 2: each part at its own P-level, and what joining them saves.
+        "build_up": build_up(
+            result.cost_dollars_array, result.schedule_days_array,
+            require_day_rate(result.day_rate, caller="json_writer._build_integrated.build_up")),
+        "what_counts_where": WHAT_COUNTS_WHERE,
+        "day_rate_derivation": day_rate_derivation(
+            result.run_config,
+            day_rate=require_day_rate(result.day_rate, caller="json_writer.day_rate_derivation"),
+            programme_working_days=result.deterministic_baseline_days),
+        # 1.6 property 6: analyst only (D-2).
+        "total_cost": total_cost_block(total_cost),
+        "leave_one_out": None if result.leave_one_out is None else {
+            "p_level": result.leave_one_out["p_level"],
+            "iterations": result.leave_one_out["iterations"],
+            "replays": result.leave_one_out["replays"],
+            "method": result.leave_one_out["method"],
+        },
     }
 
 
-def _build_jcl(result: Any, project_start: _dt.date) -> dict[str, Any]:
-    """1.5: the joint confidence level at the D-3 target pair (INTSCURVE-01 Part C).
+def _build_contingency(
+    result: Any, p80_dollars: float, *, workbook_data: WorkbookData, period_end_date: _dt.date,
+) -> dict[str, Any]:
+    """1.6 properties 7, 10 and 11: recommended or held against required, and the P80 bridge.
 
-    Cost axis: event-risk cost alone, delay cost EXCLUDED - delay is already on the finish axis.
-    The period route draws no base, so the cost target is the P80 integrated contingency on its
-    own. Finish axis: the baseline plus each iteration's delay, paired with the cost arm by index
-    (the two arms run on the same fire record). Finish target: the P80 finish.
+    Same P80 as the integrated block, by construction. The JCL against held uses the base the
+    headline JCL uses, so the two differ only in the budget line.
     """
-    from src.integrated.jcl import JCL_FRONTIER_LEVEL, jcl_data
+    from src.am.integrated_views import (
+        contingency_block, jcl_against_held, period_total_cost,
+    )
 
-    finish_days = float(result.deterministic_baseline_days) + np.asarray(
-        result.schedule_days_array, dtype=float)
-    out = jcl_data(
-        result.cost_dollars_array, finish_days,
-        cost_target=float(np.percentile(result.integrated_dollars_array, 80)),
-        finish_target=float(np.percentile(finish_days, 80)), level=JCL_FRONTIER_LEVEL)
+    bridge = getattr(result, "bridge", None)
+    block = contingency_block(p80_dollars, workbook_data.contingency,
+                              period_end=period_end_date, bridge=bridge)
+    if block["held_dollars"] is None:
+        return block
+    total_cost = period_total_cost(result) if result.base_layer is not None else None
+    held_jcl = jcl_against_held(result, total_cost, block["held_dollars"])
+    return contingency_block(p80_dollars, workbook_data.contingency, period_end=period_end_date,
+                             held_jcl=held_jcl, bridge=bridge)
+
+
+def _build_jcl(
+    result: Any, project_start: _dt.date, total_cost: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """1.6 property 1: the JCL on the report's basis, by the report's own function.
+
+    ``stage3_jcl`` on the period's arrays: cost axis = base drawn + event-risk cost (delay cost
+    excluded, it is on the finish axis), cost target = declared base + the P80 contingency,
+    finish target = the P80 finish (D-3). With Layer 1 off no base is drawn, the cost axis is
+    event cost alone, and ``base_drawn`` and the basis say so. In 1.5 the period drew no base
+    and so published 79% against the report's 52%; the gap was the base alone.
+    """
+    from src.am.integrated_views import jcl_basis_sentence, period_jcl
+    from src.integrated.jcl import JCL_FRONTIER_LEVEL
+
+    out = period_jcl(result, total_cost)
+    if out is None:
+        return None
     return {
-        "basis": "event-risk cost (delay cost excluded) against project finish; budget = P80 "
-                 "integrated contingency, finish = P80 finish; cost and schedule sampled jointly",
+        "basis": jcl_basis_sentence(out),
         "jcl": round(out["jcl"], 4),
         "cost_target_dollars": round(out["cost_target"], 2),
+        "declared_base_dollars": round(out["declared_base_dollars"], 2),
+        "base_drawn": bool(out["base_drawn"]),
         "cost_confidence": round(out["cost_confidence"], 4),
         "finish_target_date": _isoformat_date(
             _working_days_to_calendar_date(project_start, out["finish_target"])),
         "finish_confidence": round(out["finish_confidence"], 4),
-        "frontier_level": out["level"],
+        "p_level": int(out["p_level"]),
+        "frontier_level": float(JCL_FRONTIER_LEVEL),
     }
 
 
@@ -964,6 +1114,18 @@ def _validate(doc: dict[str, Any]) -> None:
 # Public entry point
 # ---------------------------------------------------------------------------
 
+def period_json_filename(period_end_date: _dt.date) -> str:
+    return f"period_{period_end_date.strftime('%Y%m%d')}.json"
+
+
+def previous_period_json(output_dir: Path, period_end_date: _dt.date) -> Path | None:
+    """The latest period file in ``output_dir`` dated before this one: the delta's and the
+    bridge's "last period", found the same way for both."""
+    this = period_json_filename(period_end_date)
+    prior = sorted(p for p in Path(output_dir).glob("period_*.json") if p.name < this)
+    return prior[-1] if prior else None
+
+
 def write_period_json(
     *,
     conditional_result: ConditionalRunResult,
@@ -1028,18 +1190,23 @@ def write_period_json(
     )
     baseline_p80_days = baseline_p80_hours / HOURS_PER_DAY
 
+    loo = getattr(integrated_result, "leave_one_out", None) if integrated_result else None
+    p80_dollars = (round(float(np.percentile(integrated_result.integrated_dollars_array, 80)), 2)
+                   if integrated_result is not None else None)
     risks = _build_risks(
         pinned_states=conditional_result.pinned_states,
         risk_drivers=risk_drivers,
         workbook_data=workbook_data,
         am_metrics=am_metrics,
         project_finish_p80_days=baseline_p80_days,
+        leave_one_out=loo,
     )
     mitigations = _build_mitigations(
         workbook_data=workbook_data,
         am_metrics=am_metrics,
         project_start=project_start,
         baseline_p80_hours=baseline_p80_hours,
+        leave_one_out=loo,
     )
     activities = _build_activities(
         am_metrics=am_metrics,
@@ -1057,22 +1224,20 @@ def write_period_json(
 
     # Find previous-period JSON for delta.
     output_dir.mkdir(parents=True, exist_ok=True)
-    period_filename = f"period_{period_end_date.strftime('%Y%m%d')}.json"
-    period_path = output_dir / period_filename
-    prior_jsons = sorted(
-        p for p in output_dir.glob("period_*.json") if p.name < period_filename
-    )
-    previous_period_path = prior_jsons[-1] if prior_jsons else None
+    period_path = output_dir / period_json_filename(period_end_date)
+    previous_period_path = previous_period_json(output_dir, period_end_date)
 
     delta = _build_delta(
         headline=headline,
         current_risks=risks,
         previous_period_path=previous_period_path,
+        current_p80_dollars=p80_dollars,
     )
     trend = _build_trend(
         data_dir=output_dir,
         current_p80=headline["p80_finish"],
         current_period_end=meta["period_end_date"],
+        current_p80_dollars=p80_dollars,
     )
 
     audit = _build_audit(
@@ -1114,6 +1279,11 @@ def write_period_json(
     # and calling a defect.
     if integrated_result is not None:
         doc["integrated"] = _build_integrated(integrated_result, project_start)
+        doc["contingency"] = _build_contingency(
+            integrated_result, doc["integrated"]["p80_dollars"],
+            workbook_data=workbook_data, period_end_date=period_end_date)
+        if doc["contingency"]["illustrative"]:
+            meta["contingency_illustrative"] = True
     elif integrated_unavailable_reason:
         audit["integrated_unavailable"] = integrated_unavailable_reason
 

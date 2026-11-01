@@ -16,7 +16,7 @@ import { usePathname } from "next/navigation";
 import { normalisePath, roleFromPathname } from "@/lib/PeriodContext";
 
 const PM_PAGES: { href: string; label: string }[] = [
-  { href: "/", label: "1. Where we are" },
+  { href: "/", label: "1. How much and when" },
   { href: "/risks/", label: "2. What's driving risk" },
   { href: "/mitigations/", label: "3. What we could do" },
   { href: "/changes/", label: "4. What changed" },
@@ -36,7 +36,7 @@ export function PageNav() {
 
   return (
     <nav
-      className="flex gap-1 px-6 py-3 bg-white border-b print:hidden"
+      className="flex flex-wrap gap-1 px-4 sm:px-6 py-3 bg-white border-b print:hidden"
       style={{ borderColor: "var(--color-card-border)" }}
       aria-label="Page navigation"
     >
