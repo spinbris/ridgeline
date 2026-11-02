@@ -45,6 +45,8 @@ _DIVERGENT = {
 #: gate equals their prefix - both groups are "mapped" for the fabrication check.
 _MAPPED_IDS = frozenset(_DIVERGENT) | {
     "WT-002", "WT-009", "WT-021", "WT-026", "WT-027",
+    # WINDREAL-01: the five newly Time=Yes risks, each 1:1 on its own gate.
+    "WT-003", "WT-012", "WT-022", "WT-024", "WT-028",
 }
 
 

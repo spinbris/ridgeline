@@ -180,9 +180,11 @@ def test_no_double_count_guard() -> None:
 # Validation / build checks
 # ---------------------------------------------------------------------------
 
-def test_showcase_base_sums_to_50m() -> None:
+def test_showcase_base_sums_to_declared_total() -> None:
     cfg = build_showcase_layer1()
-    assert cfg.base.sum() == pytest.approx(50_000_000.0, abs=1.0)
+    # WINDREAL-01: $120M (was $50M). Exact equality; pytest.approx is banned for goldens
+    # and adds nothing here, since the matrix is written in cents-exact $M.
+    assert abs(cfg.base.sum() - 120_000_000.0) <= 1.0
     validate_layer1(cfg)  # no raise
 
 
@@ -231,16 +233,19 @@ def test_validate_layer1_raises_on_bad_config() -> None:
 # shifting under a numerical-library patch rather than of a changed model: a mean
 # averages ULP noise away, a percentile and a single draw do not.
 _PINNED_100K = {
-    "base_p80": 55996935.2302684,
-    "base_mean": 53047282.15178579,
-    "owner_cost_p80": 57213788.19364301,
-    "owner_cost_mean": 54116663.19843759,
+    # WINDREAL-01 (01/11/2026): the $120M re-scale. Each value is the $50M pin x2.4 to within
+    # rounding, as Layer 1 is linear in the base. Captured on the blessing machine (the XPS)
+    # at the Stage C re-bless; the cloud box lands a few ULP away on the first-five draws.
+    "base_p80": 134392644.55264413,
+    "base_mean": 127313477.16428591,
+    "owner_cost_p80": 135550367.34053126,
+    "owner_cost_mean": 128382858.21093774,
     "cost_first5": [
-        54411202.063912526,
-        52116775.134729736,
-        53336411.29811651,
-        52807186.05413784,
-        60793528.88331425,
+        130022679.61769375,
+        124225272.12890898,
+        122924535.22035377,
+        126247253.64274384,
+        141736666.19401994,
     ],
 }
 

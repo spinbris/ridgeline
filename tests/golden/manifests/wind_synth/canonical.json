@@ -8,27 +8,27 @@
   "inputs_sha256": {
     "tests/fixtures/synthetic_wind/wind_register.xlsx": {
       "method": "git_blob_oid",
-      "value": "328806c739dbb635786055d2ee2948cee4882b74"
+      "value": "b4d077f65fd07d3e4872d6c44112d1a5a0fcc1d3"
     },
     "tests/fixtures/synthetic_wind/wind_schedule.xer": {
       "method": "git_blob_oid",
-      "value": "5cbed8f12994c6f82b1c4809dd8791f58add2764"
+      "value": "73e5c92cfd2df97b19c10ff85d4c3e525b8c6877"
     }
   },
-  "engine_ref": "PUBLICFACE-01-11-g928f8ae",
+  "engine_ref": "INTVIEW-01-10-ge5be2e2-dirty",
   "environment": {
     "python": "3.12.4",
     "numpy": "1.26.4"
   },
   "headline": {
-    "p50": "0x1.41b8936cf92eap+22",
-    "p80": "0x1.cb0865bbb68abp+22",
-    "p90": "0x1.09a3fa875b29ap+23",
-    "mean": "0x1.4ecea4ea32efbp+22"
+    "p50": "0x1.41efbc5d9863ep+23",
+    "p80": "0x1.c1008020d6dd7p+23",
+    "p90": "0x1.01fd8ed3da8d0p+24",
+    "mean": "0x1.4af78351a76f7p+23"
   },
   "blessed": {
-    "date": "2026-10-08",
+    "date": "2026-11-01",
     "by": "Steve",
-    "reason": "CONFIGTRUTH-01: golden provenance refresh on the clean tree at 928f8ae (the P5 bless, Director 08/10/2026: 'bless yes'); engine_ref only"
+    "reason": "WINDREAL-01 re-scale to a real 40 MW farm, Director-approved 01/11/2026"
   }
 }

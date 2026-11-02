@@ -464,7 +464,7 @@ That refusal is the gate working.
 status workbook, then serve the build:
 
 ```powershell
-python -m src.am.run_period --workbook status_periods\wind_period_01.xlsx --project synthetic_wind --output-dir data --project-start 2024-01-01
+python -m src.am.run_period --workbook status_periods\wind_period_01.xlsx --project synthetic_wind --output-dir data --project-start 2025-04-28
 .\PUBLISH_PERIOD.bat <json-path-printed-above> --project synthetic_wind
 python -m http.server 4173 -d dashboard\out
 ```

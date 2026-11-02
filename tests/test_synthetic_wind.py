@@ -80,7 +80,7 @@ def test_cost_mc_produces_pbands():
     from src.v5_register_reader import read_risks_v5
 
     risks = read_risks_v5(str(WIND_REGISTER))
-    assert len(risks) == 35
+    assert len(risks) == 30  # WINDREAL-01: 30 risks (35 before)
     assert all(r.risk_id.startswith("WT-") for r in risks)
 
     cfg = SimConfig(n_iter=3000, seed=42)
@@ -123,7 +123,8 @@ def test_cascade_kernel_fires_on_wind_group():
     )
     assert result.n_groups >= 1
     assert "WT-CAS" in result.group_membership
-    assert sorted(result.group_membership["WT-CAS"]) == [15, 16]  # WT-016, WT-017
+    idx = [i for i, r in enumerate(risks) if r.risk_id in ("WT-016", "WT-017")]
+    assert sorted(result.group_membership["WT-CAS"]) == idx == [13, 14]  # WT-016, WT-017
 
 
 # ---------------------------------------------------------------------------
@@ -136,7 +137,7 @@ def test_stage25_schedule_mc_produces_pbands():
     from src.sra.strawman_reader import read_risk_scope
 
     risk_scope = read_risk_scope(str(WIND_REGISTER))
-    assert (risk_scope["time_impact"] == "Yes").sum() == 10
+    assert (risk_scope["time_impact"] == "Yes").sum() == 15  # WINDREAL-01 (10 before)
 
     cfg = SRAConfig(
         register_path=WIND_REGISTER, p6_path=WIND_XER, strawman_path=WIND_REGISTER,

@@ -75,7 +75,8 @@ CONTINGENCY_HEADER_ROW = 6
 AM_INCLUDE_COL = 69  # column BQ
 AM_INCLUDE_FIRST_ROW = 5
 
-# The 10 schedule-driving WT risks (register baseline prob + mode + owner).
+# The 15 schedule-driving WT risks (register baseline prob + mode + owner). WINDREAL-01 added
+# the five risks the re-scale coded Time=Yes (WT-003/012/022/024/028).
 TRACKED_RISKS = [
     ("WT-001", "Turbine foundation rework", 0.45, "Series", "Civil Lead"),
     ("WT-002", "Access road wet-weather damage", 0.50, "Hybrid", "Civil Lead"),
@@ -87,6 +88,11 @@ TRACKED_RISKS = [
     ("WT-027", "Substation E&I commissioning slip", 0.35, "Parallel", "Substation Lead"),
     ("WT-031", "SCADA integration defects", 0.50, "Series", "Commissioning Lead"),
     ("WT-032", "Turbine commissioning faults", 0.45, "Hybrid", "Commissioning Lead"),
+    ("WT-003", "Unforeseen ground conditions", 0.35, "Hybrid", "Civil Lead"),
+    ("WT-012", "Erection weather standby", 0.60, "Hybrid", "Erection Lead"),
+    ("WT-022", "Network operator approval delay", 0.40, "Series", "Grid Lead"),
+    ("WT-024", "Grid compliance test failure", 0.25, "Series", "Commissioning Lead"),
+    ("WT-028", "Power transformer delivery delay", 0.25, "Series", "Substation Lead"),
 ]
 BASELINE_PROB = {r[0]: r[2] for r in TRACKED_RISKS}
 
@@ -108,29 +114,32 @@ MILESTONES = [
 # before commitment and shows "Recommended at P80". The ledger is cumulative - each period lists
 # every movement to date - as a cost controller's would be.
 
+# WINDREAL-01 (01/11/2026): re-set by the same rule on the $120M re-scale. Period 01's P80
+# contingency is $14.68M (20k iterations, seed 42), so opening held is $14.7M; every ledger
+# amount and mitigation cost is x2.4, rounded to $10k, as the risk costs were.
 COMMITMENT_DATE = _dt.date(2026, 3, 16)
-OPENING_HELD = 7_500_000
+OPENING_HELD = 14_700_000
 CONTINGENCY_LEDGER = {
     2: [
-        (_dt.date(2026, 3, 27), "Draw", 450000, "Approved", "WT-008",
+        (_dt.date(2026, 3, 27), "Draw", 1080000, "Approved", "WT-008",
          "Vessel standby while the delivery window is re-secured"),
     ],
     3: [
-        (_dt.date(2026, 3, 27), "Draw", 450000, "Approved", "WT-008",
+        (_dt.date(2026, 3, 27), "Draw", 1080000, "Approved", "WT-008",
          "Vessel standby while the delivery window is re-secured"),
-        (_dt.date(2026, 4, 14), "Draw", 280000, "Approved", "WT-009",
+        (_dt.date(2026, 4, 14), "Draw", 670000, "Approved", "WT-009",
          "Backup crane mobilisation"),
-        (_dt.date(2026, 4, 28), "Draw", 600000, "Pending", "WT-021",
+        (_dt.date(2026, 4, 28), "Draw", 1440000, "Pending", "WT-021",
          "Grid connection redesign variation, under assessment"),
     ],
     4: [
-        (_dt.date(2026, 3, 27), "Draw", 450000, "Approved", "WT-008",
+        (_dt.date(2026, 3, 27), "Draw", 1080000, "Approved", "WT-008",
          "Vessel standby while the delivery window is re-secured"),
-        (_dt.date(2026, 4, 14), "Draw", 280000, "Approved", "WT-009",
+        (_dt.date(2026, 4, 14), "Draw", 670000, "Approved", "WT-009",
          "Backup crane mobilisation"),
-        (_dt.date(2026, 5, 12), "Draw", 520000, "Approved", "WT-021",
+        (_dt.date(2026, 5, 12), "Draw", 1250000, "Approved", "WT-021",
          "Grid connection redesign variation, agreed at assessment"),
-        (_dt.date(2026, 5, 20), "Release", 200000, "Approved", "WT-009",
+        (_dt.date(2026, 5, 20), "Release", 480000, "Approved", "WT-009",
          "Crane risk closed; unused allowance returned"),
     ],
 }
@@ -172,8 +181,8 @@ PERIODS = [
                        "WM-03": ("Not started", 0), "WM-04": ("Not started", 0)},
         "mitigations": [
             ("MIT-01", "WT-008", "Expedite WTG shipping; secure alternate "
-             "vessel window", 450000, 6, "Actioned", "Procurement Lead", None),
-            ("MIT-02", "WT-009", "Pre-mobilise backup main crane", 280000, 8,
+             "vessel window", 1080000, 6, "Actioned", "Procurement Lead", None),
+            ("MIT-02", "WT-009", "Pre-mobilise backup main crane", 670000, 8,
              "Proposed", "Erection Lead", None),
         ],
     },
@@ -197,11 +206,11 @@ PERIODS = [
                        "WM-03": ("Not started", 0), "WM-04": ("Not started", 0)},
         "mitigations": [
             ("MIT-01", "WT-008", "Expedite WTG shipping; secure alternate "
-             "vessel window", 450000, 6, "Actioned", "Procurement Lead", None),
-            ("MIT-02", "WT-009", "Pre-mobilise backup main crane", 280000, 8,
+             "vessel window", 1080000, 6, "Actioned", "Procurement Lead", None),
+            ("MIT-02", "WT-009", "Pre-mobilise backup main crane", 670000, 8,
              "Approved", "Erection Lead", None),
             ("MIT-03", "WT-021", "Early network-operator design workshop",
-             120000, 4, "Proposed", "Grid Lead", None),
+             290000, 4, "Proposed", "Grid Lead", None),
         ],
     },
     {
@@ -237,9 +246,9 @@ PERIODS = [
             # MIT-01 actioned (not Completed) so WT-008 keeps its residual
             # risk rather than being removed from the MC.
             ("MIT-01", "WT-008", "Expedite WTG shipping; secure alternate "
-             "vessel window", 450000, 6, "Actioned", "Procurement Lead", None),
+             "vessel window", 1080000, 6, "Actioned", "Procurement Lead", None),
             ("MIT-03", "WT-021", "Early network-operator design workshop",
-             120000, 4, "Proposed", "Grid Lead", None),
+             290000, 4, "Proposed", "Grid Lead", None),
         ],
     },
 ]

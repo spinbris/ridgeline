@@ -354,8 +354,8 @@ L1_BASE_DRAWN_CAVEAT_BULLET = (
 JCL_ORIENTING = (
     "Each dot is one iteration: its cost on the vertical axis and its finish on the horizontal. "
     "The dashed lines are the budget and the P80 finish; the dark dots meet both. The cost axis "
-    "leaves out delay cost, because delay is already on the finish axis and would otherwise be "
-    "counted twice. The orange line is where 70% of iterations meet both (the NASA reference "
+    "includes delay cost, because the budget has to fund it; the figure counts iterations that "
+    "meet both lines and adds nothing across them. The orange line is where 70% of iterations meet both (the NASA reference "
     "norm); no Australian guidance requires a joint confidence level, so it is shown beside the "
     "headline, not as one."
 )
@@ -363,7 +363,9 @@ JCL_ORIENTING = (
 JCL_BASIS = (
     "Cost and schedule are sampled jointly: a risk that fires raises cost and delays the finish "
     "in the same iteration. That pulls the dots toward one diagonal, so the JCL is higher than "
-    "it would be if the two were drawn independently."
+    "it would be if the two were drawn independently. The base estimate's own uncertainty is "
+    "drawn independent of the schedule, so it spreads the dots up and down without a slope; "
+    "event risk alone correlates much more strongly with the finish than the full cost does."
 )
 
 # INTSCURVE-01 P3: the integrated tornado.

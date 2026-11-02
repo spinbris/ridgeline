@@ -1,7 +1,7 @@
 ---
 title: "Tropic Ridge Wind Farm: what the contingency really is"
-subtitle: 'Upfront integrated cost-and-schedule risk analysis for a 40 MW, ~[$50M]{.run v="capex_total" f="M0"} wind-farm scope'
-date: 2026-10-29
+subtitle: 'Upfront integrated cost-and-schedule risk analysis for a 40 MW, ~[$120M]{.run v="capex_total" f="M0"} wind-farm scope'
+date: 2026-11-02
 author: "CBL Analytics"
 from: markdown-smart
 format:
@@ -39,8 +39,10 @@ now?" The two stages never blur - this page is the sizing analysis; the
 dashboard is the live tracking.
 
 All figures below come from a synthetic Tropic Ridge Wind Farm dataset (40 MW,
-~[$50M]{.run v="capex_total" f="M0"} capex: EPC [$45M]{.run v="capex_epc" f="M0"} + grid connect [$5M]{.run v="capex_grid" f="M0"}). They are illustrative and for
-analytical purposes only.
+~[$120M]{.run v="capex_total" f="M0"} capex: EPC [$111M]{.run v="capex_epc" f="M0"} + grid connect [$9M]{.run v="capex_grid" f="M0"}). They are illustrative and for
+analytical purposes only. Delay is priced at the project's time-related costs
+(preliminaries, site overheads and owner's costs) per working day. Lost revenue from a late
+finish is an owner exposure on top of that, and is not in the contingency.
 
 ## The headline answer
 
@@ -48,16 +50,16 @@ A deterministic base estimate carries no contingency and quietly assumes
 nothing goes wrong. The integrated Monte Carlo analysis prices what "wrong"
 actually costs, across both arms of the project at once:
 
-| Component | P80 | % of [$50M]{.run v="capex_total" f="M0"} capex |
+| Component | P80 | % of [$120M]{.run v="capex_total" f="M0"} capex |
 |---|---|---|
-| Cost QRA (risk register, Layer 2) | [$5.42M]{.run v="cost.p80" f="M"} | [10.8%]{.run v="cost.p80_pct" f="pct"} |
-| Schedule (Stage 3 CPM replay, dollarised at [$35k]{.run v="day_rate" f="k"}/working day) | [$2.13M]{.run v="sched.p80_dollars" f="M"} | [4.3%]{.run v="sched.p80_dollars_pct" f="pct"} |
-| **Integrated contingency (P80 of the joint total)** | **[$7.48M]{.run v="integrated.p80" f="M"}** | **[15.0%]{.run v="integrated.p80_pct" f="pct"}** |
-| _Naive sum (cost P80 + schedule P80)_ | _[$7.55M]{.run v="integrated.naive_p80" f="M"}_ | _[15.1%]{.run v="integrated.naive_p80_pct" f="pct"}_ |
+| Cost QRA (risk register, Layer 2) | [$11.24M]{.run v="cost.p80" f="M"} | [9.4%]{.run v="cost.p80_pct" f="pct"} |
+| Schedule (Stage 3 CPM replay, dollarised at [$35k]{.run v="day_rate" f="k"}/working day) | [$3.50M]{.run v="sched.p80_dollars" f="M"} | [2.9%]{.run v="sched.p80_dollars_pct" f="pct"} |
+| **Integrated contingency (P80 of the joint total)** | **[$14.60M]{.run v="integrated.p80" f="M"}** | **[12.2%]{.run v="integrated.p80_pct" f="pct"}** |
+| _Naive sum (cost P80 + schedule P80)_ | _[$14.74M]{.run v="integrated.naive_p80" f="M"}_ | _[12.3%]{.run v="integrated.naive_p80_pct" f="pct"}_ |
 
 The two arms are sampled together, iteration by iteration, so the integrated
 figure is the P80 of the joint total. Adding the two P80s instead overstates it
-by [$0.07M]{.run v="integrated.overstatement" f="M"}.
+by [$0.14M]{.run v="integrated.overstatement" f="M"}.
 
 The number that matters for a business case is not the base estimate; it is
 this contingency and the confidence attached to it.
@@ -75,17 +77,17 @@ the right tail stretches out toward the high-confidence percentiles:
 
 ![Density of the cost contingency with the mean and P50/P80/P90/P95 reference lines.](figs/wind_cost_density.png){#fig-cost-density}
 
-| Confidence | Cost contingency | % of [$50M]{.run v="capex_total" f="M0"} capex |
+| Confidence | Cost contingency | % of [$120M]{.run v="capex_total" f="M0"} capex |
 |---|---|---|
-| Mean | [$3.97M]{.run v="cost.mean" f="M"} | [7.9%]{.run v="cost.mean_pct" f="pct"} |
-| P50 (median) | [$3.73M]{.run v="cost.p50" f="M"} | [7.5%]{.run v="cost.p50_pct" f="pct"} |
-| P80 | [$5.42M]{.run v="cost.p80" f="M"} | [10.8%]{.run v="cost.p80_pct" f="pct"} |
-| P90 | [$6.44M]{.run v="cost.p90" f="M"} | [12.9%]{.run v="cost.p90_pct" f="pct"} |
-| P95 | [$7.32M]{.run v="cost.p95" f="M"} | [14.6%]{.run v="cost.p95_pct" f="pct"} |
+| Mean | [$8.31M]{.run v="cost.mean" f="M"} | [6.9%]{.run v="cost.mean_pct" f="pct"} |
+| P50 (median) | [$8.00M]{.run v="cost.p50" f="M"} | [6.7%]{.run v="cost.p50_pct" f="pct"} |
+| P80 | [$11.24M]{.run v="cost.p80" f="M"} | [9.4%]{.run v="cost.p80_pct" f="pct"} |
+| P90 | [$13.03M]{.run v="cost.p90" f="M"} | [10.9%]{.run v="cost.p90_pct" f="pct"} |
+| P95 | [$14.59M]{.run v="cost.p95" f="M"} | [12.2%]{.run v="cost.p95_pct" f="pct"} |
 
 *Caption: cumulative-probability S-curve of the Layer-2 cost contingency. The
-gap between P50 ([$3.73M]{.run v="cost.p50" f="M"}) and P80 ([$5.42M]{.run v="cost.p80" f="M"}) is the cost of buying down risk from
-even-odds to a defensible 4-in-5 confidence - about [$1.7M]{.run v="cost.p80_minus_p50" f="M1"}, and the reason
+gap between P50 ([$8.00M]{.run v="cost.p50" f="M"}) and P80 ([$11.24M]{.run v="cost.p80" f="M"}) is the cost of buying down risk from
+even-odds to a defensible 4-in-5 confidence - about [$3.2M]{.run v="cost.p80_minus_p50" f="M1"}, and the reason
 "use the mean" understates what a sponsor should hold.*
 
 ## Chart 2 - What drives the cost (the tornado)
@@ -97,22 +99,22 @@ expected monetary value (EMV), the cost is concentrated in a short list:
 
 | Risk | Description | Cost group | Mean EMV |
 |---|---|---|---|
-| [WT-008]{.run v="cost.rank1.id" f="s"} | [WTG delivery delay (long-lead)]{.run v="cost.rank1.desc" f="s"} | [CG02]{.run v="cost.rank1.cg" f="s"} | [$0.27M]{.run v="cost.rank1.emv" f="M"} |
-| [WT-009]{.run v="cost.rank2.id" f="s"} | [Main crane mobilisation delay]{.run v="cost.rank2.desc" f="s"} | [CG02]{.run v="cost.rank2.cg" f="s"} | [$0.27M]{.run v="cost.rank2.emv" f="M"} |
-| [WT-012]{.run v="cost.rank3.id" f="s"} | [Erection weather standby]{.run v="cost.rank3.desc" f="s"} | [CG02]{.run v="cost.rank3.cg" f="s"} | [$0.24M]{.run v="cost.rank3.emv" f="M"} |
-| [WT-021]{.run v="cost.rank4.id" f="s"} | [Grid connection redesign]{.run v="cost.rank4.desc" f="s"} | [CG04]{.run v="cost.rank4.cg" f="s"} | [$0.19M]{.run v="cost.rank4.emv" f="M"} |
-| [WT-003]{.run v="cost.rank5.id" f="s"} | [Unforeseen ground conditions]{.run v="cost.rank5.desc" f="s"} | [CG01]{.run v="cost.rank5.cg" f="s"} | [$0.19M]{.run v="cost.rank5.emv" f="M"} |
-| [WT-014]{.run v="cost.rank6.id" f="s"} | [Major component warranty defect]{.run v="cost.rank6.desc" f="s"} | [CG02]{.run v="cost.rank6.cg" f="s"} | [$0.17M]{.run v="cost.rank6.emv" f="M"} |
+| [WT-008]{.run v="cost.rank1.id" f="s"} | [WTG delivery delay (long-lead)]{.run v="cost.rank1.desc" f="s"} | [CG02]{.run v="cost.rank1.cg" f="s"} | [$0.65M]{.run v="cost.rank1.emv" f="M"} |
+| [WT-009]{.run v="cost.rank2.id" f="s"} | [Main crane mobilisation delay]{.run v="cost.rank2.desc" f="s"} | [CG02]{.run v="cost.rank2.cg" f="s"} | [$0.64M]{.run v="cost.rank2.emv" f="M"} |
+| [WT-012]{.run v="cost.rank3.id" f="s"} | [Erection weather standby]{.run v="cost.rank3.desc" f="s"} | [CG02]{.run v="cost.rank3.cg" f="s"} | [$0.58M]{.run v="cost.rank3.emv" f="M"} |
+| [WT-021]{.run v="cost.rank4.id" f="s"} | [Grid connection redesign]{.run v="cost.rank4.desc" f="s"} | [CG04]{.run v="cost.rank4.cg" f="s"} | [$0.46M]{.run v="cost.rank4.emv" f="M"} |
+| [WT-003]{.run v="cost.rank5.id" f="s"} | [Unforeseen ground conditions]{.run v="cost.rank5.desc" f="s"} | [CG01]{.run v="cost.rank5.cg" f="s"} | [$0.45M]{.run v="cost.rank5.emv" f="M"} |
+| [WT-031]{.run v="cost.rank6.id" f="s"} | [SCADA integration defects]{.run v="cost.rank6.desc" f="s"} | [CG06]{.run v="cost.rank6.cg" f="s"} | [$0.40M]{.run v="cost.rank6.emv" f="M"} |
 
 *Caption: top cost risks by mean EMV. The top three ([WT-008]{.run v="cost.rank1.id" f="s"}, [WT-009]{.run v="cost.rank2.id" f="s"}, [WT-012]{.run v="cost.rank3.id" f="s"})
-account for roughly [20%]{.run v="cost.top3_share" f="pct0"} of the mean contingency, and cost group
-[CG02]{.run v="cost.cg_top.id" f="s"} carries the largest single-group share at [$1.47M]{.run v="cost.cg_top.emv" f="M"} mean. Risk treatment
+account for roughly [23%]{.run v="cost.top3_share" f="pct0"} of the mean contingency, and cost group
+[CG02]{.run v="cost.cg_top.id" f="s"} carries the largest single-group share at [$2.72M]{.run v="cost.cg_top.emv" f="M"} mean. Risk treatment
 spent here moves the number more than anywhere else.*
 
 ## Chart 3 - Where the schedule risk lives (Stage 3 CPM-replay)
 
 The schedule arm runs the same risks through a CPM-replay over the full
-[171]{.run v="s3.n_activities" f="int"}-activity construction schedule, so the delay reflects the real critical
+[176]{.run v="s3.n_activities" f="int"}-activity construction schedule, so the delay reflects the real critical
 path, not a spreadsheet add-up. Each schedule risk is auto-mapped to a single
 gating activity, so the risk-driven spread reflects additive PERT impacts,
 not over-binding.
@@ -121,11 +123,11 @@ not over-binding.
 
 | Confidence | Project finish (working days from start) |
 |---|---|
-| Mean | [632.7]{.run v="s3.finish.mean" f="d1"} |
-| P50 | [631.3]{.run v="s3.finish.p50" f="d1"} |
-| P80 | [649.1]{.run v="s3.finish.p80" f="d1"} |
-| P90 | [658.7]{.run v="s3.finish.p90" f="d1"} |
-| P95 | [666.7]{.run v="s3.finish.p95" f="d1"} |
+| Mean | [373.3]{.run v="s3.finish.mean" f="d1"} |
+| P50 | [370.1]{.run v="s3.finish.p50" f="d1"} |
+| P80 | [398.7]{.run v="s3.finish.p80" f="d1"} |
+| P90 | [414.4]{.run v="s3.finish.p90" f="d1"} |
+| P95 | [429.0]{.run v="s3.finish.p95" f="d1"} |
 
 The CPM-replay also scores every activity by how often it lands on the critical
 path across the simulated futures. The top activities by criticality index are
@@ -135,7 +137,7 @@ basis:
 ![Top 20 activities by criticality index (AACE 65R-11, Mode-independent).](figs/wind_activity_criticality.png){#fig-activity-criticality}
 
 *Caption: Stage 3 project-finish P-bands. The P95-P50 spread is about
-[35]{.run v="s3.finish.p95_minus_p50" f="d0"} working days, a tight, credible band rather than
+[59]{.run v="s3.finish.p95_minus_p50" f="d0"} working days, a tight, credible band rather than
 the blown-out range that over-binding produces.*
 
 ## Chart 4 - The two layers, side by side
@@ -147,9 +149,9 @@ ignores the schedule:
 
 | Arm | What it prices | P80 contingency |
 |---|---|---|
-| Cost QRA | Register risks landing as dollars | [$5.42M]{.run v="cost.p80" f="M"} ([10.8%]{.run v="cost.p80_pct" f="pct"}) |
-| Schedule (Stage 3 CPM replay, dollarised) | Finish delay at [$35k]{.run v="day_rate" f="k"}/working day | [$2.13M]{.run v="sched.p80_dollars" f="M"} ([4.3%]{.run v="sched.p80_dollars_pct" f="pct"}) |
-| **Integrated** | Both at once, jointly | **[$7.48M]{.run v="integrated.p80" f="M"} ([15.0%]{.run v="integrated.p80_pct" f="pct"})** |
+| Cost QRA | Register risks landing as dollars | [$11.24M]{.run v="cost.p80" f="M"} ([9.4%]{.run v="cost.p80_pct" f="pct"}) |
+| Schedule (Stage 3 CPM replay, dollarised) | Finish delay at [$35k]{.run v="day_rate" f="k"}/working day | [$3.50M]{.run v="sched.p80_dollars" f="M"} ([2.9%]{.run v="sched.p80_dollars_pct" f="pct"}) |
+| **Integrated** | Both at once, jointly | **[$14.60M]{.run v="integrated.p80" f="M"} ([12.2%]{.run v="integrated.p80_pct" f="pct"})** |
 
 *Caption: the integrated headline. Most renewable business cases stop at the
 cost line; the schedule line is where projects are quietly won or lost.*

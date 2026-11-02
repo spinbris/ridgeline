@@ -193,7 +193,7 @@ class TestWindRuntimePaths:
         assert _FIRST_RISK_ID in message, message
         assert BAD_GATE in message, message
 
-    def test_all_ten_wind_gates_resolve_today(self, _wind) -> None:
+    def test_all_wind_gates_resolve_today(self, _wind) -> None:
         """Positive control, and A11.1's D-7 precondition as a standing test.
 
         Every non-blank ``Gating_Activity_ID`` in the shipped wind register
@@ -210,7 +210,7 @@ class TestWindRuntimePaths:
             for row in scope.itertuples()
             if str(getattr(row, "gating_activity_id", "") or "").strip()
         ]
-        assert len(populated) == 10, populated
+        assert len(populated) == 15, populated  # WINDREAL-01: 15 gates (10 before)
         assert set(populated) <= codes, sorted(set(populated) - codes)
         assert_injection_method_consistency(scope, codes)
 

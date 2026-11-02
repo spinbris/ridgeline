@@ -1,8 +1,8 @@
 {
   "project": "synthetic_wind",
-  "run_date": "2026-10-29",
-  "timestamp": "2026-10-28T21:46:55+00:00",
-  "engine_sha": "ab3d0c6a10d49a93f5f6f75606f3d2c9b6243539",
+  "run_date": "2026-11-02",
+  "timestamp": "2026-11-02T01:15:44+00:00",
+  "engine_sha": "253b6497d3d4b8b89efdc582b66a5716fb9e8dbf",
   "engine_tree_dirty": false,
   "mode": "prod",
   "seed": 42,
@@ -10,15 +10,15 @@
   "input_sha256": {
     "register": {
       "method": "git_blob_oid",
-      "value": "328806c739dbb635786055d2ee2948cee4882b74"
+      "value": "b4d077f65fd07d3e4872d6c44112d1a5a0fcc1d3"
     },
     "xer": {
       "method": "git_blob_oid",
-      "value": "5cbed8f12994c6f82b1c4809dd8791f58add2764"
+      "value": "73e5c92cfd2df97b19c10ff85d4c3e525b8c6877"
     },
     "strawman": {
       "method": "git_blob_oid",
-      "value": "328806c739dbb635786055d2ee2948cee4882b74"
+      "value": "b4d077f65fd07d3e4872d6c44112d1a5a0fcc1d3"
     }
   },
   "cross_validation_all_pass": true

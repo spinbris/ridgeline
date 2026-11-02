@@ -4,9 +4,13 @@ The JCL is the share of iterations whose cost is at or under the cost target AND
 is at or before the finish target. It is the joint reading the two separate S-curves cannot give:
 a P80 budget and a P80 finish are each met four times in five, but together less often.
 
-**The cost axis excludes delay cost** (Part C property 11). Delay cost is the finish delay
-priced at the day rate, so carrying it on the cost axis as well as on the finish axis would count
-the same days twice. The axis is base (where the register draws one) plus event-risk cost.
+**The cost axis carries delay cost** (JCLAXIS-01, Director 01/11/2026, superseding INTSCURVE-01
+Part C property 11). The budget it is tested against includes delay cost, so the axis must too;
+a JCL counts iterations meeting both targets and adds nothing across the axes, so nothing is
+counted twice. The axis is base (where the register draws one) + event-risk cost + delay cost.
+
+**The rank correlation and quadrant shares** are returned beside the JCL, because the correlation
+between the axes is what most moves a JCL, and a reader cannot judge it by eye from the cloud.
 
 **Targets** (D-3, Director 28/10/2026): cost = base + the event-risk contingency at the headline
 P-level; finish = the P80 finish. The 70% frontier (the NASA norm) is drawn for reference; no
@@ -61,6 +65,32 @@ def jcl_frontier(
     return out
 
 
+def rank_correlation(x: np.ndarray, y: np.ndarray) -> float:
+    """Spearman's rank correlation, average ranks for ties; NaN when either side has no spread.
+
+    Pure numpy, so the engine layer takes no scipy dependency for one statistic.
+    """
+    a, b = _average_ranks(x), _average_ranks(y)
+    if a.size != b.size or a.size < 2:
+        raise ValueError(f"rank_correlation: {a.shape} and {b.shape} must pair, two or more")
+    if np.ptp(a) == 0 or np.ptp(b) == 0:
+        return float("nan")
+    return float(np.corrcoef(a, b)[0, 1])
+
+
+def _average_ranks(values: np.ndarray) -> np.ndarray:
+    v = np.asarray(values, dtype=float)
+    order = np.argsort(v, kind="mergesort")
+    sorted_v = v[order]
+    # Runs of equal values share the mean of the 1-based ranks they span.
+    starts = np.flatnonzero(np.r_[True, sorted_v[1:] != sorted_v[:-1]])
+    ends = np.r_[starts[1:], v.size]
+    mean_rank = (starts + ends + 1) / 2.0
+    ranks = np.empty(v.size, dtype=float)
+    ranks[order] = np.repeat(mean_rank, ends - starts)
+    return ranks
+
+
 def jcl_data(
     cost_axis: np.ndarray, finish_axis: np.ndarray, *, cost_target: float,
     finish_target: float, level: float = JCL_FRONTIER_LEVEL,
@@ -68,11 +98,13 @@ def jcl_data(
     """Everything the JCL chart and sentence need, from one pair of paired arrays.
 
     Returns ``{"cost_axis", "finish_axis", "meets_both" (bool array), "cost_target",
-    "finish_target", "jcl", "cost_confidence", "finish_confidence", "frontier", "level"}``.
+    "finish_target", "jcl", "cost_confidence", "finish_confidence", "frontier", "level",
+    "rank_correlation", "quadrants" {"meets_both", "cost_only", "finish_only", "neither"}}``.
     """
     cost = np.asarray(cost_axis, dtype=float)
     finish = np.asarray(finish_axis, dtype=float)
-    meets = (cost <= cost_target) & (finish <= finish_target)
+    on_cost, on_time = cost <= cost_target, finish <= finish_target
+    meets = on_cost & on_time
     return {
         "cost_axis": cost,
         "finish_axis": finish,
@@ -84,4 +116,11 @@ def jcl_data(
         "finish_confidence": float(np.mean(finish <= finish_target)),
         "frontier": jcl_frontier(cost, finish, level),
         "level": float(level),
+        "rank_correlation": rank_correlation(cost, finish),
+        "quadrants": {
+            "meets_both": float(np.mean(meets)),
+            "cost_only": float(np.mean(on_cost & ~on_time)),
+            "finish_only": float(np.mean(~on_cost & on_time)),
+            "neither": float(np.mean(~on_cost & ~on_time)),
+        },
     }

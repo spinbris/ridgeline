@@ -125,26 +125,30 @@ LEGACY_CHAIN_IDS = None
 #: The property the original protected is untouched: what it forbids is a
 #: CROSS-PROJECT fallback silently supplying another project's number. These are this
 #: project's own figures, derived from its own documented basis rather than invented -
-#: the capex total below is the sum of ``CAPEX_BASIS`` in
-#: ``scripts/build_synthetic_wind_fixture.py`` ($45M EPC + $5M grid connect, a 40 MW
-#: farm, Showcase-P3 decision 5), and the buckets are that same cost-group breakdown.
+#: the capex total below is the Layer 1 declared total (a 40 MW farm, $120M since
+#: WINDREAL-01), and the buckets are the fixture's cost-group breakdown of it.
 #:
 #: ``workbook_filename`` and ``programme_seasons`` remain absent: nothing asks for them.
 #: Leaving them out keeps the fail-loud behaviour where it still has something to catch.
-#: This project's own capex basis, from ``scripts/build_synthetic_wind_fixture.py``:
-#: CG01 9.0 + CG02 22.0 + CG03 5.0 + CG04 5.0 + CG05 6.0 + CG06 3.0 = $50.0M.
-WIND_GP_TOC: float = 50_000_000.0
+#: This project's own capex basis (WINDREAL-01, 01/11/2026): $120M for a 40 MW farm,
+#: the Layer 1 declared total in ``src/layer1_showcase.py``, which is its one home. It
+#: was $50M (CG01 9.0 + CG02 22.0 + ... + CG06 3.0) before the re-scale.
+from src.layer1_showcase import DECLARED_TOTAL as _DECLARED_TOTAL  # noqa: E402
 
-#: The same six cost groups as Layer 1 WBS buckets. Variances mirror the reference
-#: project's non-preliminaries shape (-5%/+7.5% Triangular); this project has no
+WIND_GP_TOC: float = _DECLARED_TOTAL
+
+#: The same six cost groups as Layer 1 WBS buckets, at the CG bases the fixture
+#: builder derives from the Layer 1 matrix (``_derive_capex_basis``; held equal by
+#: ``tests/test_wind_realism.py``). Variances mirror the reference project's
+#: non-preliminaries shape (-5%/+7.5% Triangular); this project has no
 #: preliminaries bucket, so it has no wide-variance outlier.
 WIND_HEADLESS_BUCKETS: tuple[WBSBucket, ...] = (
-    WBSBucket("Civil & Earthworks", 9_000_000, -0.05, 0.075, "Triangular"),
-    WBSBucket("Turbine Supply & Erection", 22_000_000, -0.05, 0.075, "Triangular"),
-    WBSBucket("Electrical Reticulation", 5_000_000, -0.05, 0.075, "Triangular"),
-    WBSBucket("Grid Connection", 5_000_000, -0.05, 0.075, "Triangular"),
-    WBSBucket("Balance of Plant / Substation", 6_000_000, -0.05, 0.075, "Triangular"),
-    WBSBucket("Commissioning & Controls", 3_000_000, -0.05, 0.075, "Triangular"),
+    WBSBucket("Civil & Earthworks", 14_400_000, -0.05, 0.075, "Triangular"),
+    WBSBucket("Turbine Supply & Erection", 74_400_000, -0.05, 0.075, "Triangular"),
+    WBSBucket("Electrical Reticulation", 8_400_000, -0.05, 0.075, "Triangular"),
+    WBSBucket("Grid Connection", 8_600_000, -0.05, 0.075, "Triangular"),
+    WBSBucket("Balance of Plant / Substation", 7_000_000, -0.05, 0.075, "Triangular"),
+    WBSBucket("Commissioning & Controls", 7_200_000, -0.05, 0.075, "Triangular"),
 )
 
 HEADLESS_CONFIG = {

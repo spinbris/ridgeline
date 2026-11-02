@@ -27,7 +27,7 @@ FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures" / "synthetic_wind"
 WIND_REGISTER = FIXTURE_DIR / "wind_register.xlsx"
 WIND_XER = FIXTURE_DIR / "wind_schedule.xer"
 
-WIND_CAPEX_TOTAL = 50_000_000.0
+WIND_CAPEX_TOTAL = 120_000_000.0  # WINDREAL-01 (was $50M)
 
 
 @pytest.fixture(autouse=True)
@@ -49,7 +49,7 @@ def test_register_is_full_capex_tied_wind_set():
     from src.v5_register_reader import read_risks_v5
 
     risks = read_risks_v5(str(WIND_REGISTER))
-    assert len(risks) == 35
+    assert len(risks) == 30  # WINDREAL-01: 30 risks (35 before)
     assert all(r.risk_id.startswith("WT-") for r in risks)
     # Six wind cost groups, all populated.
     cgs = {r.correlation_group for r in risks}
@@ -58,8 +58,8 @@ def test_register_is_full_capex_tied_wind_set():
     dists = {r.distribution.lower() for r in risks}
     assert {"pert", "triangular", "lognormal"} <= dists
 
-    # Decision 5: TIC equals the Wind Farm Beta capex, and per-CG base values
-    # sum to the same total.
+    # TIC equals the capex, and per-CG base values sum to the same total
+    # (WINDREAL-01: derived from Layer 1, so the two breakdowns cannot disagree).
     wb = openpyxl.load_workbook(str(WIND_REGISTER), data_only=True, read_only=True)
     labels = {}
     for row in wb["MC_Params"].iter_rows(min_row=1, max_row=200, min_col=2,
@@ -107,7 +107,7 @@ def test_stage25_finish_delay_band_monotonic():
     from src.sra.strawman_reader import read_risk_scope
 
     scope = read_risk_scope(str(WIND_REGISTER))
-    assert (scope["time_impact"] == "Yes").sum() == 10
+    assert (scope["time_impact"] == "Yes").sum() == 15  # WINDREAL-01 (10 before)
     cfg = SRAConfig(register_path=WIND_REGISTER, p6_path=WIND_XER,
                     strawman_path=WIND_REGISTER, iterations=8000,
                     random_seed=42, day_rate=35_000.0, mode_multipliers=TEST_MODE_MULTIPLIERS)
@@ -153,16 +153,18 @@ def test_stage3_binds_match_wind03_mapping():
             pess_pert=float(row["pess_days"]),
             probability=float(row["probability_time"]),
             mode=str(row["mode_aggregated"]))
-    assert len(rules) == 10
+    assert len(rules) == 15
     drivers = expand_auto_rules(rules, graph)
     # WIND-03 approved per-risk bind counts (5 multi-activity, 5 kept 1:1).
     expected = {
         "WT-001": 11, "WT-002": 1, "WT-008": 11, "WT-009": 1, "WT-020": 10,
         "WT-021": 1, "WT-026": 1, "WT-027": 1, "WT-031": 11, "WT-032": 10,
+        # WINDREAL-01: the five newly Time=Yes risks, 1:1 on their own gates.
+        "WT-003": 1, "WT-012": 1, "WT-022": 1, "WT-024": 1, "WT-028": 1,
     }
     counts = {rid: len(d.affected_activity_ids) for rid, d in drivers.items()}
     assert counts == expected, f"bind counts {counts} != approved {expected}"
-    assert sum(counts.values()) == 58
+    assert sum(counts.values()) == 63
     # Bounded: no risk binds more than its work group (11), a far cry from
     # the ~171-activity whole-schedule over-binding WIND-03 §1 warns against.
     assert max(counts.values()) <= 11
@@ -176,3 +178,21 @@ def test_stage3_binds_match_wind03_mapping():
     # Risk-driven spread is modest (additive PERT on gating activities), not the
     # runaway inflation whole-group binding would produce.
     assert (p95 - p50) < 0.5 * p50
+
+
+def test_binding_buckets_match_the_derived_cg_basis():
+    """WINDREAL-01: one capex breakdown. The binding's headless buckets and its TIC
+    must equal the CG bases the fixture builder derives from the Layer 1 matrix, so
+    the register, Layer 1 and the binding cannot drift apart (the pre-WINDREAL
+    fixture had turbines at $22M in one and $31M in the other)."""
+    spec = importlib.util.spec_from_file_location(
+        "wind_builder_realism",
+        Path(__file__).resolve().parents[1] / "scripts" / "build_synthetic_wind_fixture.py")
+    builder = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(builder)
+    from src.layer1_showcase import DECLARED_TOTAL
+    from src.sra.cpm.bindings.synthetic_wind import WIND_GP_TOC, WIND_HEADLESS_BUCKETS
+
+    assert WIND_GP_TOC == DECLARED_TOTAL == builder.WIND_CAPEX_TOTAL
+    assert [(b.name, b.base_cost) for b in WIND_HEADLESS_BUCKETS] == [
+        (label, base) for (label, base) in builder.CAPEX_BASIS.values()]

@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 
+from src.sra.cpm.bindings.synthetic_wind import WIND_GP_TOC  # the declared base
 import numpy as np
 import pytest
 
@@ -154,7 +155,7 @@ def test_the_total_is_base_plus_the_headline_array_exactly():
                           base["base_array"] + integrated_dollars_array(cost, days, DAY_RATE))
     for p, v in total["percentiles_dollars"].items():
         assert v == float(np.percentile(total["total_dollars"], p))
-        assert total["contingency_dollars"][p] == v - 50_000_000.0
+        assert total["contingency_dollars"][p] == v - WIND_GP_TOC
     rows = total_cost_rows(total)
     assert [r["Confidence level"] for r in rows] == ["P50", "P80", "P90"]
     assert not any("recommended" in r["Confidence level"] for r in rows)

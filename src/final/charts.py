@@ -295,12 +295,28 @@ def make_jcl_scatter(
                 f"finish {jcl['finish_confidence']:.0%} on their own)",
                 xy=(f_t, c_t), xytext=(8, 8), textcoords="offset points", fontsize=10,
                 color="#C0392B", fontweight="bold")
+    # JCLAXIS-01 P2, P3: the quadrant shares in their corners, and the rank correlation.
+    q = jcl.get("quadrants")
+    if q:
+        for text, (x, y, ha, va) in (
+                (f"Both met {q['meets_both']:.0%}", (0.01, 0.01, "left", "bottom")),
+                (f"Date only {q['finish_only']:.0%}", (0.01, 0.99, "left", "top")),
+                (f"Budget only {q['cost_only']:.0%}", (0.99, 0.01, "right", "bottom")),
+                (f"Neither {q['neither']:.0%}", (0.99, 0.99, "right", "top"))):
+            ax.text(x, y, text, transform=ax.transAxes, ha=ha, va=va, fontsize=9,
+                    color="#555555")
+    rho = jcl.get("rank_correlation")
+    if rho is not None and np.isfinite(rho):
+        ax.text(0.5, 0.99, f"Rank correlation, cost with finish: {rho:.2f}",
+                transform=ax.transAxes, ha="center", va="top", fontsize=9, color="#555555")
     ax.set_xlabel(finish_label, fontsize=11)
-    ax.set_ylabel("Cost excluding delay cost ($M)", fontsize=11)
+    ax.set_ylabel("Cost including delay cost ($M)", fontsize=11)
     ax.set_title(title, fontsize=13, pad=12)
     ax.grid(linestyle=":", color="#BDC3C7", zorder=0)
     ax.set_axisbelow(True)
-    ax.legend(loc="lower right", fontsize=9, framealpha=0.9, markerscale=3)
+    # Below the axes, so it never covers a quadrant label (JCLAXIS-01).
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.11), ncol=3, fontsize=9,
+              framealpha=0.9, markerscale=3)
     fig.tight_layout()
     fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
     plt.close(fig)

@@ -6,7 +6,7 @@ under the active ``synthetic_wind`` binding and writes readable, fully
 RefProject-free summaries to ``outputs/wind_showcase/``:
 
 - ``wind_cost_qra.md``      - Monte-Carlo cost QRA: P-bands, contingency as a
-  % of the $50M Wind Farm Beta capex, per-cost-group breakdown, top-risk
+  % of the $120M Tropic Ridge capex, per-cost-group breakdown, top-risk
   tornado (mean EMV).
 - ``wind_sra_schedule.md``  - Stage 2.5 schedule MC: finish-delay P-bands,
   dollarised at the wind day rate, per-risk contribution.
@@ -79,10 +79,15 @@ STAGE3_ITERATIONS = N_ITER
 #: Read from the baseline, never typed here. main() rereads it from --baseline-meta; the golden
 #: adapter sets it from the golden registry row.
 SEED = baseline_seed(BASELINE_META)
-CAPEX_TOTAL = 50_000_000.0
+# WINDREAL-01: capex is read from the binding, not typed here (it was a $50M literal that
+# nothing held to the register). Grid = the Grid Connection cost group; EPC = the rest.
+from src.sra.cpm.bindings.synthetic_wind import (  # noqa: E402
+    WIND_GP_TOC as _WIND_GP_TOC, WIND_HEADLESS_BUCKETS as _WIND_BUCKETS,
+)
+CAPEX_TOTAL = float(_WIND_GP_TOC)
 #: The capex split the showcase text states; held to CAPEX_TOTAL in _quoted_values.
-CAPEX_EPC = 45_000_000.0
-CAPEX_GRID = 5_000_000.0
+CAPEX_GRID = float(next(b.base_cost for b in _WIND_BUCKETS if b.name == "Grid Connection"))
+CAPEX_EPC = CAPEX_TOTAL - CAPEX_GRID
 DAY_RATE = 35_000.0
 
 # SHOWCASESYNC-01: --publish writes the whole set where it ships, in one run, so no hand copy can

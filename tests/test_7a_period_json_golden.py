@@ -13,7 +13,7 @@ exist - and part A creates it. These tests are what make it a gate rather than a
 stamp attests to real committed code):
 
     python -m src.am.run_period --workbook status_periods/wind_period_01.xlsx \\
-        --project synthetic_wind --output-dir <tmp> --project-start 2024-01-01
+        --project synthetic_wind --output-dir <tmp> --project-start 2025-04-28
 
 at the iteration counts and seed in `GOLDEN_RUN` below, then copy the emitted file over
 `GOLDEN`. A moved number is a bug until a methodology change says otherwise - the GOLDEN01 rule,
@@ -61,7 +61,7 @@ GOLDEN_RUN = dict(
     counterfactual_iterations=500,
     seed=golden_seed(),
     criticality_measurement_mode="both",
-    project_start=_dt.date(2024, 1, 1),
+    project_start=_dt.date(2025, 4, 28),  # WINDREAL-01: the wind build start (was 2024-01-01)
 )
 
 
