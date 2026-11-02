@@ -109,3 +109,5 @@ as a follow-up rather than resolved.
     p50: $5.271M -> $5.271M  p80: $7.521M -> $7.521M  p90: $8.705M -> $8.705M  mean: $5.485M -> $5.485M
 - 2026-10-08 synthetic_road::canonical P80 $11.369M -> $11.369M - reason: CONFIGTRUTH-01: golden provenance refresh on the clean tree at 928f8ae (the P5 bless, Director 08/10/2026: 'bless yes'); engine_ref only (by Steve)
     p50: $7.877M -> $7.877M  p80: $11.369M -> $11.369M  p90: $13.366M -> $13.366M  mean: $8.263M -> $8.263M
+- 2026-11-01 wind_synth::canonical P80 $7.521M -> $14.713M - reason: WINDREAL-01 re-scale to a real 40 MW farm, Director-approved 01/11/2026 (by Steve)
+    p50: $5.271M -> $10.549M  p80: $7.521M -> $14.713M  p90: $8.705M -> $16.908M  mean: $5.485M -> $10.845M

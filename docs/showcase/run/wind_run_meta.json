@@ -5,17 +5,17 @@
   "apply_mode_multipliers": false,
   "criticality_measurement_mode": "mode_independent",
   "headline_engine": "integrated_simulation_stage3 (joint cost + Stage 3 schedule)",
-  "n_dual_coded_risks": 10,
-  "integrated_total_p80": 7482634.794690012,
-  "naive_sum_p80": 7554808.303208478,
+  "n_dual_coded_risks": 15,
+  "integrated_total_p80": 14599502.781742606,
+  "naive_sum_p80": 14739006.35888951,
   "production_scale_floor_note": "Draft-scale runs are for layout/sanity only; no blog number may come from anything but a production-scale run. A low-n run is NOT a subset of a high-n run.",
-  "engine_sha": "ab3d0c6a10d49a93f5f6f75606f3d2c9b6243539",
+  "engine_sha": "253b6497d3d4b8b89efdc582b66a5716fb9e8dbf",
   "engine_tree_dirty": false,
   "input_sha256": {
-    "register": "45328342244526f582b8000692ed0b46a56c95427ad552dac0e81f5befd57b5c",
-    "xer": "2120db0da6469fd4c07b9ab433e02d2ca6958a129dc5f51c28195472a71d2324"
+    "register": "edb1f40c2504e9e8de61a9199b301d6e28400bc9aa0999333e6306541c3fa161",
+    "xer": "f6c55af3331f2156138d371a366c78f25951308bac9c6205a1b299b2ef7f746b"
   },
-  "run_id": "a17d43d3-e38f-47a0-a5b2-07283c31e34d",
-  "run_date": "2026-10-29",
-  "run_timestamp": "2026-10-28T21:37:34+00:00"
+  "run_id": "011ec851-c529-4274-920e-ac536ddb120f",
+  "run_date": "2026-11-02",
+  "run_timestamp": "2026-11-02T01:16:42+00:00"
 }

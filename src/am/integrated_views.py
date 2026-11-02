@@ -163,12 +163,14 @@ def period_jcl(result: Any, total_cost: dict[str, Any] | None) -> dict[str, Any]
 def jcl_basis_sentence(jcl: dict[str, Any]) -> str:
     if jcl["base_drawn"]:
         budget = (f"budget = the declared base (${jcl['declared_base_dollars'] / 1e6:.2f}M) plus "
-                  f"the P{jcl['p_level']} contingency, cost axis = base drawn + event-risk cost")
+                  f"the P{jcl['p_level']} contingency, cost axis = base drawn + event-risk cost "
+                  f"+ delay cost")
     else:
         budget = (f"no base drawn (Layer 1 off), so budget = the P{jcl['p_level']} contingency "
-                  f"alone and cost axis = event-risk cost")
-    return (f"{budget}; delay cost excluded from the cost axis because delay is on the finish "
-            f"axis; finish = P80 finish; cost and schedule sampled jointly. The report's basis.")
+                  f"alone and cost axis = event-risk cost + delay cost")
+    return (f"{budget}, as the budget funds delay cost; finish = P80 finish; cost and schedule "
+            f"sampled jointly; rank correlation of cost with finish "
+            f"{jcl['rank_correlation']:.2f}. The report's basis.")
 
 
 def total_cost_block(total: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -270,9 +272,11 @@ def jcl_against_held(
 ) -> dict[str, Any] | None:
     """The JCL with the budget at declared base + HELD contingency (property 10).
 
-    Same axes as ``stage3_jcl`` - base drawn + event-risk cost against the P80 finish - so the
+    Same axes as ``stage3_jcl`` - base drawn + event-risk cost + delay cost against the P80
+    finish (JCLAXIS-01) - so the
     only difference from the headline JCL is the budget line. Shown beside it, never instead.
     """
+    from src.integrated.integrated_dollars import integrated_dollars_array
     from src.integrated.jcl import jcl_data
 
     if result.project_finish_days is None:
@@ -280,7 +284,9 @@ def jcl_against_held(
     finish = np.asarray(result.project_finish_days, dtype=float)
     base = total_cost["base_dollars"] if total_cost else 0.0
     declared = total_cost["base_total_dollars"] if total_cost else 0.0
-    return jcl_data(np.asarray(result.cost_dollars_array, dtype=float) + base, finish,
+    integrated = integrated_dollars_array(
+        result.cost_dollars_array, result.schedule_days_array, _rate(result, "jcl_against_held"))
+    return jcl_data(integrated + base, finish,
                     cost_target=declared + float(held_dollars),
                     finish_target=float(np.percentile(finish, 80)))
 

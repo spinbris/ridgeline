@@ -220,7 +220,10 @@ def test_unique_task_codes_build():
 
 _WIND = {"WT-001": "downstream", "WT-002": "member", "WT-008": "upstream", "WT-009": "member",
          "WT-020": "downstream", "WT-021": "member", "WT-026": "member", "WT-027": "member",
-         "WT-031": "upstream", "WT-032": "downstream"}
+         "WT-031": "upstream", "WT-032": "downstream",
+         # WINDREAL-01: the five newly Time=Yes risks, each 1:1 on its own spine gate.
+         "WT-003": "member", "WT-012": "member", "WT-022": "member", "WT-024": "member",
+         "WT-028": "member"}
 
 
 def _fixture_drivers(project: str, monkeypatch):

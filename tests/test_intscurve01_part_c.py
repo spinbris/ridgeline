@@ -1,7 +1,8 @@
 """INTSCURVE-01 Part C: the joint confidence level, in the report and the app.
 
-P11  the JCL on cost (base + event-risk, delay cost excluded) against finish, at the D-3 target
-     pair, with the 70% frontier; the basis states that joint sampling raises it.
+P11  the JCL on cost against finish, at the D-3 target pair, with the 70% frontier; the basis
+     states that joint sampling raises it. The cost axis now carries delay cost (JCLAXIS-01,
+     Director 01/11/2026, superseding the exclusion this stage shipped): tests/test_jclaxis01.py.
 P12  the period JSON carries the integrated curve points and the JCL (schema 1.5).
 """
 from __future__ import annotations
@@ -65,7 +66,7 @@ def test_shared_fire_decisions_raise_the_jcl_over_independence():
 
 
 # ---------------------------------------------------------------------------
-# The deliverable's JCL: cost without delay cost, D-3 targets
+# The deliverable's JCL: D-3 targets (axis with delay cost, JCLAXIS-01)
 # ---------------------------------------------------------------------------
 
 def _stage3(cost, days, finish):
@@ -73,24 +74,25 @@ def _stage3(cost, days, finish):
             "schedule_result": SimpleNamespace(project_finish_days=finish)}
 
 
-def test_the_cost_axis_excludes_delay_cost_and_the_targets_are_d3():
+def test_the_targets_are_d3():
     cost, days, finish = _paired()
     base = np.full(cost.size, 50e6) + np.random.default_rng(1).normal(0, 2e6, cost.size)
     total = {"base_dollars": base, "base_total_dollars": 50e6}
     jcl = stage3_jcl(_stage3(cost, days, finish), total, DAY_RATE)
-    assert np.array_equal(jcl["cost_axis"], cost + base), "no delay cost on the cost axis"
-    headline = float(np.percentile(integrated_dollars_array(cost, days, DAY_RATE), 80))
+    integrated = integrated_dollars_array(cost, days, DAY_RATE)
+    headline = float(np.percentile(integrated, 80))
     assert jcl["cost_target"] == 50e6 + headline
     assert jcl["finish_target"] == float(np.percentile(finish, 80))
-    assert jcl["jcl"] == joint_confidence(cost + base, finish, jcl["cost_target"],
+    assert jcl["jcl"] == joint_confidence(integrated + base, finish, jcl["cost_target"],
                                           jcl["finish_target"])
     assert jcl["level"] == 0.70 and jcl["frontier"]
 
 
-def test_without_a_base_the_cost_axis_is_event_cost_alone():
+def test_without_a_base_the_cost_axis_has_no_base():
     cost, days, finish = _paired()
     jcl = stage3_jcl(_stage3(cost, days, finish), None, DAY_RATE)
-    assert np.array_equal(jcl["cost_axis"], cost) and jcl["base_drawn"] is False
+    assert np.array_equal(jcl["cost_axis"], integrated_dollars_array(cost, days, DAY_RATE))
+    assert jcl["base_drawn"] is False
     assert "base" not in jcl_sentence(jcl)
     assert stage3_jcl(_stage3(cost, days, finish[:-1]), None, DAY_RATE) is None
     assert stage3_jcl(None, None, DAY_RATE) is None
@@ -189,22 +191,4 @@ class TestThePeriodJsonCarriesTheIntegratedCurveAndJcl:
         assert j["finish_target_date"] == finish_p80
         assert 0 < j["jcl"] <= min(j["cost_confidence"], j["finish_confidence"])
         assert j["frontier_level"] == 0.70
-        assert "delay cost excluded" in j["basis"]
-
-
-def test_the_period_jcl_leaves_delay_cost_off_its_cost_axis():
-    """All the money is delay: with delay off the cost axis every iteration meets the budget."""
-    import datetime as _dt
-
-    from src.am.json_writer import _build_jcl
-
-    days = np.linspace(0.0, 50.0, 1_000)
-    result = SimpleNamespace(
-        cost_dollars_array=np.zeros(days.size), schedule_days_array=days,
-        integrated_dollars_array=integrated_dollars_array(np.zeros(days.size), days, DAY_RATE),
-        deterministic_baseline_days=300.0, project_finish_days=300.0 + days, day_rate=DAY_RATE)
-    # No base drawn (Layer 1 off): the cost axis is event cost alone.
-    j = _build_jcl(result, _dt.date(2024, 1, 1), None)
-    assert j["base_drawn"] is False
-    assert j["cost_confidence"] == 1.0
-    assert j["jcl"] == j["finish_confidence"]
+        assert "+ delay cost" in j["basis"] and "excluded" not in j["basis"]

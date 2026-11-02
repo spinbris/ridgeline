@@ -403,7 +403,7 @@ describe("the integrated S-curve and JCL (contract 1.5, INTSCURVE-01 Part C)", (
     expect(text).toContain(formatLongDate(jcl.finish_target_date));
     // A literal on purpose, as the conditioning sentence above: it is a statement of method.
     expect(text).toMatch(/sampled jointly/);
-    expect(text).toMatch(/leaves out delay cost/);
+    expect(text).toMatch(/includes delay cost/);
   });
 });
 

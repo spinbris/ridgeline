@@ -344,8 +344,8 @@ function OnBudgetAndOnTimeTile({ jcl }: { jcl?: IntegratedJcl }) {
           </div>
           <div className="text-sm mt-2" style={{ color: "var(--color-muted)" }}>
             Budget alone {formatPercent(jcl.cost_confidence, 0)}, date alone{" "}
-            {formatPercent(jcl.finish_confidence, 0)}. Delay cost is judged through the date, so
-            it is not counted twice.
+            {formatPercent(jcl.finish_confidence, 0)}. The cost includes delay cost, as the budget
+            funds it.
           </div>
           <Link
             href="/analyst/"

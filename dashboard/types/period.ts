@@ -394,7 +394,7 @@ export interface IntegratedCurvePoint {
 
 /**
  * Contract 1.5: the joint confidence level - the share of iterations that meet the cost target
- * AND the finish target together. Cost axis excludes delay cost (delay is on the finish axis).
+ * AND the finish target together. Cost axis includes delay cost, as the budget does (JCLAXIS-01).
  */
 export interface IntegratedJcl {
   basis: string;

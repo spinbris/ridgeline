@@ -15,14 +15,14 @@ export function JointConfidenceNote({ jcl }: { jcl: IntegratedJcl }) {
       Joint confidence level <strong>{formatPercent(jcl.jcl, 0)}</strong>: the share of
       iterations that come in at or under {formatAud(jcl.cost_target_dollars)}{" "}
       {jcl.base_drawn
-        ? `(the ${formatAud(jcl.declared_base_dollars)} base plus the P${jcl.p_level} contingency) of base and event-risk cost`
-        : `(the P${jcl.p_level} contingency; no base estimate was drawn) of event-risk cost`}{" "}
+        ? `(the ${formatAud(jcl.declared_base_dollars)} base plus the P${jcl.p_level} contingency) of base, event-risk and delay cost`
+        : `(the P${jcl.p_level} contingency; no base estimate was drawn) of event-risk and delay cost`}{" "}
       AND finish by {formatLongDate(jcl.finish_target_date)}. On their own the budget is met in{" "}
       {formatPercent(jcl.cost_confidence, 0)} of iterations and the finish in{" "}
       {formatPercent(jcl.finish_confidence, 0)}. Cost and schedule are sampled jointly, so a risk
       that fires raises both in the same iteration; that makes the joint figure higher than it
-      would be if they were drawn independently. The cost here leaves out delay cost, which is
-      already on the finish side.
+      would be if they were drawn independently. The cost here includes delay cost, because the
+      budget has to fund it; the figure counts outcomes that meet both, so nothing is counted twice.
     </p>
   );
 }

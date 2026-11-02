@@ -99,11 +99,11 @@ class TestPerRiskMode:
         assert "| WT-021 | Parallel | 0.00 |" in _rendered(_wind)
 
 
-def test_wind_fixture_mix_is_four_series_four_hybrid_two_parallel(_wind) -> None:
+def test_wind_fixture_mix_is_seven_series_six_hybrid_two_parallel(_wind) -> None:
     """Ties the surface to the shipped fixture rather than to a chosen example.
 
-    The ten Time=Yes wind risks are Series 4 / Hybrid 4 / Parallel 2, so a real
-    showcase run renders ``4S/4H/2P``. Read from the register, not asserted from
+    The fifteen Time=Yes wind risks (WINDREAL-01; ten before) are Series 7 /
+    Hybrid 6 / Parallel 2, so a real showcase run renders ``7S/6H/2P``. Read from the register, not asserted from
     a constant in the script.
     """
     from src.sra.strawman_reader import read_risk_scope
@@ -114,5 +114,5 @@ def test_wind_fixture_mix_is_four_series_four_hybrid_two_parallel(_wind) -> None
         for row in scope.itertuples()
         if str(getattr(row, "time_impact", "") or "").strip() == "Yes"
     }
-    assert len(modes) == 10, modes
-    assert format_mode_mix(modes) == "4S/4H/2P"
+    assert len(modes) == 15, modes
+    assert format_mode_mix(modes) == "7S/6H/2P"

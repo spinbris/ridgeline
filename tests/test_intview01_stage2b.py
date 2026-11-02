@@ -145,7 +145,8 @@ def test_the_jcl_against_held_equals_the_headline_jcl_when_held_is_the_recommend
     days = rng.gamma(2.0, 15.0, n)
     finish = 500.0 + days
     base = {"base_dollars": rng.normal(50e6, 2e6, n), "base_total_dollars": 50e6}
-    result = SimpleNamespace(cost_dollars_array=cost, project_finish_days=finish)
+    result = SimpleNamespace(cost_dollars_array=cost, schedule_days_array=days,
+                             project_finish_days=finish, day_rate=rate)
     headline = stage3_jcl({"cost_result": {"cost_dollars_array": cost},
                            "schedule_days_array": days,
                            "schedule_result": SimpleNamespace(project_finish_days=finish)},
@@ -291,8 +292,8 @@ class TestFourPeriods:
 
     def test_held_follows_the_illustrative_ledger(self, four_periods):
         held = [d["contingency"]["held_dollars"] for d in four_periods[1:]]
-        assert held == [7_050_000.0, 6_770_000.0, 6_450_000.0]
-        assert four_periods[2]["contingency"]["pending_draws_dollars"] == 600_000.0
+        assert held == [13_620_000.0, 12_950_000.0, 12_180_000.0]  # WINDREAL-01 (x2.4 ledger)
+        assert four_periods[2]["contingency"]["pending_draws_dollars"] == 1_440_000.0
         for d in four_periods[1:]:
             c = d["contingency"]
             assert c["phase"] == "held" and c["illustrative"] is True

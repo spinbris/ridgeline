@@ -32,6 +32,8 @@ TEMPLATE_PATH = AM_REPO_ROOT / "status_periods" / "wind_am_template.xlsx"
 EXPECTED_RISK_IDS = (  # the wind template's AM_Period_Status rows (RS-A2 rebase)
     "WT-001", "WT-002", "WT-008", "WT-009", "WT-020",
     "WT-021", "WT-026", "WT-027", "WT-031", "WT-032",
+    # WINDREAL-01: the five risks the re-scale coded Time=Yes, appended in builder order.
+    "WT-003", "WT-012", "WT-022", "WT-024", "WT-028",
 )
 
 EXPECTED_MILESTONE_IDS = tuple(f"WM-{i:02d}" for i in range(1, 5))  # WM-01..WM-04, the wind template

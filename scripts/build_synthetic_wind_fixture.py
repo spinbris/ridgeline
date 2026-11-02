@@ -6,13 +6,13 @@ end-to-end (cost + Stage 2.5 + Stage 3) on a *full, publishable* wind-BOP
 project — the substrate the P5/P6 marketing layer draws from:
 
 - ``wind_register.xlsx`` — a V5-format register (``Risk Register`` +
-  ``MC_Params``), ~35 risks ``WT-001``..``WT-035`` across the CG01-CG06
+  ``MC_Params``), 30 risks in ``WT-001``..``WT-032`` across the CG01-CG06
   wind cost groups, mixed distributions (PERT / Triangular / Lognormal),
   a recurrence-coded risk, a cost cascade group, and ~10 Time_Impact=Yes
-  risks (a couple dual-coded across cost + schedule). The per-cost-group
-  capex base values tie to an external **Wind Farm Beta** reference spec
-  ($45M EPC + $5M grid connect = $50M capex; Showcase-P3 decision 5) and
-  the same $50M is written to ``MC_Params`` as ``TIC`` so the QRA
+  risks (WINDREAL-01: 30 risks, 15 dual-coded). The per-cost-group
+  capex base values are derived from the Layer 1 base matrix
+  ($120M for 40 MW; WINDREAL-01, was the $50M Showcase-P3 decision 5) and
+  the same total is written to ``MC_Params`` as ``TIC`` so the QRA
   contingency sits on the capex the feasibility model used.
   Under REG-01 the register is CONSOLIDATED: the themed ``Risk Register``
   sheet also carries Mode + builder-computed EMV literal columns (the blog
@@ -68,24 +68,54 @@ _SECTION_TINT = {         # light band fills for the row-3 section labels
 FIXTURE_DIR = REPO_ROOT / "tests" / "fixtures" / "synthetic_wind"
 
 # ---------------------------------------------------------------------------
-# Wind Farm Beta capex basis (Showcase-P3 decision 5).
-# A 40 MW wind farm: $45M EPC + $5M grid connect = $50M capex on a two-year
-# build. The QRA contingency the wind register produces sits *on top of* this
-# same capex — so the feasibility model, the contingency model and (in P4) the
-# active-management layer share one numeric spine. Each CG cost group carries a
-# notional base value; the risk three-point impacts below are sized as plausible
-# fractions of the group they belong to, and the total is written to MC_Params
-# as TIC so the deliverable expresses contingency as a % of the $50M base.
+# Tropic Ridge capex basis (WINDREAL-01, Director-approved 01/11/2026).
+# A 40 MW wind farm at about A$3.0M/MW: $120M capex on an ~18-month build (it was
+# $50M, about 40% of what a real 40 MW farm costs). The QRA contingency sits on
+# top of this capex. The CG cost-group bases are DERIVED from the Layer 1 base
+# matrix (src/layer1_showcase.py), so the register carries one breakdown, not two
+# that disagree (the old CAPEX_BASIS put turbines at $22M while Layer 1 said $31M).
+# Each Layer 1 row maps wholly to one CG, except "Substation & grid connection",
+# which splits 5/12 grid connection (CG04) and 7/12 substation (CG05).
+# Development & approvals sits with grid connection (connection approvals are the
+# long pole of development); owner's costs & PM sit with commissioning & controls.
 # ---------------------------------------------------------------------------
-CAPEX_BASIS = {
-    "CG01": ("Civil & Earthworks", 9_000_000),
-    "CG02": ("Turbine Supply & Erection", 22_000_000),
-    "CG03": ("Electrical Reticulation", 5_000_000),
-    "CG04": ("Grid Connection", 5_000_000),
-    "CG05": ("Balance of Plant / Substation", 6_000_000),
-    "CG06": ("Commissioning & Controls", 3_000_000),
+_CG_LABELS = {
+    "CG01": "Civil & Earthworks",
+    "CG02": "Turbine Supply & Erection",
+    "CG03": "Electrical Reticulation",
+    "CG04": "Grid Connection",
+    "CG05": "Balance of Plant / Substation",
+    "CG06": "Commissioning & Controls",
 }
-WIND_CAPEX_TOTAL = sum(v[1] for v in CAPEX_BASIS.values())  # $50,000,000
+#: Layer 1 row -> {CG: share}. Shares per row sum to 1.
+_L1_ROW_TO_CG = {
+    "Development & approvals": {"CG04": 1.0},
+    "Turbine supply": {"CG02": 1.0},
+    "Turbine transport & erection": {"CG02": 1.0},
+    "BOP civils": {"CG01": 1.0},
+    "Electrical BOP": {"CG03": 1.0},
+    "Substation & grid connection": {"CG04": 5.0 / 12.0, "CG05": 7.0 / 12.0},
+    "Commissioning": {"CG06": 1.0},
+    "Owners costs & PM": {"CG06": 1.0},
+}
+
+
+def _derive_capex_basis() -> dict:
+    """CG -> (label, base $), summed from the Layer 1 rows; whole dollars."""
+    from src.layer1_showcase import _BASE_M, DECLARED_TOTAL, ROWS
+    acc = {cg: 0.0 for cg in _CG_LABELS}
+    for row_label, row in zip(ROWS, _BASE_M):
+        for cg, share in _L1_ROW_TO_CG[row_label].items():
+            acc[cg] += float(row.sum()) * share * 1_000_000.0
+    basis = {cg: (_CG_LABELS[cg], int(round(v))) for cg, v in acc.items()}
+    total = sum(v for _l, v in basis.values())
+    if total != int(DECLARED_TOTAL):
+        raise ValueError(f"CG capex basis {total} != Layer 1 declared total {DECLARED_TOTAL}")
+    return basis
+
+
+CAPEX_BASIS = _derive_capex_basis()
+WIND_CAPEX_TOTAL = sum(v[1] for v in CAPEX_BASIS.values())  # $120,000,000
 
 # CG correlation coefficients (the cost groups double as correlation groups).
 WIND_CG_COEFFICIENTS = {
@@ -111,94 +141,97 @@ METHODOLOGY_CG_COEFFICIENTS = {
 METHODOLOGY_MODE_MULTIPLIERS = {"Series": 1.0, "Hybrid": 0.5, "Parallel": 0.0}
 
 # ---------------------------------------------------------------------------
-# Risk data — 35 synthetic wind-BOP risks.
+# Risk data — 30 synthetic wind risks (WINDREAL-01, 01/11/2026).
 # fields: id, status, desc, owner, rbs1, rbs2, dist, cg, recurrence,
 #         prob_cost, opt$, ml$, pess$, time?, mode, prob_time, optD, mlD, pessD,
 #         cascade_group, sched_prefix
 # `sched_prefix` is the schedule WBS prefix the Stage 3 auto-mapper binds the
 # risk onto (10 Civil / 20 Foundations / 30 Turbine Erection / 40 Electrical /
 # 50 Grid+Substation / 60 Commissioning); blank for cost-only risks.
-# Time=Yes set (10): WT-001/002/008/009/020/021/026/027/031/032
-#   Modes — Series 4, Hybrid 4, Parallel 2 (a realistic schedule-arm mix).
-#   Dual-coded headline risks (big cost AND schedule): WT-008, WT-021.
+# WINDREAL-01 re-scale, Director-approved 01/11/2026:
+#   - cost three-points x2.4 (the $50M -> $120M base), rounded to $10k;
+#     probabilities unchanged. Cost impacts stay direct-only (no prelims).
+#   - removed as operating-phase, not construction: WT-014 warranty defect,
+#     WT-015 gearbox / main bearing, WT-033 power performance test, WT-035
+#     defects liability; WT-034 grid-code retest folded into WT-024. IDs are
+#     not renumbered, so a reader can trace each risk to its prior version.
+#   - newly Time=Yes (a wind practitioner expects each to move finish):
+#     WT-003 ground, WT-012 erection weather, WT-022 network approval,
+#     WT-028 transformer delivery, WT-024 grid-compliance hold points.
+#   - schedule days recalibrated for NEM conditions: WT-021 grid connection
+#     20/50/130 (was 6/15/35), WT-008 WTG delivery 10/30/80 (was 8/20/45).
+#     First-cut practitioner judgment, not a dataset (findings note
+#     WINDREAL_input_realism_20261101).
+# Time=Yes set (15): WT-001/002/003/008/009/012/020/021/022/024/026/027/028/031/032
+#   Modes — Series 7, Hybrid 6, Parallel 2.
 # ---------------------------------------------------------------------------
 WIND_RISKS = [
-    # ----- CG01 Civil & Earthworks (base $9.0M) -----
+    # ----- CG01 Civil & Earthworks -----
     ("WT-001", "Open", "Turbine foundation rework", "EPC Contractor", "Civil & Earthworks", "Foundations",
-     "PERT", "CG01", "", 0.45, 100_000, 300_000, 700_000, "Yes", "Series", 0.45, 5, 12, 24, "", "20"),
+     "PERT", "CG01", "", 0.45, 240_000, 720_000, 1_680_000, "Yes", "Series", 0.45, 5, 12, 24, "", "20"),
     ("WT-002", "Open", "Access road wet-weather damage", "EPC Contractor", "Civil & Earthworks", "Roads",
-     "Triangular", "CG01", "Single", 0.50, 60_000, 180_000, 500_000, "Yes", "Hybrid", 0.50, 3, 7, 16, "", "10"),
+     "Triangular", "CG01", "Single", 0.5, 140_000, 430_000, 1_200_000, "Yes", "Hybrid", 0.5, 3, 7, 16, "", "10"),
     ("WT-003", "Open", "Unforeseen ground conditions", "EPC Contractor", "Civil & Earthworks", "Earthworks",
-     "Lognormal", "CG01", "", 0.35, 150_000, 400_000, 1_100_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "Lognormal", "CG01", "", 0.35, 360_000, 960_000, 2_640_000, "Yes", "Hybrid", 0.35, 3, 8, 20, "", "20"),
     ("WT-004", "Open", "Hardstand settlement", "EPC Contractor", "Civil & Earthworks", "Hardstands",
-     "PERT", "CG01", "", 0.25, 40_000, 120_000, 350_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "PERT", "CG01", "", 0.25, 100_000, 290_000, 840_000, "No", "", 0.0, 0, 0, 0, "", ""),
     ("WT-005", "Open", "Bulk earthworks quantity overrun", "EPC Contractor", "Civil & Earthworks", "Earthworks",
-     "Triangular", "CG01", "", 0.55, 80_000, 220_000, 480_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "Triangular", "CG01", "", 0.55, 190_000, 530_000, 1_150_000, "No", "", 0.0, 0, 0, 0, "", ""),
     ("WT-006", "Open", "Drainage & culvert rework", "EPC Contractor", "Civil & Earthworks", "Drainage",
-     "PERT", "CG01", "", 0.30, 50_000, 140_000, 300_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "PERT", "CG01", "", 0.3, 120_000, 340_000, 720_000, "No", "", 0.0, 0, 0, 0, "", ""),
     ("WT-007", "Open", "Erosion & sediment control overrun", "Shared", "Civil & Earthworks", "Environmental",
-     "Triangular", "CG01", "", 0.40, 30_000, 90_000, 220_000, "No", "", 0.0, 0, 0, 0, "", ""),
-    # ----- CG02 Turbine Supply & Erection (base $22.0M) -----
+     "Triangular", "CG01", "", 0.4, 70_000, 220_000, 530_000, "No", "", 0.0, 0, 0, 0, "", ""),
+    # ----- CG02 Turbine Supply & Erection -----
     ("WT-008", "Open", "WTG delivery delay (long-lead)", "Wind Farm Owner", "Turbine Supply & Erection", "Procurement",
-     "PERT", "CG02", "", 0.40, 200_000, 600_000, 1_500_000, "Yes", "Series", 0.40, 8, 20, 45, "", "30"),
+     "PERT", "CG02", "", 0.4, 480_000, 1_440_000, 3_600_000, "Yes", "Series", 0.4, 10, 30, 80, "", "30"),
     ("WT-009", "Open", "Main crane mobilisation delay", "EPC Contractor", "Turbine Supply & Erection", "Heavy Lift",
-     "Triangular", "CG02", "", 0.45, 150_000, 450_000, 1_200_000, "Yes", "Hybrid", 0.45, 4, 10, 24, "", "30"),
+     "Triangular", "CG02", "", 0.45, 360_000, 1_080_000, 2_880_000, "Yes", "Hybrid", 0.45, 4, 10, 24, "", "30"),
     ("WT-010", "Open", "Blade transport damage", "EPC Contractor", "Turbine Supply & Erection", "Logistics",
-     "PERT", "CG02", "", 0.30, 120_000, 350_000, 900_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "PERT", "CG02", "", 0.3, 290_000, 840_000, 2_160_000, "No", "", 0.0, 0, 0, 0, "", ""),
     ("WT-011", "Open", "Tower section nonconformance", "Wind Farm Owner", "Turbine Supply & Erection", "Quality",
-     "Lognormal", "CG02", "", 0.25, 200_000, 500_000, 1_400_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "Lognormal", "CG02", "", 0.25, 480_000, 1_200_000, 3_360_000, "No", "", 0.0, 0, 0, 0, "", ""),
     ("WT-012", "Open", "Erection weather standby", "EPC Contractor", "Turbine Supply & Erection", "Weather",
-     "Triangular", "CG02", "", 0.60, 100_000, 300_000, 800_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "Triangular", "CG02", "", 0.6, 240_000, 720_000, 1_920_000, "Yes", "Hybrid", 0.6, 5, 12, 25, "", "30"),
     ("WT-013", "Open", "Bolt tensioning / torque rework", "EPC Contractor", "Turbine Supply & Erection", "Mechanical",
-     "PERT", "CG02", "", 0.35, 60_000, 180_000, 450_000, "No", "", 0.0, 0, 0, 0, "", ""),
-    ("WT-014", "Open", "Major component warranty defect", "Wind Farm Owner", "Turbine Supply & Erection", "Warranty",
-     "PERT", "CG02", "", 0.20, 250_000, 700_000, 2_000_000, "No", "", 0.0, 0, 0, 0, "", ""),
-    ("WT-015", "Open", "Gearbox / main-bearing replacement", "Wind Farm Owner", "Turbine Supply & Erection", "Mechanical",
-     "Lognormal", "CG02", "", 0.15, 300_000, 800_000, 2_400_000, "No", "", 0.0, 0, 0, 0, "", ""),
-    # ----- CG03 Electrical Reticulation (base $5.0M) -----
+     "PERT", "CG02", "", 0.35, 140_000, 430_000, 1_080_000, "No", "", 0.0, 0, 0, 0, "", ""),
+    # ----- CG03 Electrical Reticulation -----
     ("WT-016", "Open", "Array cable supply shortfall", "EPC Contractor", "Electrical Reticulation", "Procurement",
-     "PERT", "CG03", "", 0.45, 90_000, 250_000, 600_000, "No", "", 0.0, 0, 0, 0, "WT-CAS", ""),
+     "PERT", "CG03", "", 0.45, 220_000, 600_000, 1_440_000, "No", "", 0.0, 0, 0, 0, "WT-CAS", ""),
     ("WT-017", "Open", "Cable installation productivity", "EPC Contractor", "Electrical Reticulation", "Construction",
-     "PERT", "CG03", "", 0.40, 70_000, 220_000, 520_000, "No", "", 0.0, 0, 0, 0, "WT-CAS", ""),
+     "PERT", "CG03", "", 0.4, 170_000, 530_000, 1_250_000, "No", "", 0.0, 0, 0, 0, "WT-CAS", ""),
     ("WT-018", "Open", "Cable joint re-termination", "EPC Contractor", "Electrical Reticulation", "Electrical",
-     "Triangular", "CG03", "", 0.30, 50_000, 150_000, 400_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "Triangular", "CG03", "", 0.3, 120_000, 360_000, 960_000, "No", "", 0.0, 0, 0, 0, "", ""),
     ("WT-019", "Open", "Trenching clash with civil works", "Shared", "Electrical Reticulation", "Interface",
-     "PERT", "CG03", "", 0.25, 40_000, 120_000, 300_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "PERT", "CG03", "", 0.25, 100_000, 290_000, 720_000, "No", "", 0.0, 0, 0, 0, "", ""),
     ("WT-020", "Open", "HV array cable test failures", "EPC Contractor", "Electrical Reticulation", "Testing",
-     "Triangular", "CG03", "", 0.35, 60_000, 170_000, 420_000, "Yes", "Parallel", 0.35, 1, 4, 10, "", "40"),
-    # ----- CG04 Grid Connection (base $5.0M) -----
+     "Triangular", "CG03", "", 0.35, 140_000, 410_000, 1_010_000, "Yes", "Parallel", 0.35, 1, 4, 10, "", "40"),
+    # ----- CG04 Grid Connection -----
     ("WT-021", "Open", "Grid connection redesign", "Wind Farm Owner", "Grid Connection", "Design",
-     "Lognormal", "CG04", "", 0.30, 200_000, 500_000, 1_200_000, "Yes", "Series", 0.30, 6, 15, 35, "", "50"),
+     "Lognormal", "CG04", "", 0.3, 480_000, 1_200_000, 2_880_000, "Yes", "Series", 0.3, 20, 50, 130, "", "50"),
     ("WT-022", "Open", "Network operator approval delay", "Wind Farm Owner", "Grid Connection", "Approvals",
-     "PERT", "CG04", "", 0.40, 100_000, 280_000, 700_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "PERT", "CG04", "", 0.4, 240_000, 670_000, 1_680_000, "Yes", "Series", 0.4, 10, 25, 60, "", "50"),
     ("WT-023", "Open", "Protection settings rework", "Shared", "Grid Connection", "Electrical",
-     "Triangular", "CG04", "", 0.30, 60_000, 160_000, 380_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "Triangular", "CG04", "", 0.3, 140_000, 380_000, 910_000, "No", "", 0.0, 0, 0, 0, "", ""),
     ("WT-024", "Open", "Grid compliance test failure", "Wind Farm Owner", "Grid Connection", "Testing",
-     "PERT", "CG04", "", 0.25, 120_000, 320_000, 800_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "PERT", "CG04", "", 0.25, 290_000, 770_000, 1_920_000, "Yes", "Series", 0.25, 5, 15, 40, "", "60"),
     ("WT-025", "Open", "Connection-point scope change", "Wind Farm Owner", "Grid Connection", "Scope",
-     "Triangular", "CG04", "", 0.20, 80_000, 200_000, 500_000, "No", "", 0.0, 0, 0, 0, "", ""),
-    # ----- CG05 Balance of Plant / Substation (base $6.0M) -----
+     "Triangular", "CG04", "", 0.2, 190_000, 480_000, 1_200_000, "No", "", 0.0, 0, 0, 0, "", ""),
+    # ----- CG05 Balance of Plant / Substation -----
     ("WT-026", "Open", "Substation civils delay", "EPC Contractor", "Balance of Plant", "Civil",
-     "PERT", "CG05", "", 0.35, 80_000, 220_000, 550_000, "Yes", "Hybrid", 0.35, 2, 6, 14, "", "50"),
+     "PERT", "CG05", "", 0.35, 190_000, 530_000, 1_320_000, "Yes", "Hybrid", 0.35, 2, 6, 14, "", "50"),
     ("WT-027", "Open", "Substation E&I commissioning slip", "Shared", "Balance of Plant", "Commissioning",
-     "Triangular", "CG05", "", 0.35, 60_000, 180_000, 450_000, "Yes", "Parallel", 0.35, 1, 4, 10, "", "50"),
+     "Triangular", "CG05", "", 0.35, 140_000, 430_000, 1_080_000, "Yes", "Parallel", 0.35, 1, 4, 10, "", "50"),
     ("WT-028", "Open", "Power transformer delivery delay", "Wind Farm Owner", "Balance of Plant", "Procurement",
-     "PERT", "CG05", "", 0.25, 150_000, 400_000, 1_000_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "PERT", "CG05", "", 0.25, 360_000, 960_000, 2_400_000, "Yes", "Series", 0.25, 10, 30, 70, "", "50"),
     ("WT-029", "Open", "Control building fit-out overrun", "EPC Contractor", "Balance of Plant", "Building",
-     "Triangular", "CG05", "", 0.30, 50_000, 140_000, 320_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "Triangular", "CG05", "", 0.3, 120_000, 340_000, 770_000, "No", "", 0.0, 0, 0, 0, "", ""),
     ("WT-030", "Open", "Earthing & lightning protection rework", "EPC Contractor", "Balance of Plant", "Electrical",
-     "PERT", "CG05", "", 0.25, 40_000, 110_000, 280_000, "No", "", 0.0, 0, 0, 0, "", ""),
-    # ----- CG06 Commissioning & Controls (base $3.0M) -----
+     "PERT", "CG05", "", 0.25, 100_000, 260_000, 670_000, "No", "", 0.0, 0, 0, 0, "", ""),
+    # ----- CG06 Commissioning & Controls -----
     ("WT-031", "Open", "SCADA integration defects", "Shared", "Commissioning & Controls", "Controls",
-     "PERT", "CG06", "", 0.50, 110_000, 300_000, 700_000, "Yes", "Series", 0.50, 4, 9, 19, "", "60"),
+     "PERT", "CG06", "", 0.5, 260_000, 720_000, 1_680_000, "Yes", "Series", 0.5, 4, 9, 19, "", "60"),
     ("WT-032", "Open", "Turbine commissioning faults", "EPC Contractor", "Commissioning & Controls", "Commissioning",
-     "Triangular", "CG06", "", 0.45, 90_000, 250_000, 600_000, "Yes", "Hybrid", 0.45, 3, 7, 16, "", "60"),
-    ("WT-033", "Open", "Power performance test shortfall", "Wind Farm Owner", "Commissioning & Controls", "Testing",
-     "PERT", "CG06", "", 0.30, 60_000, 160_000, 400_000, "No", "", 0.0, 0, 0, 0, "", ""),
-    ("WT-034", "Open", "Grid code compliance retest", "Shared", "Commissioning & Controls", "Testing",
-     "Triangular", "CG06", "", 0.25, 70_000, 180_000, 450_000, "No", "", 0.0, 0, 0, 0, "", ""),
-    ("WT-035", "Open", "Punchlist / defects liability", "EPC Contractor", "Commissioning & Controls", "Closeout",
-     "PERT", "CG06", "", 0.40, 50_000, 140_000, 350_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "Triangular", "CG06", "", 0.45, 220_000, 600_000, 1_440_000, "Yes", "Hybrid", 0.45, 3, 7, 16, "", "60"),
 ]
 
 # Schedule WBS groups: (prefix, wbs_id, name).
@@ -229,6 +262,12 @@ GATING = {
     "WT-027": ("50.G.003", "Substation E&I commissioning gate"),
     "WT-031": ("60.G.001", "SCADA integration gate"),
     "WT-032": ("60.G.002", "Turbine commissioning gate"),
+    # WINDREAL-01: one gate each for the five risks newly coded Time=Yes.
+    "WT-003": ("20.G.002", "Ground conditions gate"),
+    "WT-012": ("30.G.003", "Erection weather window gate"),
+    "WT-022": ("50.G.004", "Network operator approval gate"),
+    "WT-028": ("50.G.005", "Power transformer delivery gate"),
+    "WT-024": ("60.G.003", "Grid compliance hold-point gate"),
 }
 
 #: WIND-03 mapping (Director-approved, all ten rows). The strawman
@@ -241,7 +280,7 @@ GATING = {
 #: 1:1 on their gate (serial-spine groups where broadening would compound
 #: the same delay - the RefProject over-binding failure WIND-03 warns against).
 #: ``(prefix, expected_bound_activity_count)``; the counts are asserted in
-#: ``tests/test_synthetic_wind.py`` and total 58.
+#: ``tests/test_synthetic_wind.py`` and total 63 (58 before WINDREAL-01).
 PREFIX_MAPPING = {
     "WT-001": ("20.A", 11),      # foundation: controlling + 10 excavation
     "WT-002": ("10.G.001", 1),   # keep 1:1 (group 10 serial spine)
@@ -253,11 +292,85 @@ PREFIX_MAPPING = {
     "WT-027": ("50.G.003", 1),   # keep 1:1
     "WT-031": ("60.A", 11),      # SCADA: controlling + 10 pre-commissioning
     "WT-032": ("60.B", 10),      # commissioning: 10 per-turbine (finish-neutral)
+    # WINDREAL-01: the five new Time=Yes risks stay 1:1 on their own spine gate
+    # (each is a discrete hold on the path to energisation or handover). Total 63.
+    "WT-003": ("20.G.002", 1),
+    "WT-012": ("30.G.003", 1),
+    "WT-022": ("50.G.004", 1),
+    "WT-028": ("50.G.005", 1),
+    "WT-024": ("60.G.003", 1),
 }
 
-#: Invented wind day rate ($/working day). Proportionate to a ~$50M, ~18-month
-#: wind-BOP build (prelims spine far below RefProject's $100,000/wd). Schedule
-#: contingency dollarises Time=Yes slip at this rate. REG-01: this is the ONE
+#: WINDREAL-01: the controlling network. (prefix, code, name, hours, gate risk id,
+#: path). A row with a risk id is that risk's GATING hold point (1 day). Rows run in
+#: order within each path. "pre" runs to the foundations gate; there the job forks
+#: into the "turbine" path (delivery, erection, array cabling) and the "substation"
+#: path (substation, transformer, network approval, grid connection), which run in
+#: parallel, as on a real job, and rejoin at energisation; "post" is commissioning
+#: to handover. The Director approved the parallel path at Stage A review
+#: (01/11/2026): the serial spine stacked every delay end to end (P80 slip 34%).
+GATE_HRS = 8.0
+SPINE = (
+    ("10", "10.A.001", "Site establishment", 80, "", "pre"),
+    ("10", "10.A.002", "Main site access road", 120, "", "pre"),
+    ("10", "10.G.001", "", 0, "WT-002", "pre"),
+    ("20", "20.G.002", "", 0, "WT-003", "pre"),
+    ("20", "20.A.900", "Foundation works (controlling)", 480, "", "pre"),
+    ("20", "20.G.001", "", 0, "WT-001", "pre"),
+    ("30", "30.G.001", "", 0, "WT-008", "turbine"),
+    ("30", "30.G.002", "", 0, "WT-009", "turbine"),
+    ("30", "30.G.003", "", 0, "WT-012", "turbine"),
+    ("30", "30.A.900", "Turbine erection (controlling)", 480, "", "turbine"),
+    ("40", "40.A.001", "Array cable trenching", 160, "", "turbine"),
+    ("40", "40.A.002", "Array cable pull-in", 120, "", "turbine"),
+    ("40", "40.A.003", "Array cable terminations", 80, "", "turbine"),
+    ("40", "40.A.004", "HV array cable testing", 80, "", "turbine"),
+    ("40", "40.G.001", "", 0, "WT-020", "turbine"),
+    ("50", "50.A.001", "Substation civils", 200, "", "substation"),
+    ("50", "50.G.002", "", 0, "WT-026", "substation"),
+    ("50", "50.G.005", "", 0, "WT-028", "substation"),
+    ("50", "50.A.002", "Power transformer installation", 120, "", "substation"),
+    ("50", "50.A.003", "Switchgear & E&I installation", 160, "", "substation"),
+    ("50", "50.G.003", "", 0, "WT-027", "substation"),
+    ("50", "50.A.004", "Protection & control commissioning", 120, "", "substation"),
+    ("50", "50.G.004", "", 0, "WT-022", "substation"),
+    ("50", "50.A.005", "Grid connection works", 160, "", "substation"),
+    ("50", "50.G.001", "", 0, "WT-021", "substation"),
+    ("50", "50.A.006", "Substation energisation", 80, "", "post"),
+    ("60", "60.C.001", "SCADA integration & site controls", 120, "", "post"),
+    ("60", "60.G.001", "", 0, "WT-031", "post"),
+    ("60", "60.A.900", "Turbine commissioning (controlling)", 320, "", "post"),
+    ("60", "60.G.002", "", 0, "WT-032", "post"),
+    ("60", "60.C.002", "Grid code compliance testing", 80, "", "post"),
+    ("60", "60.G.003", "", 0, "WT-024", "post"),
+    ("60", "60.C.003", "Power performance testing", 80, "", "post"),
+    ("60", "60.C.004", "Punchlist & handover", 80, "", "post"),
+)
+
+
+def _path_hours(path: str) -> float:
+    return sum(GATE_HRS if rid else hrs for (_p, _c, _n, hrs, rid, pth) in SPINE if pth == path)
+
+
+#: Deterministic hours on each parallel path, and the float the shorter one carries
+#: (authored floats are the CPM floats here, so the auto-mapper reads true values).
+TURBINE_PATH_HOURS = _path_hours("turbine")
+SUBSTATION_PATH_HOURS = _path_hours("substation")
+SUBSTATION_FLOAT_HOURS = max(TURBINE_PATH_HOURS - SUBSTATION_PATH_HOURS, 0.0)
+TURBINE_FLOAT_HOURS = max(SUBSTATION_PATH_HOURS - TURBINE_PATH_HOURS, 0.0)
+#: Planned duration on the 5-day, 8-hour calendar, written to MC_Params (it said
+#: 90 weeks while the CPM ran ~118; now one number, computed from the network).
+SCHEDULE_HOURS = (_path_hours("pre") + max(TURBINE_PATH_HOURS, SUBSTATION_PATH_HOURS)
+                  + _path_hours("post"))
+SCHEDULE_WEEKS = round(SCHEDULE_HOURS / 40.0)
+
+#: Wind day rate ($/working day): preliminaries, site overheads and owner's
+#: time-related costs only, per PLAYBOOK (no standby, no lost revenue). WINDREAL-01
+#: check: about 12% of the $120M capex over the ~405 wd build is about $35-37k/wd,
+#: so the value is unchanged from the $50M era but is now right for the reason the
+#: playbook gives. Lost revenue (about $38k/wd at 40 MW, 35% capacity factor,
+#: ~$80/MWh) is an owner exposure, deliberately NOT in this rate or in contingency.
+#: Schedule contingency dollarises Time=Yes slip at this rate. REG-01: this is the ONE
 #: home for the day rate - written to MC_Params only (the per-row strawman
 #: Day_Rate is deleted with the strawman).
 WIND_DAY_RATE = 35_000.0
@@ -505,7 +618,7 @@ def build_register(path: Path) -> None:
         ("day_rate ($/wd)", WIND_DAY_RATE),
         ("programme_seasons", 1),
         ("cp_hybrid_float_threshold_days", 20),
-        ("schedule duration (weeks)", 90),
+        ("schedule duration (weeks)", SCHEDULE_WEEKS),
         ("expected_time_yes_count", n_time),
     ]
     # CG correlation coefficients + a documented capex base value per group.
@@ -574,8 +687,9 @@ def _build_schedule_tables() -> dict:
     Topology: a single **controlling spine** (site → foundations → erection →
     array cabling → substation/grid → energisation → commissioning → handover)
     whose activities all carry ``total_float = 0`` and form the genuine
-    critical path (~90 working weeks, matching the strawman). The ten gating
-    activities (one per Time=Yes risk, :data:`GATING`) sit *on* this spine, so
+    critical path (:data:`SCHEDULE_WEEKS`; WINDREAL-01 forks it into parallel turbine and
+    substation paths, the substation path carrying float). The
+    gating activities (one per Time=Yes risk, :data:`GATING`) sit *on* this spine, so
     each schedule risk perturbs project finish, and each gate's code is unique
     so the Stage 3 auto-mapper binds the risk to exactly one activity.
 
@@ -601,7 +715,9 @@ def _build_schedule_tables() -> dict:
                         "wbs_short_name": prefix, "wbs_name": name, "seq_num": k})
 
     wbs_id = {prefix: wid for (prefix, wid, _name) in WIND_WBS}
-    start = pd.Timestamp("2026-03-02 08:00")
+    # WINDREAL-01: the build starts 28/04/2025 so the ~14-month plan finishes 29/06/2026,
+    # the commissioning date the AM periods narrate (period runs pass the same start).
+    start = pd.Timestamp("2025-04-28 08:00")
     task: list[dict] = []
     taskpred: list[dict] = []
     seq = {"task": 1000, "pred": 5000}
@@ -630,56 +746,42 @@ def _build_schedule_tables() -> dict:
             "pred_task_id": pred_tid, "pred_type": ptype, "lag_hr_cnt": float(lag),
         })
 
-    # --- Controlling spine (float 0 throughout = the critical path) ----------
-    nodes: list[int] = []
+    # --- Controlling network (WINDREAL-01: pre -> turbine || substation -> post) --
+    handles: dict[str, int] = {}
+    tails: dict[str, int] = {}
+    path_float = {"pre": 0.0, "post": 0.0, "turbine": TURBINE_FLOAT_HOURS,
+                  "substation": SUBSTATION_FLOAT_HOURS}
 
-    def spine(prefix, code, name, hrs):
-        tid = add_task(prefix, code, name, hrs, 0.0)
-        if nodes:
-            link(nodes[-1], tid)
-        nodes.append(tid)
-        return tid
-
-    def spine_gate(rid, prefix, hrs=40.0):
+    def spine_gate(rid, prefix, float_h, hrs=GATE_HRS):
         code, name = GATING[rid]
-        return spine(prefix, code, name, hrs)
+        return add_task(prefix, code, name, hrs, float_h)
 
-    spine("10", "10.A.001", "Site establishment", 80)
-    s_road = spine("10", "10.A.002", "Main site access road", 120)
-    g_civil = spine_gate("WT-002", "10")
-    spine("20", "20.A.900", "Foundation works (controlling)", 700)
-    g_found = spine_gate("WT-001", "20")
-    spine_gate("WT-008", "30")          # WTG delivery gate
-    g_crane = spine_gate("WT-009", "30")  # main crane availability gate
-    spine("30", "30.A.900", "Turbine erection (controlling)", 1100)
-    s_trench = spine("40", "40.A.001", "Array cable trenching", 200)
-    spine("40", "40.A.002", "Array cable pull-in", 160)
-    spine("40", "40.A.003", "Array cable terminations", 120)
-    s_hvtest = spine("40", "40.A.004", "HV array cable testing", 80)
-    spine_gate("WT-020", "40")          # HV array cable test gate
-    s_subciv = spine("50", "50.A.001", "Substation civils", 200)
-    spine_gate("WT-026", "50")          # substation civils gate
-    spine("50", "50.A.002", "Power transformer installation", 120)
-    spine("50", "50.A.003", "Switchgear & E&I installation", 160)
-    spine_gate("WT-027", "50")          # substation E&I gate
-    spine("50", "50.A.004", "Protection & control commissioning", 120)
-    s_grid = spine("50", "50.A.005", "Grid connection works", 160)
-    spine_gate("WT-021", "50")          # grid connection gate
-    s_energise = spine("50", "50.A.006", "Substation energisation", 80)
-    spine("60", "60.C.001", "SCADA integration & site controls", 120)
-    spine_gate("WT-031", "60")          # SCADA integration gate
-    spine("60", "60.A.900", "Turbine commissioning (controlling)", 480)
-    g_comm = spine_gate("WT-032", "60")  # turbine commissioning gate
-    spine("60", "60.C.002", "Grid code compliance testing", 80)
-    spine("60", "60.C.003", "Power performance testing", 120)
-    spine("60", "60.C.004", "Punchlist & handover", 80)
+    for prefix, code, name, hrs, gate_rid, path in SPINE:
+        fl = path_float[path]
+        tid = spine_gate(gate_rid, prefix, fl) if gate_rid else add_task(prefix, code, name, hrs, fl)
+        if path in ("turbine", "substation") and path not in tails:
+            link(tails["pre"], tid)                      # the fork at the foundations gate
+        elif path == "post" and "post" not in tails:
+            link(tails["turbine"], tid)                  # rejoin at energisation
+            link(tails["substation"], tid)
+        elif path in tails:
+            link(tails[path], tid)
+        tails[path] = tid
+        handles[code] = tid
+
+    s_road, g_civil, g_found = handles["10.A.002"], handles["10.G.001"], handles["20.G.001"]
+    g_crane, s_trench, s_hvtest = handles["30.G.002"], handles["40.A.001"], handles["40.A.004"]
+    s_subciv, s_grid, s_energise = handles["50.A.001"], handles["50.A.005"], handles["50.A.006"]
+    g_comm = handles["60.G.002"]
 
     # --- Per-turbine detail branches (positive float, parallel to spine) -----
     for i in range(1, N_TURBINES + 1):
         # Access spur off the main road -> civil gate.
         spur = add_task("10", f"10.C.{i:03d}", f"Turbine {i} access spur & pad", 40, 200.0)
         link(s_road, spur)
-        link(spur, g_civil)
+        # WINDREAL-01: the spur feeds its own foundation only. It used to feed the civil
+        # gate too, which put 40h of "floated" spur work on the critical path (CPM finish
+        # 5 wd past the controlling spine while the spur was authored with 200h float).
         # Foundation mini-chain (civil gate -> foundations gate), parallel to
         # the 700h controlling activity.
         exc = add_task("20", f"20.A.{i:03d}", f"T{i} foundation excavation", 40, 240.0)

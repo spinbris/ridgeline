@@ -139,7 +139,7 @@ def test_headless_partial_config_fails_loud_on_absent_key(monkeypatch) -> None:
     monkeypatch.setenv(_ENV, "synthetic_wind")
     assert d.get_wbs_cross_bucket_rho() == 0.4
     assert d.get_headless_cg_coefficients()["CG06"] == 0.4  # wind's own map (not 0.5)
-    assert d.get_default_gp_toc() == 50_000_000.0           # supplied at RS-B step 1
+    assert d.get_default_gp_toc() == 120_000_000.0          # supplied at RS-B step 1; $120M since WINDREAL-01
     assert len(d.get_headless_buckets()) == 6               # supplied at RS-B step 1
 
     withheld = ("get_default_workbook_filename", "get_default_programme_seasons")

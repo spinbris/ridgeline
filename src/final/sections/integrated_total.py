@@ -163,10 +163,12 @@ def stage3_jcl(
     day_rate: float,
     p_level: int = 80,
 ) -> dict[str, Any] | None:
-    """INTSCURVE-01 P11: the JCL on the Stage 3 run, cost axis without delay cost.
+    """INTSCURVE-01 P11 / JCLAXIS-01: the JCL on the Stage 3 run, cost axis with delay cost.
 
-    Cost axis: base (when Part B drew one) + event-risk cost, per iteration. Finish axis: the
-    run's own ``project_finish_days``, paired with the cost arm by construction (the cost arm's
+    Cost axis: base (when Part B drew one) + event-risk cost + delay cost, per iteration: the
+    integrated total the budget is set against (JCLAXIS-01, Director 01/11/2026). A JCL counts
+    iterations meeting both targets and adds nothing across axes, so delay is not counted twice.
+    Finish axis: the run's own ``project_finish_days``, paired with the cost arm by construction (the cost arm's
     fire record drove the replay). Targets (D-3): cost = declared base + the integrated
     contingency at ``p_level`` (the headline's own figure); finish = the P80 finish. ``None``
     when the run carries no Stage 3 arrays (a section-seam fixture), so nothing is drawn.
@@ -180,11 +182,11 @@ def stage3_jcl(
     finish = np.asarray(getattr(schedule, "project_finish_days", []), dtype=float)
     if cost.size == 0 or cost.shape != finish.shape or cost.shape != days.shape:
         return None
-    headline_contingency = float(np.percentile(
-        integrated_dollars_array(cost, days, day_rate), p_level))
+    integrated = integrated_dollars_array(cost, days, day_rate)
+    headline_contingency = float(np.percentile(integrated, p_level))
     base = total_cost["base_dollars"] if total_cost else 0.0
     declared = total_cost["base_total_dollars"] if total_cost else 0.0
-    out = jcl_data(cost + base, finish, cost_target=declared + headline_contingency,
+    out = jcl_data(integrated + base, finish, cost_target=declared + headline_contingency,
                    finish_target=float(np.percentile(finish, 80)))
     out.update(p_level=int(p_level), base_drawn=bool(total_cost),
                headline_contingency_dollars=headline_contingency,
@@ -194,6 +196,7 @@ def stage3_jcl(
 
 def jcl_sentence(jcl: dict[str, Any]) -> str:
     """The JCL in one sentence, with both targets and what each achieves on its own."""
+    q = jcl["quadrants"]
     budget = (f"${jcl['cost_target'] / 1e6:.2f}M (the ${jcl['declared_base_dollars'] / 1e6:.2f}M "
               f"base plus the P{jcl['p_level']} contingency)" if jcl["base_drawn"] else
               f"${jcl['cost_target'] / 1e6:.2f}M (the P{jcl['p_level']} contingency)")
@@ -201,7 +204,9 @@ def jcl_sentence(jcl: dict[str, Any]) -> str:
             f"or under a budget of {budget} AND finish by the P80 finish, working day "
             f"{jcl['finish_target']:.0f}. On their own the budget is met in "
             f"{jcl['cost_confidence']:.0%} of iterations and the finish in "
-            f"{jcl['finish_confidence']:.0%}.")
+            f"{jcl['finish_confidence']:.0%}. Rank correlation of cost with finish "
+            f"{jcl['rank_correlation']:.2f}; meets both {q['meets_both']:.0%}, budget only "
+            f"{q['cost_only']:.0%}, date only {q['finish_only']:.0%}, neither {q['neither']:.0%}.")
 
 
 def confidence_curve_display_rows(rows: list[dict[str, Any]]) -> list[dict[str, str]]:

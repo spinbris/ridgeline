@@ -121,7 +121,7 @@ def test_fixture_flag_true_layer1_reads_on():
     assert grids["layer1_enabled"] is True
     layer1 = _layer1_from_grids(grids)
     assert layer1 is not None
-    assert layer1.declared_total == 50_000_000.0     # the wind $50M base
+    assert layer1.declared_total == 120_000_000.0    # the wind $120M base (WINDREAL-01)
     assert len(layer1.factors) == 14
 
 
