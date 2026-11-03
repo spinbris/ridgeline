@@ -91,6 +91,6 @@ def test_theming_value_neutral_reads(monkeypatch):
     from src.sra.strawman_reader import read_risk_scope
     from src.v5_register_reader import read_risks_v5
     risks = read_risks_v5(str(WIND_REGISTER), risk_id_prefix="WT")
-    assert len(risks) == 30  # WINDREAL-01: 30 risks (35 before)
+    assert len(risks) == 29  # RISKDRV-01: WT-017 folded into D3 (WINDREAL-01: 30)
     scope = read_risk_scope(str(WIND_REGISTER))
     assert (scope["time_impact"] == "Yes").sum() == 15  # WINDREAL-01: 15 (10 before)

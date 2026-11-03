@@ -286,7 +286,12 @@ def jcl_against_held(
     declared = total_cost["base_total_dollars"] if total_cost else 0.0
     integrated = integrated_dollars_array(
         result.cost_dollars_array, result.schedule_days_array, _rate(result, "jcl_against_held"))
-    return jcl_data(integrated + base, finish,
+    axis = integrated + base
+    if (total_cost or {}).get("owner_finish_days") is not None:
+        # RISKDRV-01: the owner view's axes, as stage3_jcl draws them with shared drivers on.
+        axis = total_cost["total_dollars"]
+        finish = np.asarray(total_cost["owner_finish_days"], dtype=float)
+    return jcl_data(axis, finish,
                     cost_target=declared + float(held_dollars),
                     finish_target=float(np.percentile(finish, 80)))
 

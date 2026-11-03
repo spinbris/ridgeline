@@ -6,6 +6,7 @@
  * Sections:
  * - Tornado chart (per-risk sigma_days proxy)
  * - SSI bars (Schedule Sensitivity Index per risk)
+ * - Shared drivers card (RISKDRV-01 stage 3), when the register declares drivers
  * - Notes panel with brief metric definitions
  *
  * AM10 (WIND-01 A4): the per-risk Mode-divergence pill table was removed -
@@ -18,6 +19,7 @@ import { SSIChart } from "@/components/charts/SSIChart";
 import { TornadoChart } from "@/components/charts/TornadoChart";
 import { Card } from "@/components/Card";
 import { PeriodGate } from "@/components/PeriodGate";
+import { SharedDriversCard } from "@/components/SharedDriversCard";
 import { usePeriodContext } from "@/lib/PeriodContext";
 
 export default function AnalystA2() {
@@ -31,7 +33,7 @@ export default function AnalystA2() {
 function AnalystA2Content() {
   const { status } = usePeriodContext();
   if (status.kind !== "ready") return null;
-  const { risks } = status.data;
+  const { risks, integrated } = status.data;
 
   return (
     <main className="px-6 py-6 space-y-5 max-w-7xl mx-auto">
@@ -54,6 +56,12 @@ function AnalystA2Content() {
           <SSIChart risks={risks} />
         </Card>
       </div>
+
+      {/* RISKDRV-01 stage 3 (contract 1.7): absent unless the register declares drivers. */}
+      <SharedDriversCard
+        drivers={integrated?.shared_drivers}
+        ownerView={integrated?.owner_view}
+      />
 
       {/* AM10 (WIND-01 A4): the "Mode-divergence per risk" Card was removed -
           divergence_flag is dropped from the contract (Doc 3 v2.5); under the

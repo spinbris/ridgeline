@@ -616,6 +616,7 @@ class TestChunkingAndStreaming:
             mode_multiplier_override=None,
             fires_out=None,
             fire_mask_batch=None,
+            duration_shift_batch=None,  # RISKDRV-01 stage 2; None on this path
         ) -> tuple[
             np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
         ]:

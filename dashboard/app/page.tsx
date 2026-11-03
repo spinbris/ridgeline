@@ -33,7 +33,7 @@ import {
   formatShortDate,
 } from "@/lib/formatters";
 import { usePeriodContext } from "@/lib/PeriodContext";
-import type { Delta, Headline, Integrated, IntegratedJcl } from "@/types/period";
+import type { Delta, Headline, Integrated, IntegratedJcl, OwnerView } from "@/types/period";
 
 export default function PmPage1() {
   return (
@@ -80,9 +80,12 @@ function PmPage1Content() {
           integrated={integrated}
           unavailableReason={audit.integrated_unavailable}
         />
-        <FinishTile headline={headline} />
+        <FinishTile headline={headline} ownerView={integrated?.owner_view ?? null} />
         <SinceLastPeriodTile delta={delta} previousPeriodEnd={m.previous_period_end_date} />
-        <OnBudgetAndOnTimeTile jcl={integrated?.jcl} />
+        <OnBudgetAndOnTimeTile
+          jcl={integrated?.jcl}
+          ownerFinish={integrated?.owner_view ? integrated.jcl?.finish_target_date : null}
+        />
       </section>
 
       {/* The integrated card, relabelled, as the explanation of tile 1. Rendered only with a
@@ -239,7 +242,12 @@ function ContingencyTile({
   );
 }
 
-function FinishTile({ headline }: { headline: Headline }) {
+/**
+ * Tile 2. The headline is the event-risk finish (Director S1, 03/11/2026: trend and days behind
+ * plan stay comparable with earlier periods). With shared drivers declared, one line beneath
+ * gives the owner-view P80, the finish the total cost and the JCL read (contract 1.7).
+ */
+function FinishTile({ headline, ownerView }: { headline: Headline; ownerView: OwnerView | null }) {
   const behind = headline.p80_days_behind_plan;
   return (
     <section
@@ -263,6 +271,14 @@ function FinishTile({ headline }: { headline: Headline }) {
       <div className="text-sm mt-1" style={{ color: "var(--color-muted)" }}>
         P50 {formatLongDate(headline.p50_finish)} · P90 {formatLongDate(headline.p90_finish)}
       </div>
+      {ownerView ? (
+        <div className="text-sm mt-2" data-testid="finish-owner-p80">
+          With shared drivers: P80 {formatLongDate(ownerView.p80_finish)}
+          <span className="block text-xs opacity-70 mt-1">
+            Event risks only above; this line adds uncertainty on the estimate itself.
+          </span>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -322,7 +338,14 @@ function SinceLastPeriodTile({
  * Tile 4 (INTVIEW-01 stage 2): the JCL on the report's basis, in the wireframe's words. Every
  * figure is `integrated.jcl`'s. Never blank: with no integrated block it says why it is empty.
  */
-function OnBudgetAndOnTimeTile({ jcl }: { jcl?: IntegratedJcl }) {
+function OnBudgetAndOnTimeTile({
+  jcl,
+  ownerFinish,
+}: {
+  jcl?: IntegratedJcl;
+  // 1.7: set when the JCL's finish target is the owner-view P80 (shared drivers declared).
+  ownerFinish?: string | null;
+}) {
   return (
     <section
       className="bg-white rounded-md border p-5"
@@ -340,7 +363,10 @@ function OnBudgetAndOnTimeTile({ jcl }: { jcl?: IntegratedJcl }) {
             {jcl.base_drawn
               ? `(base plus P${jcl.p_level} contingency)`
               : `(the P${jcl.p_level} contingency; no base estimate drawn)`}{" "}
-            and by the P80 date.
+            and by{" "}
+            {ownerFinish
+              ? `the P80 date with shared drivers (${formatLongDate(ownerFinish)}).`
+              : "the P80 date."}
           </div>
           <div className="text-sm mt-2" style={{ color: "var(--color-muted)" }}>
             Budget alone {formatPercent(jcl.cost_confidence, 0)}, date alone{" "}

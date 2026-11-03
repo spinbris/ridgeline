@@ -597,6 +597,7 @@ def _run_one_batch(
     mode_multiplier_override: float | None = None,
     fires_out: dict[str, np.ndarray] | None = None,
     fire_mask_batch: np.ndarray | None = None,
+    duration_shift_batch: np.ndarray | None = None,
 ) -> tuple[
     np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
 ]:
@@ -691,6 +692,12 @@ def _run_one_batch(
         fires_out=fires_out,
         fire_mask=fire_mask_batch,
     )  # shape (batch_n, n_act), dtype = precision
+    if duration_shift_batch is not None:
+        # RISKDRV-01: shared drivers move the ORIGINAL duration of the activities they map to,
+        # (m - 1) x original hours, on top of the risk deltas. Additive, so order-free. Absent,
+        # this block is skipped and the batch is byte-identical to the event-only kernel.
+        durations = durations + np.asarray(duration_shift_batch, dtype=durations.dtype)
+        np.maximum(durations, durations.dtype.type(0.0), out=durations)
 
     # Run CPM kernel — Beta-03. Returns dict with ES/EF/LS/LF/slack
     # ((batch_n, n_act) precision-typed) and on_critical_path
@@ -769,6 +776,7 @@ def _run_batch_loop(
     batch_rngs: list[np.random.Generator] | None = None,
     fires_out: dict[str, np.ndarray] | None = None,
     fire_mask: np.ndarray | None = None,
+    duration_shift: Any | None = None,
 ) -> tuple[
     np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
 ]:
@@ -861,6 +869,8 @@ def _run_batch_loop(
         ) = _run_one_batch(
             fires_out=batch_fires,
             fire_mask_batch=fire_slice,
+            duration_shift_batch=(None if duration_shift is None
+                                  else duration_shift.batch(batch_start, batch_end)),
             batch_start=batch_start,
             batch_end=batch_end,
             graph=graph,
@@ -920,6 +930,7 @@ def run_schedule_mc(
     rng: np.random.Generator | None = None,
     criticality_measurement_mode: CriticalityMeasurementMode = "mode_conditioned",
     fire_mask: np.ndarray | None = None,
+    duration_shift: Any | None = None,
 ) -> ScheduleMCResult:
     """Run the chunked schedule Monte Carlo simulation.
 
@@ -1203,6 +1214,7 @@ def run_schedule_mc(
     ) = _run_batch_loop(
         fires_out=risk_fires,
         fire_mask=fire_mask,
+        duration_shift=duration_shift,
         n_iter=n_iter,
         n_act=n_act,
         n_batches=n_batches,
@@ -1273,6 +1285,7 @@ def run_schedule_mc(
             mode_multiplier_override=1.0,
             batch_rngs=paired_batch_rngs,
             fire_mask=fire_mask,
+            duration_shift=duration_shift,
         )
         n_iter_f_mi = float(n_iter)
         mode_independent_criticality_index = {

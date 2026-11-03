@@ -235,14 +235,20 @@ def _cell_masks(cfg: Layer1Config) -> list[np.ndarray]:
 
 
 def run_layer1_base(
-    n_iter: int, cfg: Layer1Config, rng: np.random.Generator
+    n_iter: int, cfg: Layer1Config, rng: np.random.Generator,
+    *, extra_factors: tuple[Factor, ...] = (),
 ) -> dict[str, Any]:
     """Compose the per-iteration Layer-1 base contribution (dollars).
 
     Draw order (deterministic for seed reproducibility): the correlated block
     first (one ``standard_normal((n_iter, k))``), then each independent factor's
-    uniform in factor-definition order. Returns ``base_array`` (n_iter,), the
-    correlation diagnostics, and per-factor mean multipliers (attribution).
+    uniform in factor-definition order, then each of ``extra_factors`` in order.
+    Returns ``base_array`` (n_iter,), the correlation diagnostics, per-factor mean
+    multipliers (attribution) and ``factor_deltas`` (each factor's sampled delta).
+
+    ``extra_factors`` (RISKDRV-01): the shared productivity drivers' cost side, independent
+    factors drawn LAST so every register factor's draw is the one it was without them. Empty,
+    the base array is byte-identical to the call without the argument.
     """
     validate_layer1(cfg)
     masks = _cell_masks(cfg)
@@ -253,9 +259,18 @@ def run_layer1_base(
     u_corr, corr_diag = correlated_uniforms(corr_matrix, n_iter, rng)
     corr_pos = {name: i for i, name in enumerate(cfg.corr_names)}
 
+    names = {f.name for f in cfg.factors}
+    clash = [f.name for f in extra_factors if f.name in names]
+    if clash:
+        raise ValueError(f"extra factor name(s) {clash} collide with register factors")
+    if extra_factors:
+        from dataclasses import replace as _replace
+        masks = masks + _cell_masks(_replace(cfg, factors=tuple(extra_factors)))
+
     mults: dict[str, np.ndarray] = {}
+    deltas: dict[str, np.ndarray] = {}
     factor_mean_mult: dict[str, float] = {}
-    for f in cfg.factors:
+    for f in tuple(cfg.factors) + tuple(extra_factors):
         if f.name in corr_set:
             u = u_corr[:, corr_pos[f.name]]
         else:
@@ -264,12 +279,13 @@ def run_layer1_base(
         delta = pert_from_uniform(u, lo, mode, hi)
         mult = 1.0 + delta
         mults[f.name] = mult
+        deltas[f.name] = delta
         factor_mean_mult[f.name] = float(mult.mean())
 
     # 2. cell multiplier = product of every factor bound to that cell.
     n_r, n_c = cfg.base.shape
     cell_mult = np.ones((n_iter, n_r, n_c), dtype=np.float64)
-    for f, mask in zip(cfg.factors, masks):
+    for f, mask in zip(tuple(cfg.factors) + tuple(extra_factors), masks):
         if not mask.any():
             continue
         cell_mult[:, mask] *= mults[f.name][:, None]
@@ -277,12 +293,33 @@ def run_layer1_base(
     # 3. base contribution = sum over cells of base_cell * cell_multiplier.
     base_array = np.tensordot(cell_mult, cfg.base, axes=([1, 2], [0, 1]))
 
+    # 4. RISKDRV-01 stage 3: the base with each extra factor left out, every other draw held
+    # (the drivers' masked leave-one-out). Only that factor's cells are rebuilt, from the
+    # other factors' multipliers, so no division by its own multiplier. No new draws.
+    all_factors = tuple(cfg.factors) + tuple(extra_factors)
+    base_without_extra: dict[str, np.ndarray] = {}
+    for f_out, mask_out in zip(tuple(extra_factors), masks[len(cfg.factors):]):
+        if not mask_out.any():
+            base_without_extra[f_out.name] = base_array.copy()
+            continue
+        sub = np.ones((n_iter, int(mask_out.sum())), dtype=np.float64)
+        for f, mask in zip(all_factors, masks):
+            if f.name == f_out.name:
+                continue
+            hit = mask[mask_out]
+            if hit.any():
+                sub[:, hit] *= mults[f.name][:, None]
+        with_out = cell_mult[:, mask_out] @ cfg.base[mask_out]
+        base_without_extra[f_out.name] = base_array - with_out + sub @ cfg.base[mask_out]
+
     return {
         "base_array": base_array,
         "corr_diag": corr_diag,
         "corr_mode": cfg.corr_mode,
         "factor_mean_mult": factor_mean_mult,
+        "factor_deltas": deltas,
         "base_total": float(cfg.base.sum()),
+        "base_without_extra": base_without_extra,
     }
 
 

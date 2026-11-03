@@ -210,6 +210,8 @@ HTML_FIELDS: dict[str, Field] = {
         # INTSCURVE-01 Part B
         "total_cost_orienting", "total_cost_s_curve_path", "total_cost_table",
         "total_cost_basis", "base_layer_exclusion",
+        # RISKDRV-01 stage 2
+        "shared_drivers_sentence", "shared_drivers_table",
         # INTSCURVE-01 Part C
         "jcl_orienting", "jcl_path", "jcl_sentence", "jcl_basis",
     )},
@@ -272,6 +274,7 @@ VALUE_LABELS: dict[str, str] = {
 HTML_ORDER: dict[str, tuple[str, ...]] = {
     "page2_distribution": ("total_cost_heading", "total_cost_orienting",
                            "total_cost_s_curve_path", "total_cost_table", "total_cost_basis",
+                           "shared_drivers_sentence", "shared_drivers_table",
                            "jcl_heading", "jcl_orienting", "jcl_path", "jcl_sentence",
                            "jcl_basis",
                            "integrated_orienting", "integrated_s_curve_path",

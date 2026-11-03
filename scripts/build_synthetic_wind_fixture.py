@@ -151,6 +151,9 @@ METHODOLOGY_MODE_MULTIPLIERS = {"Series": 1.0, "Hybrid": 0.5, "Parallel": 0.0}
 # WINDREAL-01 re-scale, Director-approved 01/11/2026:
 #   - cost three-points x2.4 (the $50M -> $120M base), rounded to $10k;
 #     probabilities unchanged. Cost impacts stay direct-only (no prelims).
+#   - RISKDRV-01 (Director 02/11/2026, plan R3): WT-017 cable installation productivity is
+#     folded into shared driver D3 (electrical productivity), which prices the same uncertainty
+#     on every electrical activity at once. 30 risks become 29.
 #   - removed as operating-phase, not construction: WT-014 warranty defect,
 #     WT-015 gearbox / main bearing, WT-033 power performance test, WT-035
 #     defects liability; WT-034 grid-code retest folded into WT-024. IDs are
@@ -197,10 +200,10 @@ WIND_RISKS = [
     # ----- CG03 Electrical Reticulation -----
     ("WT-016", "Open", "Array cable supply shortfall", "EPC Contractor", "Electrical Reticulation", "Procurement",
      "PERT", "CG03", "", 0.45, 220_000, 600_000, 1_440_000, "No", "", 0.0, 0, 0, 0, "WT-CAS", ""),
-    ("WT-017", "Open", "Cable installation productivity", "EPC Contractor", "Electrical Reticulation", "Construction",
-     "PERT", "CG03", "", 0.4, 170_000, 530_000, 1_250_000, "No", "", 0.0, 0, 0, 0, "WT-CAS", ""),
+    # RISKDRV-01 stage 2: WT-018 joins WT-CAS in place of the folded WT-017, so the showcase
+    # keeps a two-member cascade group (cascade is off by default, so no number moves).
     ("WT-018", "Open", "Cable joint re-termination", "EPC Contractor", "Electrical Reticulation", "Electrical",
-     "Triangular", "CG03", "", 0.3, 120_000, 360_000, 960_000, "No", "", 0.0, 0, 0, 0, "", ""),
+     "Triangular", "CG03", "", 0.3, 120_000, 360_000, 960_000, "No", "", 0.0, 0, 0, 0, "WT-CAS", ""),
     ("WT-019", "Open", "Trenching clash with civil works", "Shared", "Electrical Reticulation", "Interface",
      "PERT", "CG03", "", 0.25, 100_000, 290_000, 720_000, "No", "", 0.0, 0, 0, 0, "", ""),
     ("WT-020", "Open", "HV array cable test failures", "EPC Contractor", "Electrical Reticulation", "Testing",
@@ -463,6 +466,57 @@ def _build_emv_mode_analysis(wb, n_rows: int) -> None:
     build_emv_mode_analysis(wb, DATA_START_ROW, DATA_START_ROW + n_rows - 1)
 
 
+# ---------------------------------------------------------------------------
+# RISKDRV-01 shared drivers (Director 02/11/2026, plan R1/R3). First-cut practitioner
+# judgment, not a dataset. P = productivity (own range on the duration delta, cost on the
+# named grid cells); Q = quantity-linked (the named Layer 1 factor's draw, no added cost).
+# Columns as src.shared_drivers.COLUMNS.
+# ---------------------------------------------------------------------------
+WIND_SHARED_DRIVERS = [
+    {"Driver_ID": "D1", "Name": "Civil productivity and ground", "Kind": "P",
+     "Tag": "civil_productivity", "P10": -0.05, "Mode": 0.0, "P90": 0.20,
+     "WBS_Codes": "10, 20", "Grid_Rows": "BOP civils", "Grid_Columns": "Labour, Plant",
+     "Ruled_Risks": "WT-003, WT-005",
+     "Basis": "Earthworks and foundation crews' output across the site: ground that digs harder "
+              "than the geotech, wet days that are not stoppages. WT-003 (a discrete ground "
+              "event) and WT-005 (quantity, beside Q_Civils) stay as they are."},
+    {"Driver_ID": "D2", "Name": "Erection productivity", "Kind": "P",
+     "Tag": "erection_productivity", "P10": -0.05, "Mode": 0.0, "P90": 0.15,
+     "WBS_Codes": "30", "Grid_Rows": "Turbine transport & erection",
+     "Grid_Columns": "Labour, Plant",
+     "Ruled_Risks": "WT-009, WT-012",
+     "Basis": "Lift rate in workable weather: crane crew learning, rigging and bolting cycle "
+              "times. WT-012 (wind standby, a stoppage) and WT-009 (crane mobilisation) stay "
+              "as events."},
+    {"Driver_ID": "D3", "Name": "Electrical installation productivity", "Kind": "P",
+     "Tag": "electrical_productivity", "P10": -0.05, "Mode": 0.0, "P90": 0.15,
+     "WBS_Codes": "40", "Grid_Rows": "Electrical BOP", "Grid_Columns": "Labour, Subcontract",
+     "Ruled_Risks": "",
+     "Basis": "Cable laying, jointing and termination output. Absorbs the former WT-017 "
+              "(cable installation productivity), which priced the same uncertainty as a "
+              "discrete risk."},
+    {"Driver_ID": "D4", "Name": "Grid and substation scope", "Kind": "Q",
+     "Tag": "", "P10": None, "Mode": None, "P90": None,
+     "Linked_Factors": "Q_Grid", "Elasticity": 1.0,
+     "WBS_Codes": "50", "Grid_Rows": "", "Grid_Columns": "",
+     "Ruled_Risks": "WT-025",
+     "Basis": "More substation and connection scope takes proportionally longer to build. "
+              "Q_Grid already prices its cost. WT-025 (a discrete scope change) stays."},
+]
+
+
+def _build_shared_drivers_sheet(wb) -> None:
+    """RISKDRV-01: the Shared_Drivers sheet, header-driven as src.shared_drivers reads it."""
+    from src.shared_drivers import COLUMNS, SHEET
+
+    ws = wb.create_sheet(SHEET)
+    ws.append(["Shared risk drivers (RISKDRV-01): always present, act on many activities at "
+               "once; not register risks"])
+    ws.append(list(COLUMNS))
+    for d in WIND_SHARED_DRIVERS:
+        ws.append([d.get(c) for c in COLUMNS])
+
+
 def _build_layer1_sheets(wb) -> None:
     """QRAXL-01 step 5 / REG05-A2 §3.1 - the wind Layer-1 FILL over the SHARED
     empty builder (``tools.register_scaffold.build_layer1_sheets``), so the fixture
@@ -655,6 +709,7 @@ def build_register(path: Path) -> None:
     # --- QRAXL-01 step 6b: Settings + Simulation output sheets + Grid_*/Set_*/Out_*
     # named ranges (shared scaffolder; grids sized AFTER fill). ---
     build_settings_and_simulation(wb)
+    _build_shared_drivers_sheet(wb)  # RISKDRV-01
     # REG05-A2 §3.2: the wind fixture ships Layer-1 ON (Set_Layer1_Enabled=TRUE) so
     # its filled Layer-1 reads stay byte-identical; the empty template ships FALSE.
     wb["Settings"]["B8"] = True

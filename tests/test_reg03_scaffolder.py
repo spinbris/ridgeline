@@ -184,4 +184,4 @@ def test_fixture_builder_fills_data_scaffolder_does_not(tmp_path):
             wb.close()
 
     assert data_row_count(tmpl) == 0
-    assert data_row_count(filled) == len(fixture_builder.WIND_RISKS) == 30  # WINDREAL-01 (35 before)
+    assert data_row_count(filled) == len(fixture_builder.WIND_RISKS) == 29  # RISKDRV-01 (WINDREAL-01: 30)

@@ -7,7 +7,6 @@ the report's masked leave-one-out. Below it, one unit test per new field.
 """
 from __future__ import annotations
 
-import datetime as _dt
 import json
 import os
 from pathlib import Path
@@ -291,7 +290,16 @@ def report_side(wind_project) -> dict:
                                          schedule_graph=graph, risk_drivers=drivers,
                                          xer_tables=xer)
     rate = s3.integrated_config.day_rate
-    base = deliverable_base_layer(WIND_REGISTER, ITERATIONS, SEED)
+    # RISKDRV-01 stage 2: the report side carries the register's shared drivers as
+    # src.final.deliverable.run_engines does, so both sides read the owner view.
+    from src.integrated.driver_pass import (
+        build_duration_shift, driver_rows, load_checked_drivers, stage3_owner_view)
+    shared = load_checked_drivers(WIND_REGISTER, xer)
+    base = deliverable_base_layer(WIND_REGISTER, ITERATIONS, SEED, shared_drivers=shared)
+    if shared:
+        shift = build_duration_shift(shared, base["driver_deltas"], graph, xer)
+        base["owner_view"] = stage3_owner_view(r, s3.schedule_mc_config, shift)
+        base["shared_drivers"] = driver_rows(shared, base["owner_view"], base["driver_deltas"])
     cost = np.asarray(r.cost_result["cost_dollars_array"], float)
     days = np.asarray(r.schedule_days_array, float)
     total = total_cost_data(base, cost, days, rate, p_levels=SUMMARY_P_LEVELS)
@@ -312,7 +320,7 @@ def period_side(wind_project, tmp_path_factory: pytest.TempPathFactory) -> dict:
         workbook_path=WIND_01, project="synthetic_wind",
         output_dir=tmp_path_factory.mktemp("intview01"), main_iterations=ITERATIONS,
         days_at_risk_iterations=500, counterfactual_iterations=500, seed=SEED,
-        criticality_measurement_mode="both", project_start=_dt.date(2024, 1, 1),
+        criticality_measurement_mode="both",
         allow_dirty=True)
     return json.loads(path.read_bytes().decode("utf-8"))
 

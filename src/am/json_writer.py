@@ -62,7 +62,7 @@ logger = logging.getLogger(__name__)
 # risks[].divergence_flag field (Doc 3 contract v2.4 -> v2.5). A field
 # removal must move the version so a consumer can detect it; zod accepts
 # the new value. Structural-major stays 1; this is a contract-minor bump.
-SCHEMA_VERSION = "1.6"  # INTVIEW-01 stage 2: integrated numbers on the report basis
+SCHEMA_VERSION = "1.7"  # RISKDRV-01 stage 3: shared drivers and the owner-view finish
 # 1.3 = PROVCRLF01 (input_sha256 values became {method, value} records).
 # 1.4 = stage 7 part B / SPEC §5.2 decision C2, ruled 05/09/2026: the integrated
 # cost-plus-schedule result reaches the cycle, in a NEW top-level block rather than inside
@@ -82,6 +82,9 @@ SCHEMA_VERSION = "1.6"  # INTVIEW-01 stage 2: integrated numbers on the report b
 # its masked leave-one-out dollars; each `mitigations[]` row its dollars saved and noise flag;
 # `delta` and `trend` the contingency movement; and a top-level `contingency` block, phase 1
 # ("recommended") only, its shape fixed so stage 2b fills it without a second bump.
+# 1.7 = RISKDRV-01 stage 3 (Director, 03/11/2026): `integrated` gains `owner_view` (the
+# drivers-on finish the total and the JCL read) and `shared_drivers` (each driver with its masked
+# leave-one-out). Both null when the register declares no driver; nothing else moves.
 HOURS_PER_DAY = 8.0
 
 # AM08 / AIA-01: presentation threshold for period-over-period per-risk
@@ -902,7 +905,72 @@ def _build_integrated(result: Any, project_start: _dt.date) -> dict[str, Any]:
             "replays": result.leave_one_out["replays"],
             "method": result.leave_one_out["method"],
         },
+        # 1.7 (RISKDRV-01 stage 3): null unless the register declares shared drivers.
+        "owner_view": _build_owner_view(result, project_start),
+        "shared_drivers": _build_shared_drivers(total_cost),
     }
+
+
+def _build_owner_view(result: Any, project_start: _dt.date) -> dict[str, Any] | None:
+    """1.7: the owner-view finish (drivers on), on the headline's own date arithmetic.
+
+    The headline, `distribution` and `trend` stay the event-only pass (Director S1, 03/11/2026);
+    this is the finish the total cost and the JCL read, so the app can label both.
+    """
+    owner = (getattr(result, "base_layer", None) or {}).get("owner_view")
+    if owner is None:
+        return None
+    from src.final.sections.integrated_total import DRIVER_LOO_P
+    from src.integrated.driver_pass import DRIVER_LEAVE_ONE_OUT_METHOD
+
+    finish_hours = np.asarray(owner["finish_days"], dtype=float) * HOURS_PER_DAY
+    det_hours = float(owner["deterministic_finish_days"]) * HOURS_PER_DAY
+    dist = _build_distribution(project_finish_hours=finish_hours, project_start=project_start,
+                               deterministic_finish_hours=det_hours)
+    det = _working_days_to_calendar_date(project_start, det_hours / HOURS_PER_DAY)
+
+    def _date(p: int) -> _dt.date:
+        return _working_days_to_calendar_date(
+            project_start, float(np.percentile(finish_hours, p)) / HOURS_PER_DAY)
+
+    return {
+        "label": "Finish with shared drivers (uncertainty on the estimate) as well as the event "
+                 "risks. The finish the total cost and the JCL read; the headline is event "
+                 "risks only.",
+        "driver_ids": list(owner["driver_ids"]),
+        "p50_finish": _isoformat_date(_date(50)),
+        "p80_finish": _isoformat_date(_date(80)),
+        "p90_finish": _isoformat_date(_date(90)),
+        "p80_days_behind_plan": int((_date(80) - det).days),
+        "s_curve_points": dist["s_curve_points"],
+        "percentile_table": dist["percentile_table"],
+        "driver_method": DRIVER_LEAVE_ONE_OUT_METHOD.format(p=DRIVER_LOO_P),
+    }
+
+
+def _build_shared_drivers(total_cost: dict[str, Any] | None) -> list[dict[str, Any]] | None:
+    """1.7: one row per shared driver, its leave-one-out as the report's driver table has it."""
+    rows = (total_cost or {}).get("shared_drivers")
+    if not rows:
+        return None
+
+    def _r(v: Any, n: int) -> float | None:
+        return None if v is None else round(float(v), n)
+
+    return [{
+        "driver_id": r["driver_id"],
+        "name": r["name"],
+        "kind": r["kind"],
+        "wbs_codes": list(r["wbs_codes"]),
+        "range": r["range"],
+        "acts_on": r["source"],
+        "basis": r["basis"],
+        "mean_duration_change": _r(r["mean_delta"], 4),
+        "p80_duration_change": _r(r["p80_delta"], 4),
+        "p_level": r.get("loo_p_level"),
+        "adds_to_total_dollars": _r(r.get("loo_total_dollars"), 2),
+        "adds_to_finish_days": _r(r.get("loo_finish_days"), 1),
+    } for r in rows]
 
 
 def _build_contingency(

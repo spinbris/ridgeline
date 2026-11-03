@@ -10,7 +10,6 @@ is in the running record, from a live DOM read.
 """
 from __future__ import annotations
 
-import datetime as _dt
 import json
 import re
 from pathlib import Path
@@ -84,7 +83,7 @@ class TestTheProjectKeyOnTheEngineSide:
             workbook_path=WIND_01, project="synthetic_wind", output_dir=out,
             main_iterations=500, days_at_risk_iterations=200, counterfactual_iterations=200,
             seed=42, criticality_measurement_mode="both",
-            project_start=_dt.date(2024, 1, 1), allow_dirty=True,
+            allow_dirty=True,
         )
         return out
 
@@ -133,7 +132,7 @@ class TestTheProjectKeyOnTheEngineSide:
             workbook_path=wind_02, project="synthetic_wind", output_dir=run_dir,
             main_iterations=500, days_at_risk_iterations=200, counterfactual_iterations=200,
             seed=42, criticality_measurement_mode="both",
-            project_start=_dt.date(2024, 1, 1), allow_dirty=True,
+            allow_dirty=True,
         )
         doc = json.loads(written.read_bytes().decode("utf-8"))
         seen = [pt.get("p80_finish") for pt in doc["trend"]["periods"]]

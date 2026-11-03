@@ -1,7 +1,7 @@
 ---
 title: "Tropic Ridge Wind Farm: what the contingency really is"
 subtitle: 'Upfront integrated cost-and-schedule risk analysis for a 40 MW, ~[$120M]{.run v="capex_total" f="M0"} wind-farm scope'
-date: 2026-11-02
+date: 2026-11-03
 author: "CBL Analytics"
 from: markdown-smart
 format:
@@ -52,14 +52,14 @@ actually costs, across both arms of the project at once:
 
 | Component | P80 | % of [$120M]{.run v="capex_total" f="M0"} capex |
 |---|---|---|
-| Cost QRA (risk register, Layer 2) | [$11.24M]{.run v="cost.p80" f="M"} | [9.4%]{.run v="cost.p80_pct" f="pct"} |
+| Cost QRA (risk register, Layer 2) | [$10.97M]{.run v="cost.p80" f="M"} | [9.1%]{.run v="cost.p80_pct" f="pct"} |
 | Schedule (Stage 3 CPM replay, dollarised at [$35k]{.run v="day_rate" f="k"}/working day) | [$3.50M]{.run v="sched.p80_dollars" f="M"} | [2.9%]{.run v="sched.p80_dollars_pct" f="pct"} |
-| **Integrated contingency (P80 of the joint total)** | **[$14.60M]{.run v="integrated.p80" f="M"}** | **[12.2%]{.run v="integrated.p80_pct" f="pct"}** |
-| _Naive sum (cost P80 + schedule P80)_ | _[$14.74M]{.run v="integrated.naive_p80" f="M"}_ | _[12.3%]{.run v="integrated.naive_p80_pct" f="pct"}_ |
+| **Integrated contingency (P80 of the joint total)** | **[$14.34M]{.run v="integrated.p80" f="M"}** | **[11.9%]{.run v="integrated.p80_pct" f="pct"}** |
+| _Naive sum (cost P80 + schedule P80)_ | _[$14.46M]{.run v="integrated.naive_p80" f="M"}_ | _[12.1%]{.run v="integrated.naive_p80_pct" f="pct"}_ |
 
 The two arms are sampled together, iteration by iteration, so the integrated
 figure is the P80 of the joint total. Adding the two P80s instead overstates it
-by [$0.14M]{.run v="integrated.overstatement" f="M"}.
+by [$0.12M]{.run v="integrated.overstatement" f="M"}.
 
 The number that matters for a business case is not the base estimate; it is
 this contingency and the confidence attached to it.
@@ -79,14 +79,14 @@ the right tail stretches out toward the high-confidence percentiles:
 
 | Confidence | Cost contingency | % of [$120M]{.run v="capex_total" f="M0"} capex |
 |---|---|---|
-| Mean | [$8.31M]{.run v="cost.mean" f="M"} | [6.9%]{.run v="cost.mean_pct" f="pct"} |
-| P50 (median) | [$8.00M]{.run v="cost.p50" f="M"} | [6.7%]{.run v="cost.p50_pct" f="pct"} |
-| P80 | [$11.24M]{.run v="cost.p80" f="M"} | [9.4%]{.run v="cost.p80_pct" f="pct"} |
-| P90 | [$13.03M]{.run v="cost.p90" f="M"} | [10.9%]{.run v="cost.p90_pct" f="pct"} |
-| P95 | [$14.59M]{.run v="cost.p95" f="M"} | [12.2%]{.run v="cost.p95_pct" f="pct"} |
+| Mean | [$8.07M]{.run v="cost.mean" f="M"} | [6.7%]{.run v="cost.mean_pct" f="pct"} |
+| P50 (median) | [$7.77M]{.run v="cost.p50" f="M"} | [6.5%]{.run v="cost.p50_pct" f="pct"} |
+| P80 | [$10.97M]{.run v="cost.p80" f="M"} | [9.1%]{.run v="cost.p80_pct" f="pct"} |
+| P90 | [$12.76M]{.run v="cost.p90" f="M"} | [10.6%]{.run v="cost.p90_pct" f="pct"} |
+| P95 | [$14.32M]{.run v="cost.p95" f="M"} | [11.9%]{.run v="cost.p95_pct" f="pct"} |
 
 *Caption: cumulative-probability S-curve of the Layer-2 cost contingency. The
-gap between P50 ([$8.00M]{.run v="cost.p50" f="M"}) and P80 ([$11.24M]{.run v="cost.p80" f="M"}) is the cost of buying down risk from
+gap between P50 ([$7.77M]{.run v="cost.p50" f="M"}) and P80 ([$10.97M]{.run v="cost.p80" f="M"}) is the cost of buying down risk from
 even-odds to a defensible 4-in-5 confidence - about [$3.2M]{.run v="cost.p80_minus_p50" f="M1"}, and the reason
 "use the mean" understates what a sponsor should hold.*
 
@@ -149,9 +149,9 @@ ignores the schedule:
 
 | Arm | What it prices | P80 contingency |
 |---|---|---|
-| Cost QRA | Register risks landing as dollars | [$11.24M]{.run v="cost.p80" f="M"} ([9.4%]{.run v="cost.p80_pct" f="pct"}) |
+| Cost QRA | Register risks landing as dollars | [$10.97M]{.run v="cost.p80" f="M"} ([9.1%]{.run v="cost.p80_pct" f="pct"}) |
 | Schedule (Stage 3 CPM replay, dollarised) | Finish delay at [$35k]{.run v="day_rate" f="k"}/working day | [$3.50M]{.run v="sched.p80_dollars" f="M"} ([2.9%]{.run v="sched.p80_dollars_pct" f="pct"}) |
-| **Integrated** | Both at once, jointly | **[$14.60M]{.run v="integrated.p80" f="M"} ([12.2%]{.run v="integrated.p80_pct" f="pct"})** |
+| **Integrated** | Both at once, jointly | **[$14.34M]{.run v="integrated.p80" f="M"} ([11.9%]{.run v="integrated.p80_pct" f="pct"})** |
 
 *Caption: the integrated headline. Most renewable business cases stop at the
 cost line; the schedule line is where projects are quietly won or lost.*

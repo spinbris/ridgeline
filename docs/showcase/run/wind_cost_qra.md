@@ -1,6 +1,6 @@
 # Tropic Ridge Wind Farm - Cost QRA (Monte Carlo)
 
-Illustrative showcase data. 30 risks, 100,000 iterations, seed 42. Contingency sits on the $50.0M Tropic Ridge Wind Farm capex (EPC $45M + grid connect $5M).
+Illustrative showcase data. 29 risks, 100,000 iterations, seed 42. Contingency sits on the $50.0M Tropic Ridge Wind Farm capex (EPC $45M + grid connect $5M).
 
 _Cost is the integrated engine's cost arm (jointly sampled with the Stage 3 schedule), so every cost figure in this showcase is consistent with the integrated headline. (Build note, not for client copy: the integrated engine does not yet model recurrence; WT-002 is therefore carried as single-occurrence in this showcase. The standalone cost engine models recurrence per AACE-style seasonal exposure and is the reference implementation; the two engines agree once WT-002 is single-occurrence. The capability gap is COST-01.)_
 
@@ -8,11 +8,11 @@ _Cost is the integrated engine's cost arm (jointly sampled with the Stage 3 sche
 
 | Metric | Contingency | % of $50M capex |
 |---|---|---|
-| MEAN | $8.31M | 6.9% |
-| P50 | $8.00M | 6.7% |
-| P80 | $11.24M | 9.4% |
-| P90 | $13.03M | 10.9% |
-| P95 | $14.59M | 12.2% |
+| MEAN | $8.07M | 6.7% |
+| P50 | $7.77M | 6.5% |
+| P80 | $10.97M | 9.1% |
+| P90 | $12.76M | 10.6% |
+| P95 | $14.32M | 11.9% |
 
 ## Per-cost-group mean contribution
 
@@ -20,9 +20,9 @@ _Cost is the integrated engine's cost arm (jointly sampled with the Stage 3 sche
 |---|---|
 | CG01 | $1.77M |
 | CG02 | $2.72M |
-| CG03 | $0.95M |
+| CG03 | $0.71M |
 | CG04 | $1.25M |
-| CG05 | $0.88M |
+| CG05 | $0.87M |
 | CG06 | $0.74M |
 
 ## Top risks by mean EMV (tornado)

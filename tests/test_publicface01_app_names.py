@@ -6,7 +6,6 @@ period JSON a real wind run writes.
 """
 from __future__ import annotations
 
-import datetime as _dt
 import json
 from pathlib import Path
 
@@ -53,7 +52,7 @@ def test_a_wind_period_json_names_the_product_not_a_code_name(tmp_path):
     out = run_period(
         workbook_path=workbook, output_dir=tmp_path, allow_dirty=True, project="synthetic_wind",
         main_iterations=300, days_at_risk_iterations=100, counterfactual_iterations=100,
-        seed=42, criticality_measurement_mode="both", project_start=_dt.date(2024, 1, 1))
+        seed=42, criticality_measurement_mode="both")
     doc = json.loads(Path(out).read_text(encoding="utf-8"))
     meta = doc["meta"]
     # meta.project_key is a contract field the loader checks against the directory it was read

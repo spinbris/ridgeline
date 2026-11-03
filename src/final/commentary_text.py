@@ -339,6 +339,25 @@ TOTAL_COST_BASIS = (
     "independent of the event risks. {illustrative}"
 )
 
+#: RISKDRV-01 stage 2: the total's basis when the register declares shared drivers.
+TOTAL_COST_BASIS_DRIVERS = (
+    "Base: the register's Layer 1 estimate of {base}, sampled with its systemic factors on a "
+    "random stream of its own. The register's shared drivers (table below) link part of it to "
+    "the schedule: in each iteration a driver's draw moves both the time-dependent cost on its "
+    "grid rows and the durations of its activities, and this total takes its delay cost from "
+    "that drivers-on schedule pass. The event-risk contingency above is drawn on the event-only "
+    "pass and does not include the drivers. {illustrative}"
+)
+
+#: RISKDRV-01 stage 2: introduces the shared-driver table.
+SHARED_DRIVERS_SENTENCE = (
+    "Shared drivers: uncertainty that moves cost and schedule together (AACE 57R-09 risk "
+    "drivers). A productivity driver draws its own range and applies it to its grid rows' cost "
+    "and its activities' durations; a quantity driver takes its Layer 1 quantity factor's draw "
+    "and applies it to its activities' durations only. Owner-view P80 finish: working day "
+    "{finish:.0f}, against {event_finish:.0f} on the event-only pass."
+)
+
 #: Said wherever a synthetic project's base is drawn (Part B property 9).
 ILLUSTRATIVE_BASE = "The base is illustrative: this is a synthetic project."
 
@@ -366,6 +385,15 @@ JCL_BASIS = (
     "it would be if the two were drawn independently. The base estimate's own uncertainty is "
     "drawn independent of the schedule, so it spreads the dots up and down without a slope; "
     "event risk alone correlates much more strongly with the finish than the full cost does."
+)
+
+#: RISKDRV-01 stage 2: the JCL's basis when the register declares shared drivers.
+JCL_BASIS_DRIVERS = (
+    "Cost and schedule are sampled jointly: a risk that fires raises cost and delays the finish "
+    "in the same iteration, and each shared driver moves its cost and its activities' durations "
+    "from one draw. Both axes are the owner view, drivers on. The base estimate's price and rate "
+    "factors are still drawn independent of the schedule, so they spread the dots up and down "
+    "without a slope. The budget is the declared base plus the event-risk P80 contingency."
 )
 
 # INTSCURVE-01 P3: the integrated tornado.
