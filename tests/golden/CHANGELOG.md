@@ -111,3 +111,5 @@ as a follow-up rather than resolved.
     p50: $7.877M -> $7.877M  p80: $11.369M -> $11.369M  p90: $13.366M -> $13.366M  mean: $8.263M -> $8.263M
 - 2026-11-01 wind_synth::canonical P80 $7.521M -> $14.713M - reason: WINDREAL-01 re-scale to a real 40 MW farm, Director-approved 01/11/2026 (by Steve)
     p50: $5.271M -> $10.549M  p80: $7.521M -> $14.713M  p90: $8.705M -> $16.908M  mean: $5.485M -> $10.845M
+- 2026-11-03 wind_synth::canonical P80 $14.713M -> $14.519M - reason: RISKDRV-01 stage 2: shared drivers, WT-017 folded into D3 (by Steve)
+    p50: $10.549M -> $10.312M  p80: $14.713M -> $14.519M  p90: $16.908M -> $16.764M  mean: $10.845M -> $10.587M

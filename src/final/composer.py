@@ -142,6 +142,8 @@ from src.final.charts import (
 from src.final.sections.integrated_total import (
     INTEGRATED_P_LEVELS,
     base_exclusion_sentence,
+    shared_driver_display_rows,
+    shared_drivers_sentence,
     confidence_curve_display_rows,
     integrated_range_sentence,
     integrated_total_data,
@@ -1970,21 +1972,27 @@ def _apply_total_cost(
     if not isinstance(page2, dict):
         return
     empty = {"total_cost_heading": "", "total_cost_orienting": "", "total_cost_s_curve_path": "",
-             "total_cost_table": [], "total_cost_basis": ""}
+             "total_cost_table": [], "total_cost_basis": "", "shared_drivers_sentence": "",
+             "shared_drivers_table": []}
     if not total_cost:
         page2.update(empty)
         if isinstance(page7, dict):
             page7["base_layer_exclusion"] = ""
         return
     illustrative = getattr(get_active_binding(), "illustrative_base", False)
+    drivers = list(total_cost.get("shared_drivers") or [])
     page2.update({
         "total_cost_heading": "Total cost - base, event-risk cost and delay cost",
         "total_cost_orienting": commentary_text.TOTAL_COST_ORIENTING,
         "total_cost_s_curve_path": chart_paths.get("total_cost_s_curve_path", ""),
         "total_cost_table": total_cost_rows(total_cost),
-        "total_cost_basis": commentary_text.TOTAL_COST_BASIS.format(
+        "total_cost_basis": (
+            commentary_text.TOTAL_COST_BASIS_DRIVERS if drivers
+            else commentary_text.TOTAL_COST_BASIS).format(
             base=f"${total_cost['base_total_dollars'] / 1e6:.2f}M",
             illustrative=commentary_text.ILLUSTRATIVE_BASE if illustrative else "").strip(),
+        "shared_drivers_sentence": shared_drivers_sentence(total_cost),
+        "shared_drivers_table": shared_driver_display_rows(drivers),
     })
     if isinstance(page7, dict):
         page7["base_layer_exclusion"] = base_exclusion_sentence(total_cost["excluded_factors"])
@@ -2010,7 +2018,8 @@ def _apply_jcl(
         "jcl_orienting": commentary_text.JCL_ORIENTING,
         "jcl_path": chart_paths.get("jcl_path", ""),
         "jcl_sentence": jcl_sentence(jcl),
-        "jcl_basis": commentary_text.JCL_BASIS,
+        "jcl_basis": (commentary_text.JCL_BASIS_DRIVERS if jcl.get("shared_drivers")
+                      else commentary_text.JCL_BASIS),
     })
 
 

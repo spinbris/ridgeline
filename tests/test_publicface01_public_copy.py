@@ -6,7 +6,6 @@ the strings in a period JSON a real run writes (values only; a contract field's 
 """
 from __future__ import annotations
 
-import datetime as _dt
 import json
 import re
 from pathlib import Path
@@ -85,7 +84,7 @@ def test_no_engine_string_in_a_period_json_names_an_internal_document_or_plan(tm
     out = run_period(
         workbook_path=workbook, output_dir=tmp_path, allow_dirty=True, project="synthetic_wind",
         main_iterations=300, days_at_risk_iterations=100, counterfactual_iterations=100,
-        seed=42, criticality_measurement_mode="both", project_start=_dt.date(2024, 1, 1))
+        seed=42, criticality_measurement_mode="both")
     doc = json.loads(Path(out).read_text(encoding="utf-8"))
     found = {s[:80]: m for s in _strings(doc) if (m := internal_marks(s))}
     assert found == {}, f"the period JSON a reader sees carries: {found}"

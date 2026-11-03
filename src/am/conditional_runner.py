@@ -578,6 +578,20 @@ def replay_schedule_days(
     computed exactly as ``run_integrated_period`` computes it (finish less the zero-risk pass,
     floored at zero), so a replay pairs with the integrated arm by index.
     """
+    finish = replay_schedule_finish_days(cond_result, fire_mask)
+    return np.maximum(finish - float(deterministic_finish_days), 0.0)
+
+
+def replay_schedule_finish_days(
+    cond_result: ConditionalRunResult,
+    fire_mask: np.ndarray,
+    duration_shift: Any | None = None,
+) -> np.ndarray:
+    """Project finish days for this run replayed under ``fire_mask``, every other draw fixed.
+
+    The replay behind :func:`replay_schedule_days`. ``duration_shift`` (RISKDRV-01) adds the
+    shared drivers' hours for the owner-view pass; ``None`` replays the run itself.
+    """
     r = cond_result
     if r.schedule_graph is None or r.schedule_mc_config is None or not r.pinned_drivers:
         raise ValueError(
@@ -593,6 +607,6 @@ def replay_schedule_days(
         rng=kernel_generator(int(r.schedule_mc_config.seed)),
         criticality_measurement_mode=r.config_summary.get("criticality_measurement_mode", "both"),
         fire_mask=np.asarray(fire_mask, dtype=bool),
+        duration_shift=duration_shift,
     )
-    finish = np.asarray(out.project_finish_days, dtype=float)
-    return np.maximum(finish - float(deterministic_finish_days), 0.0)
+    return np.asarray(out.project_finish_days, dtype=float)

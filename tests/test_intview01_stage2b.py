@@ -259,7 +259,7 @@ def four_periods(tmp_path_factory: pytest.TempPathFactory) -> list[dict]:
                 workbook_path=path, project="synthetic_wind", output_dir=out,
                 main_iterations=ITERATIONS, days_at_risk_iterations=500,
                 counterfactual_iterations=500, seed=SEED, criticality_measurement_mode="both",
-                project_start=_dt.date(2024, 1, 1), allow_dirty=True)
+                allow_dirty=True)
             docs.append(json.loads(written.read_bytes().decode("utf-8")))
         return docs
     finally:

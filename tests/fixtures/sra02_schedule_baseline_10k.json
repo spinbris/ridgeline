@@ -1,8 +1,8 @@
 {
   "purpose": "SRA-02 AC-5 pinned schedule baseline. Consolidated register path, schedule-only values, exact equality on float.hex(). Exists because the bit-identity gate is aggregate-only AND sits on the strawman branch, so it cannot see a schedule move on the consolidated path (brief A2.3/A2.4).",
   "captured_on": {
-    "engine_sha": "e5be2e27b77dcdcab399e949e18faf2d7c3b9efa",
-    "branch": "claude/project-thread-mecszv",
+    "engine_sha": "f38d4bb83243076ca61bb105cb2ba1a6b11d85af",
+    "branch": "claude/project-thread-ajp98p",
     "tree_dirty_tracked": true
   },
   "fingerprint_n": 5,
@@ -20,7 +20,7 @@
     "inputs": {
       "register": {
         "path": "tests/fixtures/synthetic_wind/wind_register.xlsx",
-        "sha256": "edb1f40c2504e9e8de61a9199b301d6e28400bc9aa0999333e6306541c3fa161"
+        "sha256": "a973af5d83e1298827e453261a0875ccda4376c4a381c3277786182e388ba135"
       },
       "xer": {
         "path": "tests/fixtures/synthetic_wind/wind_schedule.xer",
@@ -28,18 +28,18 @@
       }
     },
     "schedule_days_first_n": [
-      "0x1.5d81200000000p+6",
-      "0x1.0b0c880000000p+6",
-      "0x1.d2be900000000p+5",
-      "0x1.043be00000000p+6",
-      "0x1.1505300000000p+5"
+      "0x1.6b7bf80000000p+6",
+      "0x1.882d400000000p+6",
+      "0x1.0d18780000000p+6",
+      "0x1.207bcc0000000p+7",
+      "0x0.0p+0"
     ],
-    "schedule_days_mean": "0x1.1a2f3c9db22d1p+6",
-    "schedule_days_p50": "0x1.1098600000000p+6",
-    "schedule_days_p80": "0x1.8e89366666667p+6",
-    "schedule_days_p90": "0x1.d619d0ccccccep+6",
-    "schedule_days_max": "0x1.be04300000000p+7",
-    "schedule_days_nonzero_count": 9939,
-    "cost_arm_p80_crosscheck": "0x1.59ecea403c8d2p+23"
+    "schedule_days_mean": "0x1.18cc957972474p+6",
+    "schedule_days_p50": "0x1.0ce6040000000p+6",
+    "schedule_days_p80": "0x1.93aab9999999ap+6",
+    "schedule_days_p90": "0x1.da45480000001p+6",
+    "schedule_days_max": "0x1.d88d080000000p+7",
+    "schedule_days_nonzero_count": 9921,
+    "cost_arm_p80_crosscheck": "0x1.51e8d1e9625b7p+23"
   }
 }

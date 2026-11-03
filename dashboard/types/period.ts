@@ -526,6 +526,38 @@ export interface Integrated {
   day_rate_derivation: DayRateDerivation;
   total_cost: TotalCost | null;
   leave_one_out: LeaveOneOutNote | null;
+  // Contract 1.7 (RISKDRV-01 stage 3): null unless the register declares shared drivers.
+  owner_view?: OwnerView | null;
+  shared_drivers?: SharedDriver[] | null;
+}
+
+/** 1.7: the finish with shared drivers on, which the total cost and the JCL read. */
+export interface OwnerView {
+  label: string;
+  driver_ids: string[];
+  p50_finish: string;
+  p80_finish: string;
+  p90_finish: string;
+  p80_days_behind_plan: number;
+  s_curve_points: SCurvePoint[];
+  percentile_table: PercentileRow[];
+  driver_method: string;
+}
+
+/** 1.7: one shared driver (uncertainty on the estimate, not an event) and its leave-one-out. */
+export interface SharedDriver {
+  driver_id: string;
+  name: string;
+  kind: "P" | "Q";
+  wbs_codes: string[];
+  range: string;
+  acts_on: string;
+  basis: string;
+  mean_duration_change: number;
+  p80_duration_change: number;
+  p_level: number | null;
+  adds_to_total_dollars: number | null;
+  adds_to_finish_days: number | null;
 }
 
 export interface PeriodData {

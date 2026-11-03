@@ -80,7 +80,7 @@ def test_cost_mc_produces_pbands():
     from src.v5_register_reader import read_risks_v5
 
     risks = read_risks_v5(str(WIND_REGISTER))
-    assert len(risks) == 30  # WINDREAL-01: 30 risks (35 before)
+    assert len(risks) == 29  # RISKDRV-01: WT-017 folded into D3 (WINDREAL-01: 30)
     assert all(r.risk_id.startswith("WT-") for r in risks)
 
     cfg = SimConfig(n_iter=3000, seed=42)
@@ -109,7 +109,7 @@ def test_cascade_kernel_fires_on_wind_group():
 
     risks = read_risks_v5(str(WIND_REGISTER))
     for r in risks:
-        if r.risk_id in ("WT-016", "WT-017"):
+        if r.risk_id in ("WT-016", "WT-018"):  # RISKDRV-01: WT-017 folded into D3
             r.cascade_group = "WT-CAS"
             r.ml_days = 8.0  # give the group schedule slip to accumulate
 
@@ -123,8 +123,8 @@ def test_cascade_kernel_fires_on_wind_group():
     )
     assert result.n_groups >= 1
     assert "WT-CAS" in result.group_membership
-    idx = [i for i, r in enumerate(risks) if r.risk_id in ("WT-016", "WT-017")]
-    assert sorted(result.group_membership["WT-CAS"]) == idx == [13, 14]  # WT-016, WT-017
+    idx = [i for i, r in enumerate(risks) if r.risk_id in ("WT-016", "WT-018")]
+    assert sorted(result.group_membership["WT-CAS"]) == idx == [13, 14]  # WT-016, WT-018 (RISKDRV-01)
 
 
 # ---------------------------------------------------------------------------

@@ -159,7 +159,7 @@ def period_01(tmp_path_factory: pytest.TempPathFactory) -> dict:
         workbook_path=WIND_01, project="synthetic_wind",
         output_dir=tmp_path_factory.mktemp("c_p01"), main_iterations=2000,
         days_at_risk_iterations=500, counterfactual_iterations=500, seed=42,
-        criticality_measurement_mode="both", project_start=_dt.date(2024, 1, 1),
+        criticality_measurement_mode="both",
         allow_dirty=True)
     return json.loads(path.read_bytes().decode("utf-8"))
 
@@ -188,7 +188,15 @@ class TestThePeriodJsonCarriesTheIntegratedCurveAndJcl:
         assert j["cost_target_dollars"] == round(j["declared_base_dollars"] + b["p80_dollars"], 2)
         finish_p80 = {p["cumulative_prob"]: p["date"]
                       for p in period_01["distribution"]["s_curve_points"]}[0.8]
-        assert j["finish_target_date"] == finish_p80
+        # RISKDRV-01 stage 2: with shared drivers the JCL reads the owner-view finish (drivers
+        # on), while this S-curve is still the event-only pass's; the owner curve joins the
+        # contract at stage 3 (1.7). The drivers lengthen work, so the target is later.
+        from src.shared_drivers import read_shared_drivers
+        if read_shared_drivers(Path(__file__).resolve().parents[1] / "tests" / "fixtures"
+                               / "synthetic_wind" / "wind_register.xlsx"):
+            assert j["finish_target_date"] > finish_p80
+        else:
+            assert j["finish_target_date"] == finish_p80
         assert 0 < j["jcl"] <= min(j["cost_confidence"], j["finish_confidence"])
         assert j["frontier_level"] == 0.70
         assert "+ delay cost" in j["basis"] and "excluded" not in j["basis"]

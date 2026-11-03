@@ -18,6 +18,10 @@ import numpy as np
 
 from src.integrated.integrated_dollars import integrated_dollars_array
 
+#: RISKDRV-01 stage 3: the P-level the drivers' leave-one-out is read at - the primary
+#: reporting level (hard invariant 8), as the risk tornado and the JCL targets use.
+DRIVER_LOO_P = 80
+
 #: D-2 (Director, 28/10/2026): P50 / P80 / P90 everywhere, P80 the headline; P95 supporting.
 INTEGRATED_P_LEVELS: tuple[int, ...] = (50, 80, 90, 95)
 #: The executive summary's range.
@@ -112,10 +116,37 @@ def total_cost_data(
     cost = np.asarray(cost_dollars_array, dtype=float)
     if base.size == 0 or base.shape != cost.shape:
         return None
-    event_total = integrated_dollars_array(cost, schedule_days_array, day_rate)
+    owner = base_layer.get("owner_view")
+    if owner is not None:
+        # RISKDRV-01 (plan R2 (b)): the total is the owner view, so its delay is the drivers-on
+        # pass's, which pairs with the base draw that carries the same drivers' cost. The
+        # event-risk headline keeps the event-only delay; only the total and the JCL read this.
+        owner_days = np.asarray(owner["delay_days"], dtype=float)
+        if owner_days.shape != cost.shape:
+            return None
+        event_total = cost + owner_days * float(day_rate)
+    else:
+        event_total = integrated_dollars_array(cost, schedule_days_array, day_rate)
     total = base + event_total
     declared = float(base_layer["base_total_dollars"])
     pct = {int(p): float(np.percentile(total, p)) for p in p_levels}
+    extra: dict[str, Any] = {}
+    if owner is not None:
+        rows = list(base_layer.get("shared_drivers") or [])
+        if owner.get("finish_days_without") is not None:
+            # RISKDRV-01 stage 3 (S2): the driver's masked leave-one-out on this total, one
+            # function for the report and the period JSON.
+            from src.integrated.driver_pass import driver_leave_one_out
+            loo = driver_leave_one_out(
+                base_array=base, base_without_driver=base_layer.get("base_without_driver") or {},
+                cost_dollars_array=cost, owner=owner, day_rate=day_rate, p_level=DRIVER_LOO_P)
+            rows = [{**r, "loo_total_dollars": loo[r["driver_id"]]["total_p_dollars"],
+                     "loo_finish_days": loo[r["driver_id"]]["finish_p_days"],
+                     "loo_p_level": DRIVER_LOO_P} for r in rows]
+        extra = {"owner_finish_days": np.asarray(owner["finish_days"], dtype=float),
+                 "owner_delay_days": owner_days,
+                 "event_finish_days": np.asarray(owner["event_finish_days"], dtype=float),
+                 "shared_drivers": rows}
     return {
         "base_dollars": base,
         "base_plus_cost_dollars": base + cost,
@@ -125,6 +156,7 @@ def total_cost_data(
         "contingency_dollars": {p: v - declared for p, v in pct.items()},
         "mean_dollars": float(np.mean(total)),
         "excluded_factors": list(base_layer.get("excluded_factors") or []),
+        **extra,
     }
 
 
@@ -143,6 +175,38 @@ def total_cost_rows(total: dict[str, Any]) -> list[dict[str, str]]:
             "Contingency, P-value less base ($M)": _m(total["contingency_dollars"][p]),
         })
     return rows
+
+
+def shared_drivers_sentence(total: dict[str, Any]) -> str:
+    """RISKDRV-01: the shared-driver paragraph, with both P80 finishes. Empty with no drivers."""
+    from src.final import commentary_text
+
+    if not total.get("shared_drivers"):
+        return ""
+    text = commentary_text.SHARED_DRIVERS_SENTENCE.format(
+        finish=float(np.percentile(total["owner_finish_days"], 80)),
+        event_finish=float(np.percentile(total["event_finish_days"], 80)))
+    rows = total["shared_drivers"]
+    if all("loo_total_dollars" in r for r in rows):
+        from src.integrated.driver_pass import DRIVER_LEAVE_ONE_OUT_METHOD
+        p = rows[0]["loo_p_level"]
+        text += " The last two columns are " + DRIVER_LEAVE_ONE_OUT_METHOD.format(p=p)
+    return text
+
+
+def shared_driver_display_rows(rows: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """RISKDRV-01: one display row per shared driver, from ``driver_pass.driver_rows``."""
+    return [{
+        "Driver": f"{r['driver_id']} {r['name']}",
+        "Kind": "Productivity" if r["kind"] == "P" else "Quantity",
+        "WBS": ", ".join(r["wbs_codes"]),
+        "Range (P10 / Mode / P90)": r["range"],
+        "Acts on": r["source"],
+        "Mean duration change": f"{r['mean_delta']:+.1%}",
+        **({f"Adds to P{r['loo_p_level']} total ($M)": _m(r["loo_total_dollars"]),
+            f"Adds to P{r['loo_p_level']} finish (wd)": f"{r['loo_finish_days']:+.1f}"}
+           if "loo_total_dollars" in r else {}),
+    } for r in rows]
 
 
 def base_exclusion_sentence(excluded: list[dict[str, Any]]) -> str:
@@ -186,11 +250,20 @@ def stage3_jcl(
     headline_contingency = float(np.percentile(integrated, p_level))
     base = total_cost["base_dollars"] if total_cost else 0.0
     declared = total_cost["base_total_dollars"] if total_cost else 0.0
-    out = jcl_data(integrated + base, finish, cost_target=declared + headline_contingency,
+    owner_finish = (total_cost or {}).get("owner_finish_days")
+    if owner_finish is not None:
+        # RISKDRV-01: with shared drivers the JCL is drawn on the owner view - its total (base
+        # with the drivers' cost + event cost + drivers-on delay cost) against its own finish.
+        # The budget stays declared base + the event-risk headline (D-3).
+        axis, finish = total_cost["total_dollars"], np.asarray(owner_finish, dtype=float)
+    else:
+        axis = integrated + base
+    out = jcl_data(axis, finish, cost_target=declared + headline_contingency,
                    finish_target=float(np.percentile(finish, 80)))
     out.update(p_level=int(p_level), base_drawn=bool(total_cost),
                headline_contingency_dollars=headline_contingency,
-               declared_base_dollars=float(declared))
+               declared_base_dollars=float(declared),
+               shared_drivers=owner_finish is not None)
     return out
 
 

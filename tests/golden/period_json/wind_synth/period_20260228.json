@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.6",
+  "schema_version": "1.7",
   "meta": {
     "period_end_date": "2026-02-28",
     "previous_period_end_date": null,
-    "engine_run_date": "2026-11-01T07:07:05Z",
-    "engine_run_hash": "306a4b3f-6719-47dc-9bd5-8235d80862c0",
+    "engine_run_date": "2026-11-03T00:51:53Z",
+    "engine_run_hash": "0fd90410-b805-4511-9082-11942823f097",
     "register_version": "Tropic Ridge Wind Farm",
     "workbook_filename": "wind_period_01.xlsx",
     "xer_filename": "wind_schedule.xer",
@@ -13,12 +13,12 @@
     "seed_source": "override",
     "project_key": "synthetic_wind",
     "project_display_name": "Tropic Ridge Wind Farm",
-    "engine_sha": "e5be2e27b77dcdcab399e949e18faf2d7c3b9efa",
+    "engine_sha": "792d675a30511cf08e87d83432b29808c9a6b67f",
     "engine_tree_dirty": false,
     "input_sha256": {
       "register": {
         "method": "git_blob_oid",
-        "value": "b4d077f65fd07d3e4872d6c44112d1a5a0fcc1d3"
+        "value": "da4c09c5b498a8eaa18c0f14685260c73a35c5ee"
       },
       "xer": {
         "method": "git_blob_oid",
@@ -33,14 +33,14 @@
   "headline": {
     "p10_finish": "2026-08-04",
     "p50_finish": "2026-10-02",
-    "mean_finish": "2026-10-06",
+    "mean_finish": "2026-10-05",
     "p80_finish": "2026-11-18",
-    "p90_finish": "2026-12-11",
-    "p95_finish": "2027-01-03",
+    "p90_finish": "2026-12-14",
+    "p95_finish": "2027-01-04",
     "deterministic_finish": "2026-06-29",
     "p80_days_behind_plan": 142,
     "p50_days_behind_plan": 95,
-    "p90_days_behind_plan": 165,
+    "p90_days_behind_plan": 168,
     "open_risks_count": 15,
     "fired_this_period_count": 0,
     "closed_this_period_count": 0,
@@ -51,7 +51,7 @@
       {
         "period_end": "2026-02-28",
         "p80_finish": "2026-11-18",
-        "contingency_p80_dollars": 14769161.29
+        "contingency_p80_dollars": 14410870.17
       }
     ]
   },
@@ -60,117 +60,73 @@
       "risk_id": "WT-021",
       "title": "Grid connection redesign",
       "context": "",
-      "days_at_risk_p80": 16.6,
+      "days_at_risk_p80": 18.2,
       "owner": "Grid Lead",
       "status": "open",
       "probability": 0.3,
       "impact_days_emv": 15.0,
-      "criticality_conditioned": 0.416,
-      "criticality_independent": 0.416,
-      "ssi": 0.4792,
-      "cruciality_proxy_p80": 0.0409,
+      "criticality_conditioned": 0.4015,
+      "criticality_independent": 0.4015,
+      "ssi": 0.4638,
+      "cruciality_proxy_p80": 0.0446,
       "mode": "Series",
       "cg_code": null,
       "tornado_sigma_days": 5.5,
-      "tornado_sample_sigma_days": 6.59,
-      "cost_p80_contribution_dollars": 1227544.47,
-      "cost_part_dollars": 798215.3,
-      "delay_part_dollars": 429329.16,
-      "delay_days_saved_p80": 16.32
-    },
-    {
-      "risk_id": "WT-008",
-      "title": "WTG delivery delay (long-lead)",
-      "context": "",
-      "days_at_risk_p80": 10.0,
-      "owner": "Procurement Lead",
-      "status": "open",
-      "probability": 0.4,
-      "impact_days_emv": 12.0,
-      "criticality_conditioned": 0.584,
-      "criticality_independent": 0.584,
-      "ssi": 0.4479,
-      "cruciality_proxy_p80": 0.0247,
-      "mode": "Series",
-      "cg_code": null,
-      "tornado_sigma_days": 4.67,
-      "tornado_sample_sigma_days": -3.0,
-      "cost_p80_contribution_dollars": 1316377.22,
-      "cost_part_dollars": 1014979.28,
-      "delay_part_dollars": 301397.95,
-      "delay_days_saved_p80": 12.41
+      "tornado_sample_sigma_days": 8.34,
+      "cost_p80_contribution_dollars": 1123807.25,
+      "cost_part_dollars": 633882.78,
+      "delay_part_dollars": 489924.47,
+      "delay_days_saved_p80": 16.34
     },
     {
       "risk_id": "WT-022",
       "title": "Network operator approval delay",
       "context": "",
-      "days_at_risk_p80": 8.7,
+      "days_at_risk_p80": 8.9,
       "owner": "Grid Lead",
       "status": "open",
       "probability": 0.4,
       "impact_days_emv": 10.0,
-      "criticality_conditioned": 0.416,
-      "criticality_independent": 0.416,
-      "ssi": 0.305,
-      "cruciality_proxy_p80": 0.0214,
+      "criticality_conditioned": 0.4015,
+      "criticality_independent": 0.4015,
+      "ssi": 0.2943,
+      "cruciality_proxy_p80": 0.0218,
       "mode": "Series",
       "cg_code": null,
       "tornado_sigma_days": 3.33,
-      "tornado_sample_sigma_days": 1.92,
-      "cost_p80_contribution_dollars": 662199.46,
-      "cost_part_dollars": 377881.04,
-      "delay_part_dollars": 284318.42,
-      "delay_days_saved_p80": 9.46
+      "tornado_sample_sigma_days": 3.94,
+      "cost_p80_contribution_dollars": 678005.63,
+      "cost_part_dollars": 405419.01,
+      "delay_part_dollars": 272586.62,
+      "delay_days_saved_p80": 9.44
     },
     {
       "risk_id": "WT-001",
       "title": "Turbine foundation rework",
       "context": "",
-      "days_at_risk_p80": 7.3,
+      "days_at_risk_p80": 7.0,
       "owner": "Civil Lead",
       "status": "open",
       "probability": 0.45,
       "impact_days_emv": 5.4,
       "criticality_conditioned": 1.0,
       "criticality_independent": 1.0,
-      "ssi": 0.2079,
-      "cruciality_proxy_p80": 0.018,
+      "ssi": 0.2058,
+      "cruciality_proxy_p80": 0.0173,
       "mode": "Series",
       "cg_code": null,
       "tornado_sigma_days": 1.43,
-      "tornado_sample_sigma_days": -1.51,
-      "cost_p80_contribution_dollars": 654271.02,
-      "cost_part_dollars": 432205.25,
-      "delay_part_dollars": 222065.77,
-      "delay_days_saved_p80": 7.1
-    },
-    {
-      "risk_id": "WT-031",
-      "title": "SCADA integration defects",
-      "context": "",
-      "days_at_risk_p80": 7.1,
-      "owner": "Commissioning Lead",
-      "status": "open",
-      "probability": 0.5,
-      "impact_days_emv": 4.5,
-      "criticality_conditioned": 1.0,
-      "criticality_independent": 1.0,
-      "ssi": 0.9277,
-      "cruciality_proxy_p80": 0.0174,
-      "mode": "Series",
-      "cg_code": null,
-      "tornado_sigma_days": 1.25,
-      "tornado_sample_sigma_days": -1.75,
-      "cost_p80_contribution_dollars": 716836.99,
-      "cost_part_dollars": 458424.65,
-      "delay_part_dollars": 258412.34,
-      "delay_days_saved_p80": 5.69
+      "tornado_sample_sigma_days": 0.05,
+      "cost_p80_contribution_dollars": 663900.39,
+      "cost_part_dollars": 441132.73,
+      "delay_part_dollars": 222767.67,
+      "delay_days_saved_p80": 7.74
     },
     {
       "risk_id": "WT-024",
       "title": "Grid compliance test failure",
       "context": "",
-      "days_at_risk_p80": 6.9,
+      "days_at_risk_p80": 6.2,
       "owner": "Commissioning Lead",
       "status": "open",
       "probability": 0.25,
@@ -178,109 +134,175 @@
       "criticality_conditioned": 1.0,
       "criticality_independent": 1.0,
       "ssi": 1.0,
-      "cruciality_proxy_p80": 0.0169,
+      "cruciality_proxy_p80": 0.0153,
       "mode": "Series",
       "cg_code": null,
       "tornado_sigma_days": 1.46,
-      "tornado_sample_sigma_days": 0.01,
-      "cost_p80_contribution_dollars": 533662.78,
-      "cost_part_dollars": 251113.61,
-      "delay_part_dollars": 282549.17,
-      "delay_days_saved_p80": 6.48
+      "tornado_sample_sigma_days": 1.42,
+      "cost_p80_contribution_dollars": 426198.68,
+      "cost_part_dollars": 303395.38,
+      "delay_part_dollars": 122803.3,
+      "delay_days_saved_p80": 6.72
+    },
+    {
+      "risk_id": "WT-008",
+      "title": "WTG delivery delay (long-lead)",
+      "context": "",
+      "days_at_risk_p80": 5.9,
+      "owner": "Procurement Lead",
+      "status": "open",
+      "probability": 0.4,
+      "impact_days_emv": 12.0,
+      "criticality_conditioned": 0.5985,
+      "criticality_independent": 0.5985,
+      "ssi": 0.4544,
+      "cruciality_proxy_p80": 0.0144,
+      "mode": "Series",
+      "cg_code": null,
+      "tornado_sigma_days": 4.67,
+      "tornado_sample_sigma_days": -1.8,
+      "cost_p80_contribution_dollars": 1334707.76,
+      "cost_part_dollars": 1013605.84,
+      "delay_part_dollars": 321101.92,
+      "delay_days_saved_p80": 11.32
+    },
+    {
+      "risk_id": "WT-031",
+      "title": "SCADA integration defects",
+      "context": "",
+      "days_at_risk_p80": 3.7,
+      "owner": "Commissioning Lead",
+      "status": "open",
+      "probability": 0.5,
+      "impact_days_emv": 4.5,
+      "criticality_conditioned": 1.0,
+      "criticality_independent": 1.0,
+      "ssi": 0.9362,
+      "cruciality_proxy_p80": 0.0092,
+      "mode": "Series",
+      "cg_code": null,
+      "tornado_sigma_days": 1.25,
+      "tornado_sample_sigma_days": -0.7,
+      "cost_p80_contribution_dollars": 581226.0,
+      "cost_part_dollars": 474295.68,
+      "delay_part_dollars": 106930.31,
+      "delay_days_saved_p80": 6.03
     },
     {
       "risk_id": "WT-003",
       "title": "Unforeseen ground conditions",
       "context": "",
-      "days_at_risk_p80": 6.5,
+      "days_at_risk_p80": 3.5,
       "owner": "Civil Lead",
       "status": "open",
       "probability": 0.35,
       "impact_days_emv": 2.8,
       "criticality_conditioned": 1.0,
       "criticality_independent": 1.0,
-      "ssi": 0.2079,
-      "cruciality_proxy_p80": 0.0159,
+      "ssi": 0.2058,
+      "cruciality_proxy_p80": 0.0087,
       "mode": "Hybrid",
       "cg_code": null,
       "tornado_sigma_days": 0.99,
-      "tornado_sample_sigma_days": -1.5,
-      "cost_p80_contribution_dollars": 755162.82,
-      "cost_part_dollars": 627918.87,
-      "delay_part_dollars": 127243.96,
-      "delay_days_saved_p80": 4.14
-    },
-    {
-      "risk_id": "WT-028",
-      "title": "Power transformer delivery delay",
-      "context": "",
-      "days_at_risk_p80": 6.5,
-      "owner": "Substation Lead",
-      "status": "open",
-      "probability": 0.25,
-      "impact_days_emv": 7.5,
-      "criticality_conditioned": 0.416,
-      "criticality_independent": 0.416,
-      "ssi": 0.2411,
-      "cruciality_proxy_p80": 0.016,
-      "mode": "Series",
-      "cg_code": null,
-      "tornado_sigma_days": 2.5,
-      "tornado_sample_sigma_days": 0.32,
-      "cost_p80_contribution_dollars": 440624.0,
-      "cost_part_dollars": 281852.36,
-      "delay_part_dollars": 158771.64,
-      "delay_days_saved_p80": 4.04
+      "tornado_sample_sigma_days": -0.39,
+      "cost_p80_contribution_dollars": 696128.99,
+      "cost_part_dollars": 555821.58,
+      "delay_part_dollars": 140307.41,
+      "delay_days_saved_p80": 5.54
     },
     {
       "risk_id": "WT-012",
       "title": "Erection weather standby",
       "context": "",
-      "days_at_risk_p80": 4.8,
+      "days_at_risk_p80": 3.3,
       "owner": "Erection Lead",
       "status": "open",
       "probability": 0.6,
       "impact_days_emv": 7.2,
-      "criticality_conditioned": 0.584,
-      "criticality_independent": 0.584,
-      "ssi": 0.4479,
-      "cruciality_proxy_p80": 0.0119,
+      "criticality_conditioned": 0.5985,
+      "criticality_independent": 0.5985,
+      "ssi": 0.4544,
+      "cruciality_proxy_p80": 0.008,
       "mode": "Hybrid",
       "cg_code": null,
       "tornado_sigma_days": 2.0,
-      "tornado_sample_sigma_days": -3.2,
-      "cost_p80_contribution_dollars": 887545.67,
-      "cost_part_dollars": 707201.58,
-      "delay_part_dollars": 180344.09,
-      "delay_days_saved_p80": 5.16
+      "tornado_sample_sigma_days": -1.94,
+      "cost_p80_contribution_dollars": 864167.09,
+      "cost_part_dollars": 689566.78,
+      "delay_part_dollars": 174600.31,
+      "delay_days_saved_p80": 6.34
+    },
+    {
+      "risk_id": "WT-028",
+      "title": "Power transformer delivery delay",
+      "context": "",
+      "days_at_risk_p80": 3.3,
+      "owner": "Substation Lead",
+      "status": "open",
+      "probability": 0.25,
+      "impact_days_emv": 7.5,
+      "criticality_conditioned": 0.4015,
+      "criticality_independent": 0.4015,
+      "ssi": 0.2293,
+      "cruciality_proxy_p80": 0.0082,
+      "mode": "Series",
+      "cg_code": null,
+      "tornado_sigma_days": 2.5,
+      "tornado_sample_sigma_days": 0.69,
+      "cost_p80_contribution_dollars": 400775.58,
+      "cost_part_dollars": 285000.17,
+      "delay_part_dollars": 115775.41,
+      "delay_days_saved_p80": 6.06
+    },
+    {
+      "risk_id": "WT-009",
+      "title": "Main crane mobilisation delay",
+      "context": "",
+      "days_at_risk_p80": 2.5,
+      "owner": "Erection Lead",
+      "status": "open",
+      "probability": 0.45,
+      "impact_days_emv": 4.5,
+      "criticality_conditioned": 0.5985,
+      "criticality_independent": 0.5985,
+      "ssi": 0.4115,
+      "cruciality_proxy_p80": 0.006,
+      "mode": "Hybrid",
+      "cg_code": null,
+      "tornado_sigma_days": 1.5,
+      "tornado_sample_sigma_days": -1.39,
+      "cost_p80_contribution_dollars": 922578.83,
+      "cost_part_dollars": 834574.05,
+      "delay_part_dollars": 88004.78,
+      "delay_days_saved_p80": 3.87
     },
     {
       "risk_id": "WT-002",
       "title": "Access road wet-weather damage",
       "context": "",
-      "days_at_risk_p80": 4.5,
+      "days_at_risk_p80": 2.3,
       "owner": "Civil Lead",
       "status": "open",
       "probability": 0.5,
       "impact_days_emv": 3.5,
       "criticality_conditioned": 1.0,
       "criticality_independent": 1.0,
-      "ssi": 0.1183,
-      "cruciality_proxy_p80": 0.0111,
+      "ssi": 0.1171,
+      "cruciality_proxy_p80": 0.0057,
       "mode": "Hybrid",
       "cg_code": null,
       "tornado_sigma_days": 1.08,
-      "tornado_sample_sigma_days": -1.55,
-      "cost_p80_contribution_dollars": 461164.14,
-      "cost_part_dollars": 340215.5,
-      "delay_part_dollars": 120948.64,
-      "delay_days_saved_p80": 4.92
+      "tornado_sample_sigma_days": -0.37,
+      "cost_p80_contribution_dollars": 469564.53,
+      "cost_part_dollars": 316086.49,
+      "delay_part_dollars": 153478.04,
+      "delay_days_saved_p80": 5.53
     },
     {
       "risk_id": "WT-032",
       "title": "Turbine commissioning faults",
       "context": "",
-      "days_at_risk_p80": 4.5,
+      "days_at_risk_p80": 2.3,
       "owner": "Commissioning Lead",
       "status": "open",
       "probability": 0.45,
@@ -288,87 +310,21 @@
       "criticality_conditioned": 0.0,
       "criticality_independent": 0.0,
       "ssi": 0.0,
-      "cruciality_proxy_p80": 0.0112,
+      "cruciality_proxy_p80": 0.0057,
       "mode": "Hybrid",
       "cg_code": null,
       "tornado_sigma_days": 0.97,
-      "tornado_sample_sigma_days": -1.88,
-      "cost_p80_contribution_dollars": 504854.03,
-      "cost_part_dollars": 398075.88,
-      "delay_part_dollars": 106778.15,
-      "delay_days_saved_p80": 4.13
-    },
-    {
-      "risk_id": "WT-009",
-      "title": "Main crane mobilisation delay",
-      "context": "",
-      "days_at_risk_p80": 3.5,
-      "owner": "Erection Lead",
-      "status": "open",
-      "probability": 0.45,
-      "impact_days_emv": 4.5,
-      "criticality_conditioned": 0.584,
-      "criticality_independent": 0.584,
-      "ssi": 0.4056,
-      "cruciality_proxy_p80": 0.0087,
-      "mode": "Hybrid",
-      "cg_code": null,
-      "tornado_sigma_days": 1.5,
-      "tornado_sample_sigma_days": -2.85,
-      "cost_p80_contribution_dollars": 950156.48,
-      "cost_part_dollars": 859011.01,
-      "delay_part_dollars": 91145.47,
-      "delay_days_saved_p80": 4.0
-    },
-    {
-      "risk_id": "WT-026",
-      "title": "Substation civils delay",
-      "context": "",
-      "days_at_risk_p80": 1.9,
-      "owner": "Substation Lead",
-      "status": "open",
-      "probability": 0.35,
-      "impact_days_emv": 2.1,
-      "criticality_conditioned": 0.416,
-      "criticality_independent": 0.416,
-      "ssi": 0.1476,
-      "cruciality_proxy_p80": 0.0047,
-      "mode": "Hybrid",
-      "cg_code": null,
-      "tornado_sigma_days": 0.7,
-      "tornado_sample_sigma_days": -1.76,
-      "cost_p80_contribution_dollars": 326375.48,
-      "cost_part_dollars": 267430.88,
-      "delay_part_dollars": 58944.6,
-      "delay_days_saved_p80": 1.51
-    },
-    {
-      "risk_id": "WT-027",
-      "title": "Substation E&I commissioning slip",
-      "context": "",
-      "days_at_risk_p80": 1.8,
-      "owner": "Substation Lead",
-      "status": "open",
-      "probability": 0.35,
-      "impact_days_emv": 1.4,
-      "criticality_conditioned": 0.416,
-      "criticality_independent": 0.416,
-      "ssi": 0.2491,
-      "cruciality_proxy_p80": 0.0045,
-      "mode": "Parallel",
-      "cg_code": null,
-      "tornado_sigma_days": 0.52,
-      "tornado_sample_sigma_days": -1.98,
-      "cost_p80_contribution_dollars": 234026.16,
-      "cost_part_dollars": 180190.31,
-      "delay_part_dollars": 53835.85,
-      "delay_days_saved_p80": 1.18
+      "tornado_sample_sigma_days": -0.91,
+      "cost_p80_contribution_dollars": 380362.7,
+      "cost_part_dollars": 272232.9,
+      "delay_part_dollars": 108129.8,
+      "delay_days_saved_p80": 3.84
     },
     {
       "risk_id": "WT-020",
       "title": "HV array cable test failures",
       "context": "",
-      "days_at_risk_p80": 1.4,
+      "days_at_risk_p80": 1.1,
       "owner": "Electrical Lead",
       "status": "open",
       "probability": 0.35,
@@ -376,15 +332,59 @@
       "criticality_conditioned": 0.0,
       "criticality_independent": 0.0,
       "ssi": 0.0,
-      "cruciality_proxy_p80": 0.0036,
+      "cruciality_proxy_p80": 0.0026,
       "mode": "Parallel",
       "cg_code": null,
       "tornado_sigma_days": 0.52,
-      "tornado_sample_sigma_days": -2.67,
-      "cost_p80_contribution_dollars": 131751.8,
-      "cost_part_dollars": 126667.67,
-      "delay_part_dollars": 5084.13,
-      "delay_days_saved_p80": 0.64
+      "tornado_sample_sigma_days": -1.28,
+      "cost_p80_contribution_dollars": 154264.14,
+      "cost_part_dollars": 142689.57,
+      "delay_part_dollars": 11574.57,
+      "delay_days_saved_p80": 0.79
+    },
+    {
+      "risk_id": "WT-027",
+      "title": "Substation E&I commissioning slip",
+      "context": "",
+      "days_at_risk_p80": 0.2,
+      "owner": "Substation Lead",
+      "status": "open",
+      "probability": 0.35,
+      "impact_days_emv": 1.4,
+      "criticality_conditioned": 0.4015,
+      "criticality_independent": 0.4015,
+      "ssi": 0.2369,
+      "cruciality_proxy_p80": 0.0006,
+      "mode": "Parallel",
+      "cg_code": null,
+      "tornado_sigma_days": 0.52,
+      "tornado_sample_sigma_days": -0.56,
+      "cost_p80_contribution_dollars": 221956.93,
+      "cost_part_dollars": 213551.62,
+      "delay_part_dollars": 8405.31,
+      "delay_days_saved_p80": 0.56
+    },
+    {
+      "risk_id": "WT-026",
+      "title": "Substation civils delay",
+      "context": "",
+      "days_at_risk_p80": 0.0,
+      "owner": "Substation Lead",
+      "status": "open",
+      "probability": 0.35,
+      "impact_days_emv": 2.1,
+      "criticality_conditioned": 0.4015,
+      "criticality_independent": 0.4015,
+      "ssi": 0.1406,
+      "cruciality_proxy_p80": 0.0,
+      "mode": "Hybrid",
+      "cg_code": null,
+      "tornado_sigma_days": 0.7,
+      "tornado_sample_sigma_days": -0.45,
+      "cost_p80_contribution_dollars": 283573.8,
+      "cost_part_dollars": 266898.76,
+      "delay_part_dollars": 16675.03,
+      "delay_days_saved_p80": 1.99
     }
   ],
   "mitigations": [],
@@ -448,12 +448,12 @@
       {
         "activity_id": "1026",
         "name": "Substation energisation",
-        "p10_start_days": 224.15,
-        "p50_start_days": 262.53,
-        "p90_start_days": 307.19,
-        "p10_finish_days": 234.15,
-        "p50_finish_days": 272.53,
-        "p90_finish_days": 317.19,
+        "p10_start_days": 223.24,
+        "p50_start_days": 262.47,
+        "p90_start_days": 308.28,
+        "p10_finish_days": 233.24,
+        "p50_finish_days": 272.47,
+        "p90_finish_days": 318.28,
         "det_es_days": 207.0,
         "det_ef_days": 217.0,
         "criticality_index": 1.0
@@ -461,12 +461,12 @@
       {
         "activity_id": "1027",
         "name": "SCADA integration & site controls",
-        "p10_start_days": 234.06,
-        "p50_start_days": 272.63,
-        "p90_start_days": 317.16,
-        "p10_finish_days": 249.06,
-        "p50_finish_days": 287.63,
-        "p90_finish_days": 332.16,
+        "p10_start_days": 233.15,
+        "p50_start_days": 272.57,
+        "p90_start_days": 318.25,
+        "p10_finish_days": 248.15,
+        "p50_finish_days": 287.57,
+        "p90_finish_days": 333.25,
         "det_es_days": 217.0,
         "det_ef_days": 232.0,
         "criticality_index": 1.0
@@ -474,12 +474,12 @@
       {
         "activity_id": "1028",
         "name": "SCADA integration gate",
-        "p10_start_days": 253.43,
-        "p50_start_days": 292.62,
-        "p90_start_days": 337.85,
-        "p10_finish_days": 254.43,
-        "p50_finish_days": 293.62,
-        "p90_finish_days": 338.85,
+        "p10_start_days": 252.78,
+        "p50_start_days": 292.66,
+        "p90_start_days": 338.81,
+        "p10_finish_days": 253.78,
+        "p50_finish_days": 293.66,
+        "p90_finish_days": 339.81,
         "det_es_days": 232.0,
         "det_ef_days": 233.0,
         "criticality_index": 1.0
@@ -487,12 +487,12 @@
       {
         "activity_id": "1029",
         "name": "Turbine commissioning (controlling)",
-        "p10_start_days": 254.23,
-        "p50_start_days": 293.84,
-        "p90_start_days": 338.77,
-        "p10_finish_days": 294.23,
-        "p50_finish_days": 333.84,
-        "p90_finish_days": 378.77,
+        "p10_start_days": 253.58,
+        "p50_start_days": 293.89,
+        "p90_start_days": 339.73,
+        "p10_finish_days": 293.58,
+        "p50_finish_days": 333.89,
+        "p90_finish_days": 379.73,
         "det_es_days": 233.0,
         "det_ef_days": 273.0,
         "criticality_index": 1.0
@@ -500,12 +500,12 @@
       {
         "activity_id": "1030",
         "name": "Turbine commissioning gate",
-        "p10_start_days": 297.29,
-        "p50_start_days": 337.4,
-        "p90_start_days": 382.9,
-        "p10_finish_days": 298.29,
-        "p50_finish_days": 338.4,
-        "p90_finish_days": 383.9,
+        "p10_start_days": 296.7,
+        "p50_start_days": 337.42,
+        "p90_start_days": 383.71,
+        "p10_finish_days": 297.7,
+        "p50_finish_days": 338.42,
+        "p90_finish_days": 384.71,
         "det_es_days": 273.0,
         "det_ef_days": 274.0,
         "criticality_index": 1.0
@@ -513,12 +513,12 @@
       {
         "activity_id": "1031",
         "name": "Grid code compliance testing",
-        "p10_start_days": 298.25,
-        "p50_start_days": 338.44,
-        "p90_start_days": 383.88,
-        "p10_finish_days": 308.25,
-        "p50_finish_days": 348.44,
-        "p90_finish_days": 393.88,
+        "p10_start_days": 297.66,
+        "p50_start_days": 338.47,
+        "p90_start_days": 384.69,
+        "p10_finish_days": 307.66,
+        "p50_finish_days": 348.47,
+        "p90_finish_days": 394.69,
         "det_es_days": 274.0,
         "det_ef_days": 284.0,
         "criticality_index": 1.0
@@ -535,10 +535,10 @@
       "activities_ci_gt_50": 24,
       "activities_ci_gt_80": 15,
       "stochastic_cp_additions": 0,
-      "longest_path_p80_days": 406.8,
-      "zero_float_activities": 2,
+      "longest_path_p80_days": 407.0,
+      "zero_float_activities": 0,
       "mean_activity_float_days": 44.9,
-      "float_sigma_days": 23.7
+      "float_sigma_days": 23.8
     }
   },
   "distribution": {
@@ -548,7 +548,7 @@
         "cumulative_prob": 0.0
       },
       {
-        "date": "2026-07-24",
+        "date": "2026-07-23",
         "cumulative_prob": 0.05
       },
       {
@@ -560,27 +560,27 @@
         "cumulative_prob": 0.15
       },
       {
-        "date": "2026-08-21",
+        "date": "2026-08-20",
         "cumulative_prob": 0.2
       },
       {
-        "date": "2026-08-28",
+        "date": "2026-08-27",
         "cumulative_prob": 0.25
       },
       {
-        "date": "2026-09-05",
+        "date": "2026-09-02",
         "cumulative_prob": 0.3
       },
       {
-        "date": "2026-09-12",
+        "date": "2026-09-10",
         "cumulative_prob": 0.35
       },
       {
-        "date": "2026-09-19",
+        "date": "2026-09-18",
         "cumulative_prob": 0.4
       },
       {
-        "date": "2026-09-25",
+        "date": "2026-09-24",
         "cumulative_prob": 0.45
       },
       {
@@ -588,15 +588,15 @@
         "cumulative_prob": 0.5
       },
       {
-        "date": "2026-10-09",
+        "date": "2026-10-08",
         "cumulative_prob": 0.55
       },
       {
-        "date": "2026-10-15",
+        "date": "2026-10-16",
         "cumulative_prob": 0.6
       },
       {
-        "date": "2026-10-22",
+        "date": "2026-10-23",
         "cumulative_prob": 0.65
       },
       {
@@ -604,7 +604,7 @@
         "cumulative_prob": 0.7
       },
       {
-        "date": "2026-11-09",
+        "date": "2026-11-08",
         "cumulative_prob": 0.75
       },
       {
@@ -612,19 +612,19 @@
         "cumulative_prob": 0.8
       },
       {
-        "date": "2026-11-27",
+        "date": "2026-11-29",
         "cumulative_prob": 0.85
       },
       {
-        "date": "2026-12-11",
+        "date": "2026-12-14",
         "cumulative_prob": 0.9
       },
       {
-        "date": "2027-01-03",
+        "date": "2027-01-04",
         "cumulative_prob": 0.95
       },
       {
-        "date": "2027-04-11",
+        "date": "2027-04-17",
         "cumulative_prob": 1.0
       }
     ],
@@ -632,146 +632,146 @@
       {
         "date_range_start": "2026-06-29",
         "date_range_end": "2026-07-13",
-        "count": 45
+        "count": 36
       },
       {
         "date_range_start": "2026-07-13",
-        "date_range_end": "2026-07-27",
-        "count": 88
+        "date_range_end": "2026-07-28",
+        "count": 103
       },
       {
-        "date_range_start": "2026-07-27",
+        "date_range_start": "2026-07-28",
         "date_range_end": "2026-08-11",
-        "count": 141
+        "count": 142
       },
       {
         "date_range_start": "2026-08-11",
-        "date_range_end": "2026-08-25",
-        "count": 174
+        "date_range_end": "2026-08-26",
+        "count": 199
       },
       {
-        "date_range_start": "2026-08-25",
-        "date_range_end": "2026-09-08",
-        "count": 203
+        "date_range_start": "2026-08-26",
+        "date_range_end": "2026-09-10",
+        "count": 212
       },
       {
-        "date_range_start": "2026-09-08",
-        "date_range_end": "2026-09-23",
-        "count": 198
+        "date_range_start": "2026-09-10",
+        "date_range_end": "2026-09-24",
+        "count": 206
       },
       {
-        "date_range_start": "2026-09-23",
-        "date_range_end": "2026-10-07",
-        "count": 226
+        "date_range_start": "2026-09-24",
+        "date_range_end": "2026-10-09",
+        "count": 209
       },
       {
-        "date_range_start": "2026-10-07",
-        "date_range_end": "2026-10-21",
-        "count": 207
+        "date_range_start": "2026-10-09",
+        "date_range_end": "2026-10-23",
+        "count": 194
       },
       {
-        "date_range_start": "2026-10-21",
-        "date_range_end": "2026-11-05",
-        "count": 171
+        "date_range_start": "2026-10-23",
+        "date_range_end": "2026-11-07",
+        "count": 188
       },
       {
-        "date_range_start": "2026-11-05",
-        "date_range_end": "2026-11-19",
-        "count": 154
+        "date_range_start": "2026-11-07",
+        "date_range_end": "2026-11-22",
+        "count": 144
       },
       {
-        "date_range_start": "2026-11-19",
-        "date_range_end": "2026-12-03",
-        "count": 138
+        "date_range_start": "2026-11-22",
+        "date_range_end": "2026-12-06",
+        "count": 122
       },
       {
-        "date_range_start": "2026-12-03",
-        "date_range_end": "2026-12-18",
+        "date_range_start": "2026-12-06",
+        "date_range_end": "2026-12-21",
         "count": 92
       },
       {
-        "date_range_start": "2026-12-18",
-        "date_range_end": "2027-01-01",
-        "count": 60
+        "date_range_start": "2026-12-21",
+        "date_range_end": "2027-01-04",
+        "count": 56
       },
       {
-        "date_range_start": "2027-01-01",
-        "date_range_end": "2027-01-15",
-        "count": 41
+        "date_range_start": "2027-01-04",
+        "date_range_end": "2027-01-19",
+        "count": 42
       },
       {
-        "date_range_start": "2027-01-15",
-        "date_range_end": "2027-01-30",
+        "date_range_start": "2027-01-19",
+        "date_range_end": "2027-02-03",
         "count": 27
       },
       {
-        "date_range_start": "2027-01-30",
-        "date_range_end": "2027-02-13",
-        "count": 17
+        "date_range_start": "2027-02-03",
+        "date_range_end": "2027-02-17",
+        "count": 14
       },
       {
-        "date_range_start": "2027-02-13",
-        "date_range_end": "2027-02-27",
-        "count": 11
+        "date_range_start": "2027-02-17",
+        "date_range_end": "2027-03-04",
+        "count": 7
       },
       {
-        "date_range_start": "2027-02-27",
-        "date_range_end": "2027-03-14",
+        "date_range_start": "2027-03-04",
+        "date_range_end": "2027-03-18",
         "count": 3
       },
       {
-        "date_range_start": "2027-03-14",
-        "date_range_end": "2027-03-28",
+        "date_range_start": "2027-03-18",
+        "date_range_end": "2027-04-02",
+        "count": 3
+      },
+      {
+        "date_range_start": "2027-04-02",
+        "date_range_end": "2027-04-17",
         "count": 1
-      },
-      {
-        "date_range_start": "2027-03-28",
-        "date_range_end": "2027-04-11",
-        "count": 3
       }
     ],
     "percentile_table": [
       {
         "percentile": 10,
-        "days_from_start": 330.9,
+        "days_from_start": 330.8,
         "date": "2026-08-04",
         "delta_vs_det": 36
       },
       {
         "percentile": 25,
-        "days_from_start": 348.2,
-        "date": "2026-08-28",
-        "delta_vs_det": 60
+        "days_from_start": 347.7,
+        "date": "2026-08-27",
+        "delta_vs_det": 59
       },
       {
         "percentile": 50,
-        "days_from_start": 373.1,
+        "days_from_start": 373.0,
         "date": "2026-10-02",
         "delta_vs_det": 95
       },
       {
         "percentile": 75,
-        "days_from_start": 400.3,
-        "date": "2026-11-09",
-        "delta_vs_det": 133
+        "days_from_start": 399.5,
+        "date": "2026-11-08",
+        "delta_vs_det": 132
       },
       {
         "percentile": 80,
-        "days_from_start": 406.8,
+        "days_from_start": 407.0,
         "date": "2026-11-18",
         "delta_vs_det": 142
       },
       {
         "percentile": 90,
-        "days_from_start": 422.9,
-        "date": "2026-12-11",
-        "delta_vs_det": 165
+        "days_from_start": 425.4,
+        "date": "2026-12-14",
+        "delta_vs_det": 168
       },
       {
         "percentile": 95,
-        "days_from_start": 439.4,
-        "date": "2027-01-03",
-        "delta_vs_det": 188
+        "days_from_start": 440.1,
+        "date": "2027-01-04",
+        "delta_vs_det": 189
       }
     ]
   },
@@ -835,21 +835,21 @@
     "day_rate": 35000.0,
     "deterministic_baseline_days": 305.0,
     "iterations": 2000,
-    "p50_dollars": 10656202.49,
-    "mean_dollars": 10819632.7,
-    "p80_dollars": 14769161.29,
-    "p90_dollars": 16898455.65,
-    "p95_dollars": 18632524.39,
+    "p50_dollars": 10159955.69,
+    "mean_dollars": 10548312.08,
+    "p80_dollars": 14410870.17,
+    "p90_dollars": 16903364.91,
+    "p95_dollars": 18229505.1,
     "cost_marginal": {
-      "mean_dollars": 8344469.18,
-      "p80_dollars": 11396937.07
+      "mean_dollars": 8074291.43,
+      "p80_dollars": 11058347.45
     },
     "schedule_marginal": {
-      "mean_delay_days": 70.719,
-      "p80_delay_days": 101.75
+      "mean_delay_days": 70.686,
+      "p80_delay_days": 102.01
     },
     "pinning": {
-      "risks_priced": 30,
+      "risks_priced": 29,
       "risks_removed": 0,
       "risks_closed": 0,
       "risks_reprobabilised": 0,
@@ -871,7 +871,6 @@
         "WT-012": 0.6,
         "WT-013": 0.35,
         "WT-016": 0.45,
-        "WT-017": 0.4,
         "WT-018": 0.3,
         "WT-019": 0.25,
         "WT-020": 0.35,
@@ -891,98 +890,98 @@
     },
     "curve_points": [
       {
-        "dollars": 361179.9,
+        "dollars": 0.0,
         "cumulative_prob": 0.0
       },
       {
-        "dollars": 3869491.91,
+        "dollars": 3875567.36,
         "cumulative_prob": 0.05
       },
       {
-        "dollars": 5086564.55,
+        "dollars": 4853611.35,
         "cumulative_prob": 0.1
       },
       {
-        "dollars": 5965622.98,
+        "dollars": 5725217.26,
         "cumulative_prob": 0.15
       },
       {
-        "dollars": 6765428.09,
+        "dollars": 6469110.51,
         "cumulative_prob": 0.2
       },
       {
-        "dollars": 7451897.75,
+        "dollars": 7085080.07,
         "cumulative_prob": 0.25
       },
       {
-        "dollars": 8075659.84,
+        "dollars": 7786054.98,
         "cumulative_prob": 0.3
       },
       {
-        "dollars": 8705021.22,
+        "dollars": 8363704.54,
         "cumulative_prob": 0.35
       },
       {
-        "dollars": 9384037.86,
+        "dollars": 8950866.69,
         "cumulative_prob": 0.4
       },
       {
-        "dollars": 10005897.83,
+        "dollars": 9558168.08,
         "cumulative_prob": 0.45
       },
       {
-        "dollars": 10656202.49,
+        "dollars": 10159955.69,
         "cumulative_prob": 0.5
       },
       {
-        "dollars": 11125861.36,
+        "dollars": 10881748.84,
         "cumulative_prob": 0.55
       },
       {
-        "dollars": 11742670.29,
+        "dollars": 11454318.56,
         "cumulative_prob": 0.6
       },
       {
-        "dollars": 12386243.8,
+        "dollars": 12121579.96,
         "cumulative_prob": 0.65
       },
       {
-        "dollars": 13075306.19,
+        "dollars": 12923032.83,
         "cumulative_prob": 0.7
       },
       {
-        "dollars": 13915401.93,
+        "dollars": 13609387.5,
         "cumulative_prob": 0.75
       },
       {
-        "dollars": 14769161.29,
+        "dollars": 14410870.17,
         "cumulative_prob": 0.8
       },
       {
-        "dollars": 15819770.33,
+        "dollars": 15550783.26,
         "cumulative_prob": 0.85
       },
       {
-        "dollars": 16898455.65,
+        "dollars": 16903364.91,
         "cumulative_prob": 0.9
       },
       {
-        "dollars": 18632524.39,
+        "dollars": 18229505.1,
         "cumulative_prob": 0.95
       },
       {
-        "dollars": 27260701.19,
+        "dollars": 25620266.9,
         "cumulative_prob": 1.0
       }
     ],
     "jcl": {
-      "basis": "budget = the declared base ($120.00M) plus the P80 contingency, cost axis = base drawn + event-risk cost + delay cost, as the budget funds delay cost; finish = P80 finish; cost and schedule sampled jointly; rank correlation of cost with finish 0.42. The report's basis.",
-      "jcl": 0.3785,
-      "cost_target_dollars": 134769161.29,
+      "basis": "budget = the declared base ($120.00M) plus the P80 contingency, cost axis = base drawn + event-risk cost + delay cost, as the budget funds delay cost; finish = P80 finish; cost and schedule sampled jointly; rank correlation of cost with finish 0.40. The report's basis.",
+      "jcl": 0.3265,
+      "cost_target_dollars": 134410870.17,
       "declared_base_dollars": 120000000.0,
       "base_drawn": true,
-      "cost_confidence": 0.4195,
-      "finish_target_date": "2026-11-18",
+      "cost_confidence": 0.3545,
+      "finish_target_date": "2026-12-10",
       "finish_confidence": 0.8,
       "p_level": 80,
       "frontier_level": 0.7
@@ -990,30 +989,30 @@
     "build_up": [
       {
         "p_level": 50,
-        "event_cost_dollars": 8057931.73,
-        "delay_days": 68.058,
-        "delay_cost_dollars": 2382033.69,
-        "standalone_sum_dollars": 10439965.42,
-        "joint_contingency_dollars": 10656202.49,
-        "diversification_dollars": -216237.06
+        "event_cost_dollars": 7720708.71,
+        "delay_days": 67.983,
+        "delay_cost_dollars": 2379412.54,
+        "standalone_sum_dollars": 10100121.25,
+        "joint_contingency_dollars": 10159955.69,
+        "diversification_dollars": -59834.45
       },
       {
         "p_level": 80,
-        "event_cost_dollars": 11396937.07,
-        "delay_days": 101.752,
-        "delay_cost_dollars": 3561336.3,
-        "standalone_sum_dollars": 14958273.38,
-        "joint_contingency_dollars": 14769161.29,
-        "diversification_dollars": 189112.09
+        "event_cost_dollars": 11058347.45,
+        "delay_days": 102.013,
+        "delay_cost_dollars": 3570440.06,
+        "standalone_sum_dollars": 14628787.52,
+        "joint_contingency_dollars": 14410870.17,
+        "diversification_dollars": 217917.35
       },
       {
         "p_level": 90,
-        "event_cost_dollars": 13022327.46,
-        "delay_days": 117.908,
-        "delay_cost_dollars": 4126786.36,
-        "standalone_sum_dollars": 17149113.82,
-        "joint_contingency_dollars": 16898455.65,
-        "diversification_dollars": 250658.17
+        "event_cost_dollars": 12883419.22,
+        "delay_days": 120.448,
+        "delay_cost_dollars": 4215692.43,
+        "standalone_sum_dollars": 17099111.64,
+        "joint_contingency_dollars": 16903364.91,
+        "diversification_dollars": 195746.74
       }
     ],
     "what_counts_where": "Risk event costs exclude site running costs (prelims, site overheads) while the job runs late. Those are priced once, on the delay line, and only for delay that survives float. Standby caused by a specific event, such as a crane stood down waiting on wind or a demobilise and remobilise, stays in that risk's own cost.",
@@ -1031,22 +1030,22 @@
     "total_cost": {
       "label": "Total cost = base estimate drawn + event-risk cost + delay cost, as the report's total-cost table. Analyst view only (D-2).",
       "declared_base_dollars": 120000000.0,
-      "mean_dollars": 137397344.59,
+      "mean_dollars": 138415690.0,
       "rows": [
         {
           "p_level": 50,
-          "total_dollars": 136870590.24,
-          "contingency_dollars": 16870590.24
+          "total_dollars": 137894593.95,
+          "contingency_dollars": 17894593.95
         },
         {
           "p_level": 80,
-          "total_dollars": 145295111.32,
-          "contingency_dollars": 25295111.32
+          "total_dollars": 146452551.03,
+          "contingency_dollars": 26452551.03
         },
         {
           "p_level": 90,
-          "total_dollars": 149925252.57,
-          "contingency_dollars": 29925252.57
+          "total_dollars": 150868325.84,
+          "contingency_dollars": 30868325.84
         }
       ],
       "excluded_base_factors": [
@@ -1058,12 +1057,223 @@
       "iterations": 2000,
       "replays": 15,
       "method": "Per-risk dollars are leave-one-out at P80 on the integrated total, by masking: the risk's fire record is switched off and only the schedule kernel is replayed, every other risk's draws held fixed (the report's method). Cost is removed first, then delay; the split is stated, not unique. Bars do not sum to the total."
-    }
+    },
+    "owner_view": {
+      "label": "Finish with shared drivers (uncertainty on the estimate) as well as the event risks. The finish the total cost and the JCL read; the headline is event risks only.",
+      "driver_ids": [
+        "D1",
+        "D2",
+        "D3",
+        "D4"
+      ],
+      "p50_finish": "2026-10-19",
+      "p80_finish": "2026-12-10",
+      "p90_finish": "2027-01-07",
+      "p80_days_behind_plan": 164,
+      "s_curve_points": [
+        {
+          "date": "2026-06-12",
+          "cumulative_prob": 0.0
+        },
+        {
+          "date": "2026-08-06",
+          "cumulative_prob": 0.05
+        },
+        {
+          "date": "2026-08-20",
+          "cumulative_prob": 0.1
+        },
+        {
+          "date": "2026-08-29",
+          "cumulative_prob": 0.15
+        },
+        {
+          "date": "2026-09-06",
+          "cumulative_prob": 0.2
+        },
+        {
+          "date": "2026-09-14",
+          "cumulative_prob": 0.25
+        },
+        {
+          "date": "2026-09-21",
+          "cumulative_prob": 0.3
+        },
+        {
+          "date": "2026-09-29",
+          "cumulative_prob": 0.35
+        },
+        {
+          "date": "2026-10-06",
+          "cumulative_prob": 0.4
+        },
+        {
+          "date": "2026-10-13",
+          "cumulative_prob": 0.45
+        },
+        {
+          "date": "2026-10-19",
+          "cumulative_prob": 0.5
+        },
+        {
+          "date": "2026-10-28",
+          "cumulative_prob": 0.55
+        },
+        {
+          "date": "2026-11-03",
+          "cumulative_prob": 0.6
+        },
+        {
+          "date": "2026-11-10",
+          "cumulative_prob": 0.65
+        },
+        {
+          "date": "2026-11-19",
+          "cumulative_prob": 0.7
+        },
+        {
+          "date": "2026-11-30",
+          "cumulative_prob": 0.75
+        },
+        {
+          "date": "2026-12-10",
+          "cumulative_prob": 0.8
+        },
+        {
+          "date": "2026-12-21",
+          "cumulative_prob": 0.85
+        },
+        {
+          "date": "2027-01-07",
+          "cumulative_prob": 0.9
+        },
+        {
+          "date": "2027-01-27",
+          "cumulative_prob": 0.95
+        },
+        {
+          "date": "2027-05-21",
+          "cumulative_prob": 1.0
+        }
+      ],
+      "percentile_table": [
+        {
+          "percentile": 10,
+          "days_from_start": 342.3,
+          "date": "2026-08-20",
+          "delta_vs_det": 52
+        },
+        {
+          "percentile": 25,
+          "days_from_start": 360.4,
+          "date": "2026-09-14",
+          "delta_vs_det": 77
+        },
+        {
+          "percentile": 50,
+          "days_from_start": 385.4,
+          "date": "2026-10-19",
+          "delta_vs_det": 112
+        },
+        {
+          "percentile": 75,
+          "days_from_start": 415.0,
+          "date": "2026-11-30",
+          "delta_vs_det": 154
+        },
+        {
+          "percentile": 80,
+          "days_from_start": 422.5,
+          "date": "2026-12-10",
+          "delta_vs_det": 164
+        },
+        {
+          "percentile": 90,
+          "days_from_start": 442.2,
+          "date": "2027-01-07",
+          "delta_vs_det": 192
+        },
+        {
+          "percentile": 95,
+          "days_from_start": 456.8,
+          "date": "2027-01-27",
+          "delta_vs_det": 212
+        }
+      ],
+      "driver_method": "leave-one-out at P80 on the owner view: each figure is the owner-view P80 with the driver, less the P80 with that driver removed (its cost and its duration change) and every other draw held fixed. They do not sum, as the risk tornado's do not."
+    },
+    "shared_drivers": [
+      {
+        "driver_id": "D1",
+        "name": "Civil productivity and ground",
+        "kind": "P",
+        "wbs_codes": [
+          "10",
+          "20"
+        ],
+        "range": "-5% / +0% / +20%",
+        "acts_on": "own range; cost on BOP civils (Labour, Plant)",
+        "basis": "Earthworks and foundation crews' output across the site: ground that digs harder than the geotech, wet days that are not stoppages. WT-003 (a discrete ground event) and WT-005 (quantity, beside Q_Civils) stay as they are.",
+        "mean_duration_change": 0.0628,
+        "p80_duration_change": 0.146,
+        "p_level": 80,
+        "adds_to_total_dollars": 472209.44,
+        "adds_to_finish_days": 7.1
+      },
+      {
+        "driver_id": "D2",
+        "name": "Erection productivity",
+        "kind": "P",
+        "wbs_codes": [
+          "30"
+        ],
+        "range": "-5% / +0% / +15%",
+        "acts_on": "own range; cost on Turbine transport & erection (Labour, Plant)",
+        "basis": "Lift rate in workable weather: crane crew learning, rigging and bolting cycle times. WT-012 (wind standby, a stoppage) and WT-009 (crane mobilisation) stay as events.",
+        "mean_duration_change": 0.0438,
+        "p80_duration_change": 0.1077,
+        "p_level": 80,
+        "adds_to_total_dollars": 315216.47,
+        "adds_to_finish_days": 2.2
+      },
+      {
+        "driver_id": "D3",
+        "name": "Electrical installation productivity",
+        "kind": "P",
+        "wbs_codes": [
+          "40"
+        ],
+        "range": "-5% / +0% / +15%",
+        "acts_on": "own range; cost on Electrical BOP (Labour, Subcontract)",
+        "basis": "Cable laying, jointing and termination output. Absorbs the former WT-017 (cable installation productivity), which priced the same uncertainty as a discrete risk.",
+        "mean_duration_change": 0.0415,
+        "p80_duration_change": 0.1068,
+        "p_level": 80,
+        "adds_to_total_dollars": 289505.48,
+        "adds_to_finish_days": 1.7
+      },
+      {
+        "driver_id": "D4",
+        "name": "Grid and substation scope",
+        "kind": "Q",
+        "wbs_codes": [
+          "50"
+        ],
+        "range": "from Q_Grid x 1",
+        "acts_on": "quantity factor Q_Grid; no added cost",
+        "basis": "More substation and connection scope takes proportionally longer to build. Q_Grid already prices its cost. WT-025 (a discrete scope change) stays.",
+        "mean_duration_change": 0.0863,
+        "p80_duration_change": 0.1841,
+        "p_level": 80,
+        "adds_to_total_dollars": 142513.69,
+        "adds_to_finish_days": 6.1
+      }
+    ]
   },
   "contingency": {
     "phase": "recommended",
     "label": "Recommended at P80",
-    "required_p80_dollars": 14769161.29,
+    "required_p80_dollars": 14410870.17,
     "held_dollars": null,
     "commitment_date": null,
     "opening_held_dollars": null,

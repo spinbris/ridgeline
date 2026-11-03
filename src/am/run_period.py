@@ -165,7 +165,26 @@ AM_REPO_ROOT = Path(__file__).resolve().parents[2]  # this repository; the engin
 # project's three files, and nothing read them - a period run resolves its inputs from the
 # project it names (``resolve_project_inputs``). They retired with that project's binding.
 DEFAULT_OUTPUT_DIR = AM_REPO_ROOT / "data"
-DEFAULT_PROJECT_START = _dt.date(2024, 1, 1)  # Heuristic anchor; future SR pulls from .xer
+
+
+def resolve_project_start(
+    xer_tables: dict[str, Any], stated: _dt.date | None, *, xer_name: str = "the .xer",
+) -> _dt.date:
+    """The build start the period run dates finishes from: the schedule's own (PROJSTART-01).
+
+    ``stated`` (the ``--project-start`` flag) is a check, not a source: a value that disagrees
+    with the schedule is refused, because dating a run from the wrong start moves every finish
+    date in the period JSON and nothing on screen says so.
+    """
+    from src.sra.cpm.xer_reader import xer_project_start
+
+    start = xer_project_start(xer_tables)
+    if stated is not None and stated != start:
+        raise ValueError(
+            f"PROJSTART-01: --project-start {stated.isoformat()} disagrees with the build start "
+            f"{start.isoformat()} read from {xer_name}. Drop the flag, or fix the schedule."
+        )
+    return start
 
 
 def _deterministic_finish_hours(xer_tables: dict[str, Any], graph: Any) -> float:
@@ -231,6 +250,8 @@ def _attach_report_basis(
     seed: int,
     prior_period_path: Path | None = None,
     mitigations: Sequence[dict[str, Any]] = (),
+    shared_drivers: tuple[Any, ...] = (),
+    xer_tables: dict[str, Any] | None = None,
 ) -> Any:
     """INTVIEW-01 stage 2 (contract 1.6): what the period needs to report on the report's basis.
 
@@ -250,7 +271,25 @@ def _attach_report_basis(
     from src.integrated.base_layer import deliverable_base_layer
     from src.sra.strawman_reader import read_run_config
 
-    base_layer = deliverable_base_layer(register_path, int(iterations), int(seed))
+    base_layer = deliverable_base_layer(register_path, int(iterations), int(seed),
+                                        shared_drivers=shared_drivers)
+    if base_layer is not None and shared_drivers:
+        # RISKDRV-01 (plan R2 (b)): the owner-view pass on the period kernel, drivers on.
+        from src.am.conditional_runner import replay_schedule_finish_days
+        from src.integrated.driver_pass import build_duration_shift, driver_rows, owner_view
+        if xer_tables is None:
+            raise ValueError("RISKDRV-01: the owner-view pass needs the schedule's tables")
+        shift = build_duration_shift(shared_drivers, base_layer["driver_deltas"],
+                                     cond_result.schedule_graph, xer_tables)
+        base_layer["owner_view"] = owner_view(
+            lambda s: replay_schedule_finish_days(cond_result, cond_result.fire_mask, s),
+            shift,
+            event_only_finish_days=np.asarray(
+                cond_result.schedule_result.project_finish_days, dtype=float),
+            deterministic_finish_days=deterministic_finish_days,
+        )
+        base_layer["shared_drivers"] = driver_rows(
+            shared_drivers, base_layer["owner_view"], base_layer["driver_deltas"])
     loo = period_leave_one_out(
         integrated_result,
         schedule_risk_ids=tuple(cond_result.pinned_drivers.keys()),
@@ -300,7 +339,7 @@ def run_period(
     counterfactual_iterations: int = 10_000,
     seed: int | None = None,
     criticality_measurement_mode: str = "both",
-    project_start: _dt.date = DEFAULT_PROJECT_START,
+    project_start: _dt.date | None = None,
     top_n_by_ci: int = DEFAULT_TOP_N_BY_CI,
     ci_threshold: float = DEFAULT_CI_THRESHOLD,
     p_band_method: str = "B",
@@ -356,6 +395,9 @@ def run_period(
         "AM project=%s register=%s xer=%s",
         pinputs.project, register_path.name, xer_path.name,
     )
+    # RISKDRV-01: the register's shared drivers, checked before minutes of simulation, not after.
+    from src.integrated.driver_pass import load_checked_drivers
+    shared_drivers = load_checked_drivers(register_path, parse_xer(xer_path))
     seed, seed_source = _period_seed(seed, pinputs.project)
 
     # Stage 7 part C (B-2), ruled 05/09/2026: the project key lives in the PATH as well as
@@ -440,6 +482,7 @@ def run_period(
         float_threshold_hours=resolve_float_threshold_hours(pinputs.project or None),
     )
     xer_tables = parse_xer(xer_path)
+    project_start = resolve_project_start(xer_tables, project_start, xer_name=xer_path.name)
     schedule_graph = build_schedule_graph(xer_tables)
     risk_drivers_full = build_drivers_for_project(
         project=pinputs.project,
@@ -490,6 +533,8 @@ def run_period(
             seed=seed,
             prior_period_path=previous_period_json(output_dir, period_end),
             mitigations=workbook_data.mitigations,
+            shared_drivers=shared_drivers,
+            xer_tables=xer_tables,
         )
 
     # Metrics layer.
@@ -678,8 +723,9 @@ def _main(argv: list[str] | None = None) -> int:
         help="criticality_measurement_mode passed to run_schedule_mc",
     )
     parser.add_argument(
-        "--project-start", type=str, default=DEFAULT_PROJECT_START.isoformat(),
-        help="Project start date (YYYY-MM-DD) for day -> date conversion",
+        "--project-start", type=str, default=None,
+        help="PROJSTART-01: optional check. The build start is read from the .xer; a value "
+        "given here must equal it or the run is refused",
     )
     parser.add_argument("--top-n", type=int, default=DEFAULT_TOP_N_BY_CI)
     parser.add_argument("--ci-threshold", type=float, default=DEFAULT_CI_THRESHOLD)
@@ -719,7 +765,8 @@ def _run_from_args(args: argparse.Namespace) -> Path:
         counterfactual_iterations=args.counterfactual_iter,
         seed=args.seed,
         criticality_measurement_mode=args.mode,
-        project_start=_dt.date.fromisoformat(args.project_start),
+        project_start=(_dt.date.fromisoformat(args.project_start)
+                       if args.project_start else None),
         top_n_by_ci=args.top_n,
         ci_threshold=args.ci_threshold,
         allow_dirty=args.allow_dirty,

@@ -70,6 +70,9 @@ def test_the_base_moves_no_event_risk_array(monkeypatch):
     assert on.stage3_beta_result["base_layer"] is not None
     assert on.stage3_config.integrated_config.layer1_config is None
     monkeypatch.setattr(base_layer, "register_layer1", lambda _p: None)
+    # RISKDRV-01: the wind register's shared drivers act through Layer 1, so they go off with it.
+    import src.shared_drivers
+    monkeypatch.setattr(src.shared_drivers, "read_shared_drivers", lambda _p: ())
     off = run_engines(resolve_inputs())
     assert off.stage3_beta_result["base_layer"] is None
 
@@ -90,7 +93,7 @@ def test_the_deliverable_refuses_a_layer1_config_on_the_cost_arm():
     src = (Path(__file__).resolve().parents[1] / "src" / "final" / "deliverable.py").read_text(
         encoding="utf-8")
     assert 'getattr(config, "layer1_config", None) is not None' in src
-    assert "deliverable_base_layer(inputs.register_path, n_iter, seed)" in src
+    assert "deliverable_base_layer(inputs.register_path, n_iter, seed," in src
 
 
 # ---------------------------------------------------------------------------

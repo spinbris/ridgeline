@@ -12,7 +12,6 @@ the defect the ruling exists to prevent.
 """
 from __future__ import annotations
 
-import datetime as _dt
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -194,7 +193,7 @@ def test_the_contract_is_at_1_6():
     through any bump and gates nothing."""
     from src.am.json_writer import SCHEMA_VERSION
 
-    assert SCHEMA_VERSION == "1.6"
+    assert SCHEMA_VERSION == "1.7"
 
 
 def test_the_app_pins_the_same_version():
@@ -243,7 +242,7 @@ def _run_period(workbook: Path, out: Path) -> dict:
         workbook_path=workbook, project="synthetic_wind", output_dir=out,
         main_iterations=2000, days_at_risk_iterations=500, counterfactual_iterations=500,
         seed=42, criticality_measurement_mode="both",
-        project_start=_dt.date(2024, 1, 1), allow_dirty=True,
+        allow_dirty=True,
     )
     return json.loads(path.read_bytes().decode("utf-8"))
 
@@ -268,7 +267,7 @@ def period_02(tmp_path_factory: pytest.TempPathFactory) -> dict:
 @pytest.mark.integration
 class TestTheIntegratedArmEndToEnd:
     def test_a_period_carries_the_integrated_block(self, period_01: dict):
-        assert period_01["schema_version"] == "1.6"
+        assert period_01["schema_version"] == "1.7"
         block = period_01["integrated"]
         # The arithmetic is reproducible from the block itself, which is the point of carrying
         # the day rate and the marginals rather than the total alone.
@@ -374,7 +373,7 @@ class TestTheFailOpenPathActuallyRuns:
             workbook_path=WIND_01, project="synthetic_wind", output_dir=tmp_path,
             main_iterations=500, days_at_risk_iterations=200, counterfactual_iterations=200,
             seed=42, criticality_measurement_mode="both",
-            project_start=_dt.date(2024, 1, 1), allow_dirty=True,
+            allow_dirty=True,
         )
         return json.loads(path.read_bytes().decode("utf-8"))
 

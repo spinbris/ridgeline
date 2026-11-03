@@ -344,6 +344,11 @@ def run_engines(inputs: DeliverableInputs) -> EngineResults:
     # route that no longer joins its pattern sheets.
     xer_tables = parse_xer(str(inputs.p6_path))
     graph = build_schedule_graph(xer_tables)
+    # RISKDRV-01: the register's shared drivers, checked against its Layer 1 and this schedule
+    # before the Stage 3 run. () when none are declared.
+    from src.integrated.driver_pass import load_checked_drivers
+    shared_drivers = load_checked_drivers(
+        inputs.register_path, xer_tables, risk_ids=[str(r.risk_id) for r in risks])
     drivers = expand_auto_rules(
         build_stage3_rules_from_scope(risk_scope, graph, s3_cfg.binding_config), graph)
     stage3_result = run_integrated_simulation_stage3(
@@ -371,7 +376,19 @@ def run_engines(inputs: DeliverableInputs) -> EngineResults:
         raise ValueError(
             "INTSCURVE-01 R1: the deliverable's IntegratedConfig carries a layer1_config, which "
             "would add the base into the event-risk cost arm and move the headline")
-    base_layer = deliverable_base_layer(inputs.register_path, n_iter, seed)
+    base_layer = deliverable_base_layer(inputs.register_path, n_iter, seed,
+                                        shared_drivers=shared_drivers)
+    # RISKDRV-01 (plan R2 (b)): the owner-view pass, drivers on, beside the untouched
+    # event-only headline. None, and nothing below changes, when no driver is declared.
+    if base_layer is not None and shared_drivers:
+        from src.integrated.driver_pass import (
+            build_duration_shift, driver_rows, stage3_owner_view)
+        shift = build_duration_shift(
+            shared_drivers, base_layer["driver_deltas"], graph, xer_tables)
+        base_layer["owner_view"] = stage3_owner_view(
+            stage3_result, s3_cfg.schedule_mc_config, shift)
+        base_layer["shared_drivers"] = driver_rows(
+            shared_drivers, base_layer["owner_view"], base_layer["driver_deltas"])
 
     # --- F-E: GN3A section 4.1 correlation bounding, against the arm that just ran ------
     # Reproduction, not re-derivation: the same run_integrated_simulation, the same joint

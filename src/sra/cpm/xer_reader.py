@@ -88,6 +88,7 @@ are not part of the public surface.
 
 from __future__ import annotations
 
+import datetime as _dt
 import logging
 from pathlib import Path
 
@@ -464,3 +465,31 @@ def _coerce_types(df: pd.DataFrame, table_name: str) -> pd.DataFrame:
             # time. We keep '' here to avoid silently changing semantics.
 
     return df
+
+
+#: PROJSTART-01: the TASK columns a build start is read from, in order of preference. The early
+#: start is the schedule's own forward pass; the target start is the baseline it was planned on.
+_START_COLUMNS: tuple[str, ...] = ("early_start_date", "target_start_date")
+
+
+def xer_project_start(tables: dict[str, pd.DataFrame]) -> _dt.date:
+    """The build start a schedule declares: its earliest activity start, as a date.
+
+    PROJSTART-01. A period run dates every finish from the build start, which used to be a run
+    flag defaulting to 2024-01-01, so a run that omitted it dated its finishes from the wrong
+    year with nothing on screen. The start is a fact of the schedule, so it is read from it.
+    The fixture exports carry no PROJECT table, so the TASK table's earliest early start (or,
+    failing that, target start) is the start. A schedule with neither refuses rather than guess.
+    """
+    task = tables.get("TASK")
+    if task is None:
+        raise ValueError("XER has no TASK table; the build start cannot be read from it")
+    for col in _START_COLUMNS:
+        if col in task.columns:
+            starts = pd.to_datetime(task[col], errors="coerce").dropna()
+            if not starts.empty:
+                return starts.min().date()
+    raise ValueError(
+        "XER TASK table carries no early_start_date or target_start_date; the build start "
+        "cannot be read from the schedule. Export the schedule with dates (PROJSTART-01)."
+    )

@@ -6,16 +6,16 @@
   "criticality_measurement_mode": "mode_independent",
   "headline_engine": "integrated_simulation_stage3 (joint cost + Stage 3 schedule)",
   "n_dual_coded_risks": 15,
-  "integrated_total_p80": 14599502.781742606,
-  "naive_sum_p80": 14739006.35888951,
+  "integrated_total_p80": 14339823.163794853,
+  "naive_sum_p80": 14464058.298659528,
   "production_scale_floor_note": "Draft-scale runs are for layout/sanity only; no blog number may come from anything but a production-scale run. A low-n run is NOT a subset of a high-n run.",
-  "engine_sha": "253b6497d3d4b8b89efdc582b66a5716fb9e8dbf",
+  "engine_sha": "db2f509642eba9ee9b2f7321ceed529aa8c2bd9c",
   "engine_tree_dirty": false,
   "input_sha256": {
-    "register": "edb1f40c2504e9e8de61a9199b301d6e28400bc9aa0999333e6306541c3fa161",
+    "register": "a973af5d83e1298827e453261a0875ccda4376c4a381c3277786182e388ba135",
     "xer": "f6c55af3331f2156138d371a366c78f25951308bac9c6205a1b299b2ef7f746b"
   },
-  "run_id": "011ec851-c529-4274-920e-ac536ddb120f",
-  "run_date": "2026-11-02",
-  "run_timestamp": "2026-11-02T01:16:42+00:00"
+  "run_id": "b8f21576-ab9a-4c49-b8db-8f0cdb4357ab",
+  "run_date": "2026-11-03",
+  "run_timestamp": "2026-11-03T06:20:09+00:00"
 }

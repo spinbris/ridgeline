@@ -2,30 +2,29 @@ risk_id,description,cg,mean_emv
 WT-008,WTG delivery delay (long-lead),CG02,651193.4535194853
 WT-009,Main crane mobilisation delay,CG02,642196.5660709147
 WT-012,Erection weather standby,CG02,576791.5369943357
-WT-021,Grid connection redesign,CG04,458889.3629152945
+WT-021,Grid connection redesign,CG04,459564.41222767514
 WT-003,Unforeseen ground conditions,CG01,454258.9060802138
-WT-031,SCADA integration defects,CG06,402575.5906517025
+WT-031,SCADA integration defects,CG06,403515.8969863197
 WT-011,Tower section nonconformance,CG02,393536.3485986588
 WT-001,Turbine foundation rework,CG01,362064.8265169038
 WT-005,Bulk earthworks quantity overrun,CG01,343037.57927571295
-WT-032,Turbine commissioning faults,CG06,338232.1408696659
-WT-022,Network operator approval delay,CG04,305253.0588351425
-WT-016,Array cable supply shortfall,CG03,304215.7367352152
+WT-032,Turbine commissioning faults,CG06,339641.21465569484
+WT-022,Network operator approval delay,CG04,307052.3768355444
+WT-016,Array cable supply shortfall,CG03,304573.9305570783
 WT-002,Access road wet-weather damage,CG01,296887.2088309907
 WT-010,Blade transport damage,CG02,288646.390540771
-WT-028,Power transformer delivery delay,CG05,274239.64570760337
-WT-017,Cable installation productivity,CG03,234908.41412538802
-WT-024,Grid compliance test failure,CG04,218952.40033729924
-WT-026,Substation civils delay,CG05,212779.50345812592
-WT-027,Substation E&I commissioning slip,CG05,193919.51640853097
-WT-020,HV array cable test failures,CG03,181820.01974995996
+WT-028,Power transformer delivery delay,CG05,273057.81512186123
+WT-024,Grid compliance test failure,CG04,220771.8514849691
+WT-026,Substation civils delay,CG05,211515.27958724045
+WT-027,Substation E&I commissioning slip,CG05,192834.1612623222
+WT-020,HV array cable test failures,CG03,183180.73463185882
 WT-013,Bolt tensioning / torque rework,CG02,170337.17912050625
-WT-018,Cable joint re-termination,CG03,143202.96423309474
-WT-023,Protection settings rework,CG04,142903.66399724784
-WT-025,Connection-point scope change,CG04,124892.17945877825
-WT-029,Control building fit-out overrun,CG05,122509.361179811
+WT-018,Cable joint re-termination,CG03,144223.851988479
+WT-023,Protection settings rework,CG04,142474.51403370698
+WT-025,Connection-point scope change,CG04,124099.66634478976
+WT-029,Control building fit-out overrun,CG05,122037.86435343295
 WT-006,Drainage & culvert rework,CG01,111493.75163402234
 WT-007,Erosion & sediment control overrun,CG01,110046.7205851189
 WT-004,Hardstand settlement,CG01,88363.5484709844
-WT-019,Trenching clash with civil works,CG03,82119.63853279945
-WT-030,Earthing & lightning protection rework,CG05,75206.80629355837
+WT-019,Trenching clash with civil works,CG03,82586.4351361956
+WT-030,Earthing & lightning protection rework,CG05,74975.65757588444

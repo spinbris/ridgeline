@@ -448,6 +448,40 @@ const integratedSchema: z.ZodType<Integrated> = z.object({
       method: z.string(),
     })
     .nullable(),
+  // Contract 1.7, RISKDRV-01 stage 3: null (or absent) unless the register declares drivers.
+  owner_view: z
+    .object({
+      label: z.string(),
+      driver_ids: z.array(z.string()),
+      p50_finish: isoDate,
+      p80_finish: isoDate,
+      p90_finish: isoDate,
+      p80_days_behind_plan: z.number(),
+      s_curve_points: z.array(sCurvePointSchema),
+      percentile_table: z.array(percentileRowSchema),
+      driver_method: z.string(),
+    })
+    .nullable()
+    .optional(),
+  shared_drivers: z
+    .array(
+      z.object({
+        driver_id: z.string().min(1),
+        name: z.string(),
+        kind: z.enum(["P", "Q"]),
+        wbs_codes: z.array(z.string()),
+        range: z.string(),
+        acts_on: z.string(),
+        basis: z.string(),
+        mean_duration_change: z.number(),
+        p80_duration_change: z.number(),
+        p_level: z.number().nullable(),
+        adds_to_total_dollars: z.number().nullable(),
+        adds_to_finish_days: z.number().nullable(),
+      }),
+    )
+    .nullable()
+    .optional(),
 });
 
 const bridgeStepSchema = z.object({
@@ -517,7 +551,7 @@ const contingencySchema: z.ZodType<Contingency> = z.object({
  * semantically changed field passes zod silently. A version-locked app must be redeployed in
  * step with the engine, which under §5.1's static export is already true.
  */
-export const SUPPORTED_SCHEMA_VERSION = "1.6";
+export const SUPPORTED_SCHEMA_VERSION = "1.7";
 
 export const periodDataSchema: z.ZodType<PeriodData> = z.object({
   schema_version: z.string(),

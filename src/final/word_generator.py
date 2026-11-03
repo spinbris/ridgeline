@@ -1766,6 +1766,10 @@ def _render_v3_executive_summary(
         _add_dict_list_table(doc, p2_lead.get("total_cost_table", []))
         if p2_lead.get("total_cost_basis"):
             doc.add_paragraph(p2_lead["total_cost_basis"])
+        # RISKDRV-01 stage 2: the shared drivers, after the basis that names them.
+        if p2_lead.get("shared_drivers_sentence"):
+            doc.add_paragraph(p2_lead["shared_drivers_sentence"])
+            _add_dict_list_table(doc, p2_lead.get("shared_drivers_table", []))
     # INTSCURVE-01 Part C: the joint confidence level, after the total it is read against.
     if p2_lead.get("jcl_path"):
         doc.add_heading(p2_lead.get("jcl_heading") or "Joint confidence", level=2)

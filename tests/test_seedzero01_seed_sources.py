@@ -8,7 +8,6 @@ default is ``tests/test_seedzero01_no_seed_default.py``.
 """
 from __future__ import annotations
 
-import datetime as _dt
 import importlib.util
 import json
 import shutil
@@ -248,7 +247,7 @@ def _period(tmp_path, **seed):
 
     out = run_period(workbook_path=WORKBOOK, project="synthetic_wind", output_dir=tmp_path,
                      main_iterations=300, days_at_risk_iterations=100,
-                     counterfactual_iterations=100, project_start=_dt.date(2024, 1, 1),
+                     counterfactual_iterations=100,
                      allow_dirty=True, **seed)
     return json.loads(Path(out).read_text(encoding="utf-8"))["meta"]
 

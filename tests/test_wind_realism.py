@@ -49,7 +49,7 @@ def test_register_is_full_capex_tied_wind_set():
     from src.v5_register_reader import read_risks_v5
 
     risks = read_risks_v5(str(WIND_REGISTER))
-    assert len(risks) == 30  # WINDREAL-01: 30 risks (35 before)
+    assert len(risks) == 29  # RISKDRV-01: WT-017 folded into D3 (WINDREAL-01: 30)
     assert all(r.risk_id.startswith("WT-") for r in risks)
     # Six wind cost groups, all populated.
     cgs = {r.correlation_group for r in risks}

@@ -29,7 +29,8 @@ import {
   formatPercent,
   formatShortDate,
 } from "@/lib/formatters";
-import type { Integrated } from "@/types/period";
+import { SharedDriversCard } from "@/components/SharedDriversCard";
+import type { Integrated, OwnerView, SharedDriver } from "@/types/period";
 
 function renderInProvider(ui: React.ReactNode) {
   return render(<PeriodProvider>{ui}</PeriodProvider>);
@@ -287,9 +288,12 @@ describe("the contingency position (INTVIEW-01 stage 2b)", () => {
     serveGoldenWith((p) => {
       p.contingency = {
         ...p.contingency, phase: "held", label: "Held against required at P80",
-        held_dollars: 9_000_000, commitment_date: "2026-03-16", opening_held_dollars: 9_000_000,
+        // Held set above the golden's own required figure, so the case holds whatever the
+        // golden carries (a fixed $9M stopped exceeding it when WINDREAL-01 lifted the P80).
+        held_dollars: p.contingency.required_p80_dollars + 1_000_000, commitment_date: "2026-03-16",
+        opening_held_dollars: p.contingency.required_p80_dollars + 1_000_000,
         approved_draws_dollars: 0, pending_draws_dollars: 0, releases_dollars: 0,
-        shortfall_dollars: p.contingency.required_p80_dollars - 9_000_000,
+        shortfall_dollars: -1_000_000,
         jcl_against_held: 0.6, cost_confidence_against_held: 0.7, movements: [],
       };
     });
@@ -407,17 +411,17 @@ describe("the integrated S-curve and JCL (contract 1.5, INTSCURVE-01 Part C)", (
   });
 });
 
-describe("the contract version (1.6, INTVIEW-01 stage 2)", () => {
-  it("refuses a 1.5 period with the version message, not a list of missing fields", async () => {
+describe("the contract version (1.7, RISKDRV-01 stage 3)", () => {
+  it("refuses a 1.6 period with the version message, not a list of missing fields", async () => {
     serveGoldenWith((p) => {
-      p.schema_version = "1.5";
-      delete p.contingency;
-      delete p.integrated.build_up;
+      p.schema_version = "1.6";
+      delete p.integrated.owner_view;
+      delete p.integrated.shared_drivers;
     });
     try {
       renderInProvider(<PmPage1 />);
-      expect(await screen.findByText(/declares period-JSON contract 1\.5/)).toBeInTheDocument();
-      expect(document.body.textContent).toMatch(/written against 1\.6/);
+      expect(await screen.findByText(/declares period-JSON contract 1\.6/)).toBeInTheDocument();
+      expect(document.body.textContent).toMatch(/written against 1\.7/);
       expect(document.body.textContent).not.toMatch(/failed period data validation/);
     } finally {
       vi.unstubAllGlobals();
@@ -527,5 +531,55 @@ describe("the freshness banner (part C, B-3)", () => {
       vi.useRealTimers();
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe("the shared drivers (RISKDRV-01 stage 3, contract 1.7)", () => {
+  it("keeps the event-only headline and adds the owner-view P80 beneath it", async () => {
+    const golden = goldenPeriod() as any;
+    const owner = golden.integrated.owner_view as OwnerView;
+    expect(owner, "the golden carries no owner_view").toBeTruthy();
+    renderInProvider(<PmPage1 />);
+    const line = await screen.findByTestId("finish-owner-p80");
+    expect(screen.getByTestId("finish-p80").textContent?.trim()).toBe(
+      formatLongDate(golden.headline.p80_finish));
+    expect(line.textContent).toContain(`With shared drivers: P80 ${formatLongDate(owner.p80_finish)}`);
+    const jclTile = screen.getByTestId("tile-on-budget");
+    expect(jclTile.textContent).toContain("the P80 date with shared drivers");
+    expect(jclTile.textContent).toContain(formatLongDate(golden.integrated.jcl.finish_target_date));
+  });
+
+  it("shows no drivers line when the period carries none", async () => {
+    serveGoldenWith((p) => {
+      p.integrated.owner_view = null;
+      p.integrated.shared_drivers = null;
+    });
+    try {
+      renderInProvider(<PmPage1 />);
+      const tile = await screen.findByTestId("tile-finish");
+      expect(within(tile).queryByTestId("finish-owner-p80")).toBeNull();
+      expect(screen.getByTestId("tile-on-budget").textContent).toContain("and by the P80 date.");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("lists each driver with the engine's own leave-one-out figures", () => {
+    const golden = goldenPeriod() as any;
+    const drivers = golden.integrated.shared_drivers as SharedDriver[];
+    render(<SharedDriversCard drivers={drivers} ownerView={golden.integrated.owner_view} />);
+    for (const d of drivers) {
+      const row = screen.getByTestId(`shared-driver-${d.driver_id}`);
+      expect(row.textContent).toContain(d.name);
+      expect(row.textContent).toContain(formatAudMillionsDelta(d.adds_to_total_dollars!));
+      expect(row.textContent).toContain(`${d.adds_to_finish_days! > 0 ? "+" : ""}${d.adds_to_finish_days!.toFixed(1)} wd`);
+    }
+    expect(screen.getByTestId("shared-drivers-card").textContent).toContain(
+      golden.integrated.owner_view.driver_method);
+  });
+
+  it("renders nothing without drivers", () => {
+    const { container } = render(<SharedDriversCard drivers={null} ownerView={null} />);
+    expect(container.innerHTML).toBe("");
   });
 });
