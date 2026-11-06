@@ -469,10 +469,10 @@ not printed to the console and not in the HTML.
 Eleven level-1 sections, in this order. This list and
 `src/final/presentation_contract.py` are the same list, checked by the same test
 (`tests/test_presentation_contract.py`): if one moves without the other, both go red.
-Contract version **1.4**.
+Contract version **1.5**.
 
 1. **Executive summary** - the recommended contingency, one sentence, with the basis named.
-2. **Headline contingency (P80, Stage 3)** - the percentile block, and the comparison against
+2. **Headline contingency (P80, CPM replay)** - the percentile block, and the comparison against
    first-principles rules of thumb. A project whose binding declares a target-cost contract reads
    *Headline TOC contingency*; the wording follows the contract shape, not the project.
 3. **Distribution shape** - led, where the register enables Layer 1, by the total-cost S-curve
@@ -489,13 +489,20 @@ Contract version **1.4**.
 10. **Appendix** - the criticality detail and the risk-to-activity bridge table.
 11. **Audit trail** - inputs, hashes, parameters and the cross-validation result.
 
-### 8.2 The headline, and the comparator
+### 8.2 The headline, and the web report
 
-The headline is the **Stage 3** integrated cost-plus-schedule contingency at P80: one distribution,
-from a CPM replay, with its basis stated on the page. P50 and P95 are reported around it.
+The headline is the integrated event-risk contingency at P80 from the **CPM replay**: one
+distribution, with its basis stated on the page. P50 and P90 are reported beside it, and the
+P50 and P90 of total project cost, which Guidance Note 3A asks for, sit in the summary table.
+The earlier Mode-scenario range is no longer shown.
 
-The **Stage 2.5 Mode-scenario figures appear as a labelled comparator** and are never the headline.
-Where you see two integrated P80 figures, that is the intent: one distribution, one comparator.
+The web report (`final_runner.ipynb`, served as the app's report page) runs in the reader's order:
+Summary (with the "which number to use" box), Project and inputs, Contingency, Schedule (finish
+dates, criticality, schedule drivers on the replay), Risk drivers, Total cost and joint
+confidence, Checks, Actions, Method and limitations (with a glossary), then Appendix A (one
+iteration), Appendix B (correlation groups), Appendix C (audit trail) and the Disclaimer.
+`python -m src.final.report_guard <page.html>` checks a rendered page for retired terms,
+days-to-dollars arithmetic and references to sections that are not there.
 
 ### 8.3 The cross-validation gate
 

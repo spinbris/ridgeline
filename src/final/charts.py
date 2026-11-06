@@ -1796,3 +1796,39 @@ def make_ci_distribution_chart(
     fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
     plt.close(fig)
     return output_path.resolve()
+
+
+def make_worked_iteration_chart(
+    totals_m: np.ndarray,
+    point_m: float,
+    p_level: int,
+    output_path: Path | str,
+    *,
+    label: str,
+) -> Path:
+    """REPORTCOH-01 R3: the integrated S-curve with one iteration marked on it.
+
+    ``totals_m`` is every iteration's integrated contingency in $M; ``point_m`` is the worked
+    iteration's. The marker sits where that iteration falls on the curve, so the reader sees
+    the walked-through future is one point of the distribution the headline is read from.
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    arr = np.sort(np.asarray(totals_m, dtype=float))
+    cum = np.arange(1, arr.size + 1) / arr.size * 100.0
+    rank = float((arr <= point_m).mean() * 100.0)
+    fig, ax = plt.subplots(figsize=(10, 5.5))
+    ax.plot(arr, cum, color=SCENARIO_COLORS["Stage3"], linewidth=2.2,
+            label="Integrated contingency, all iterations")
+    ax.axhline(p_level, color="#7F8C8D", linestyle=":", linewidth=1.0)
+    ax.scatter([point_m], [rank], s=90, color="#C0392B", zorder=5, label=label)
+    ax.annotate(f"{label}: ${point_m:.2f}M", (point_m, rank), xytext=(12, -18),
+                textcoords="offset points", fontsize=10, color="#C0392B")
+    ax.set_xlabel("Integrated contingency, cost plus float-aware delay cost ($M)")
+    ax.set_ylabel("Cumulative probability (%)")
+    ax.set_ylim(0, 100)
+    ax.set_title("Where the worked iteration sits on the integrated S-curve")
+    ax.legend(loc="lower right")
+    fig.savefig(str(output_path), dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return output_path

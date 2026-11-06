@@ -253,6 +253,15 @@ Hard-load (do not click through) every route, with `?project=<project key>`:
 
 And on `/`: the integrated cost-plus-schedule card, whenever the period carries `integrated`.
 
+And on the report page, for any release that changes the method, the charts or the report's
+words: **read the whole rendered report, top to bottom, and sign it off.** First run
+`python -m src.final.report_guard dashboard/public/report/index.html`; it must print
+`0 problem(s)`. The guard catches retired terms, days-to-dollars sentences that do not multiply
+out, and references to sections that are not there; it cannot tell whether a sentence still says
+something true. Reading does. For a release that changes the method, a second reader who did not
+write the change reads it too. Record "report read through, <name>, <date>" in the release's
+running record.
+
 ### 7. Promote to production, then re-check
 
 Run the production sequence `PUBLISH_PERIOD.bat` printed, in order, each from the directory it

@@ -1,6 +1,6 @@
 """INTVIEW-01 stage 2b: contingency held against required, and the P80 bridge.
 
-Properties 9 to 12 of ``docs/stage_briefs/PLAN_INTVIEW01_stage2_contract16.md``. The unit tests
+Properties 9 to 12 of the INTVIEW-01 stage 2 plan. The unit tests
 pin the reader, the held arithmetic and the bridge's bookkeeping on hand-built inputs. The
 integration class runs the four Tropic Ridge periods in order and checks the two things only a
 real run can: the bridge closes on each period's own P80 (its positive control), and the held

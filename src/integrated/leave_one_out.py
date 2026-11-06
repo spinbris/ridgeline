@@ -64,7 +64,8 @@ def integrated_leave_one_out(
     The split is sequential (cost removed first), which is stated; it is not unique.
 
     Returns ``{"p_level", "iterations", "replays", "method", "rows"}``, rows sorted by ``saved``
-    descending, each ``{"risk_id", "saved_dollars", "cost_part_dollars", "delay_part_dollars"}``.
+    descending, each ``{"risk_id", "saved_dollars", "cost_part_dollars", "delay_part_dollars",
+    "finish_saved_days"}``; the last is the P-level finish delay saved, 0 for a cost-only risk.
     """
     cost = np.asarray(cost_dollars_array, dtype=float)
     per_risk = np.asarray(per_risk_cost_array, dtype=float)
@@ -93,6 +94,7 @@ def integrated_leave_one_out(
 
     total = cost + days * rate
     p_total = float(np.percentile(total, p_level))
+    p_days = float(np.percentile(days, p_level))
     col = {rid: i for i, rid in enumerate(sched_ids)}
     rows: list[dict[str, Any]] = []
     replays = 0
@@ -106,13 +108,18 @@ def integrated_leave_one_out(
             replays += 1
             without_both = without_cost - (days - delay_without) * rate
             p_without_both = float(np.percentile(without_both, p_level))
+            # REPORTCOH-01 D2: the same replay, read on the finish alone - the P-level finish
+            # delay with the risk, less without it. Presentation only: no draw changes.
+            finish_saved = p_days - float(np.percentile(delay_without, p_level))
         else:
             p_without_both = p_without_cost
+            finish_saved = 0.0
         rows.append({
             "risk_id": rid,
             "saved_dollars": p_total - p_without_both,
             "cost_part_dollars": p_total - p_without_cost,
             "delay_part_dollars": p_without_cost - p_without_both,
+            "finish_saved_days": finish_saved,
         })
     rows.sort(key=lambda r: r["saved_dollars"], reverse=True)
     return {

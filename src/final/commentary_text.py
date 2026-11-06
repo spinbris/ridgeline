@@ -90,10 +90,9 @@ HEADLINE_INTERPRETATION = (
 # STAGE3HEADLINE-01 (D-1, D-2; review B4): the page-one HTML strings when Stage 3 leads.
 # The placeholders match HEADLINE_OPENING so the composer's one format call serves both.
 HEADLINE_OPENING_STAGE3 = (
-    "Schedule risk analysis on the Stage 3 CPM replay indicates a mean schedule slip of "
-    "{mean_days:.1f} days, equivalent to ${mean_cost_m:.2f}M at ${day_rate:,.0f} per working "
-    "day. The Stage 2.5 Mode-scenario comparators span {lower_days:.1f} to {upper_days:.1f} "
-    "days mean; they are shown for continuity with earlier reporting and are not the headline."
+    "Schedule risk analysis on the CPM replay gives a mean finish delay of {mean_days:.1f} "
+    "working days, which is ${mean_delay_m:.2f}M of delay cost at ${day_rate:,.0f} per working "
+    "day. That delay cost is already inside the integrated contingency above."
 )
 HEADLINE_INTERPRETATION_STAGE3 = (
     "The headline is one Stage 3 distribution: each risk's delay is injected at its declared "
@@ -106,8 +105,8 @@ HEADLINE_INTERPRETATION_STAGE3 = (
 
 # v3.1 Page 1 lead: single recommended contingency figure.
 HEADLINE_INTEGRATED_P80 = (
-    "Recommended project contingency: ${integrated_p80_m:.2f} M "
-    "(P80, integrated cost plus schedule)."
+    "Recommended event-risk contingency: ${integrated_p80_m:.2f}M "
+    "(P80, event-risk cost plus delay cost)."
 )
 
 SCHEDULE_DAYS_CONTEXT = (
@@ -176,20 +175,33 @@ COST_DRIVERS_MODE_INDEPENDENCE_NOTE = (
 
 # Confidence curve table preamble (D11).
 CONFIDENCE_CURVE_PREAMBLE = (
-    "P80 is the recommended industry-standard contingency level for "
-    "engineering and construction projects (USACE Cost Engineering DX "
-    "guidance, AACE RP 41R-08 / 65R-11). Higher confidence increases "
-    "conservatism; lower reduces it."
+    "P80 is the reporting convention this analysis recommends for contingency, following the "
+    "US Army Corps of Engineers' 80% confidence practice; P50 and P90 are shown because "
+    "Australian Government guidance (DoI Guidance Note 3A) asks for them. Higher confidence "
+    "increases conservatism; lower reduces it."
 )
 
+# REPORTCOH-01 E4/S9: the sign of the column is read from the numbers, never asserted. The
+# sentence that interprets it is chosen in confidence_curve_footnote() below.
 CONFIDENCE_CURVE_FOOTNOTE = (
-    "Above naive sum column shows how much the integrated "
-    "(joint cost+schedule) contingency exceeds the simple addition "
-    "of cost-only and schedule-only contingencies at the same "
-    "P-level. Positive values indicate cost and schedule are "
-    "correlated through shared tail risks. Schedule slip column "
-    "is dollarised at the day rate to populate the integrated "
-    "contingency; raw days shown for engineering reference."
+    "The \"above naive sum\" column is the integrated contingency less the simple sum of the "
+    "cost-only and schedule-only contingencies at the same P-level. {sign_sentence} At the "
+    "mean it is zero by construction, because means add. The schedule slip column is the "
+    "schedule-only percentile in working days, shown for reference; it is not the slip in the "
+    "iterations that make up the integrated figure on the same row."
+)
+CONFIDENCE_CURVE_SIGN_NEGATIVE = (
+    "Here it is negative above P{flip}: cost and schedule extremes do not always arrive in the "
+    "same iteration, so the joint percentile is a little below the sum of the two marginal "
+    "percentiles."
+)
+CONFIDENCE_CURVE_SIGN_POSITIVE = (
+    "Here it is positive at every P-level shown: the same risks drive the cost and schedule "
+    "tails, so the joint percentile sits above the sum of the marginals."
+)
+CONFIDENCE_CURVE_SIGN_SMALL = (
+    "Here it is small at every P-level shown, so the joint figure and the simple sum agree "
+    "closely."
 )
 
 
@@ -215,8 +227,7 @@ DISTRIBUTION_ORIENTING = (
 DISTRIBUTION_INTERPRETATION = (
     "The right-skew is a direct consequence of low-probability, "
     "high-impact risks. Mean is pulled to the right of median by the "
-    "tail; the distance between P80 and P95 widens as Mode shifts from "
-    "Parallel toward Series. Selecting a contingency at the mean leaves "
+    "tail, and the gap from P80 to P95 is set by how long that tail is. Selecting a contingency at the mean leaves "
     "roughly half the simulated outcomes uncovered; selecting at P80 "
     "covers four in five. The choice is risk appetite, not arithmetic."
 )
@@ -228,9 +239,8 @@ DISTRIBUTION_INTERPRETATION_TEMPLATE = (
     "The right-skew is a direct consequence of low-probability, "
     "high-impact risks like {tail_risk_id} ({tail_risk_prob:.1%} "
     "probability, {tail_risk_mean_when_fired:.0f}d mean impact when "
-    "fired). Mean is pulled to the right of median by the tail; the "
-    "distance between P80 and P95 widens as Mode shifts from Parallel "
-    "toward Series. Selecting a contingency at the mean leaves roughly "
+    "fired). Mean is pulled to the right of median by the tail, and the gap "
+    "from P80 to P95 is set by how long that tail is. Selecting a contingency at the mean leaves roughly "
     "half the simulated outcomes uncovered; selecting at P80 covers "
     "four in five. The choice is risk appetite, not arithmetic."
 )
@@ -285,12 +295,17 @@ def format_cost_tornado_orienting(metric_name: str) -> str:
 
 
 COST_TORNADO_INTERPRETATION = (
-    "A small number of risks dominate cost contingency. Treatment effort "
-    "concentrated on the top three drivers delivers the largest "
-    "contingency reduction; the long tail contributes incrementally. "
-    "This pattern - top-3 dominance - is consistent with industry "
-    "experience and validates focusing risk treatment plans on the "
-    "ranked top slice."
+    "A small number of risks carry most of the cost exposure, so treatment effort is best "
+    "aimed at the top of the ranking; the long tail moves the contingency little."
+)
+
+# REPORTCOH-01 D3: under the CPM replay the leave-one-out tornado is the one cost ranking. The
+# interpretation names the top risks and the P80 each would save, from the run's own rows.
+INTEGRATED_TORNADO_INTERPRETATION = (
+    "Removing {top1} alone would save {saved1} of the P{p} contingency, {top2} {saved2} and "
+    "{top3} {saved3}. Because the figures do not add, the saving from treating all three would "
+    "need its own run. The ranking mixes cost and delay: a risk that delays the finish is "
+    "ranked on both."
 )
 
 
@@ -438,18 +453,24 @@ COST_DISTRIBUTION_ORIENTING = (
 
 SCHEDULE_TORNADO_ORIENTING = (
     "The schedule tornado ranks risks by **probability-weighted mean "
-    "contribution** in days, not by P80. For low-probability discrete "
-    "risks the P80 quantile is mathematically zero; reporting at P80 "
-    "would obscure the contribution. Probability-weighted mean (firing "
-    "probability times mean impact when fired) is the appropriate "
-    "ranking metric and matches the EMV first-principles calculation."
+    "contribution** in days: firing probability times mean impact when "
+    "fired, as drawn from the register. These figures add, which a per-risk "
+    "P80 would not, and they match the expected-value (EMV) calculation."
+)
+
+# REPORTCOH-01 S3/E11: under the CPM replay the ranking is the register's input view. The
+# replay's own finish delay is smaller, because float absorbs part of each delay.
+SCHEDULE_TORNADO_ORIENTING_STAGE3 = (
+    "The schedule tornado ranks risks by **probability-weighted mean contribution** in working "
+    "days: firing probability times mean impact when fired, as drawn from the register before "
+    "the programme logic is applied. It is the input view, and its figures add. The CPM replay's "
+    "mean finish delay is smaller than their sum, because float absorbs part of each delay; "
+    "which risks reach the finish is shown by the criticality and leave-one-out results."
 )
 
 SCHEDULE_TORNADO_INTERPRETATION = (
-    "Schedule contribution concentrates in a different set of risks "
-    "than cost contribution. Cost-only analysis cannot infer schedule "
-    "drivers; integrated cost-and-schedule MC is required to surface "
-    "the schedule-dominant risks."
+    "Schedule exposure concentrates in a different set of risks from cost "
+    "exposure, which is why the two are ranked separately."
 )
 
 MODE_SENSITIVITY_ORIENTING = (
@@ -517,14 +538,22 @@ RISK_MATRIX_ORIENTING_TEMPLATE = (
 # notebook display cell and by the formatter when no tail risk meets
 # the picker's prob < 5% threshold. Dynamic version comes from
 # `format_risk_matrix_interpretation(tail_risk)` in executive_summary.py.
+# REPORTCOH-01 R1: the CPM replay applies no Mode multiplier, so the matrix's right panel is the
+# register's expected delay per risk, the same figure as the schedule-driver table.
+RISK_MATRIX_ORIENTING_STAGE3 = (
+    "Two risk matrices side by side. Left: probability against mean impact when fired (days), "
+    "the traditional matrix. Right: probability against probability-weighted impact "
+    "(probability times mean impact when fired), each risk's expected delay as drawn from the "
+    "register, the same figure as the schedule-driver table above. Each marker is a risk; the "
+    "top contributors are labelled."
+)
+
 RISK_MATRIX_INTERPRETATION = (
     "Compare the position of low-probability, high-impact risks across "
     "the two panels. On the traditional matrix they sit at low "
-    "probability and high mean impact - easy to deprioritise in "
-    "standard prioritisation. On the probability-weighted matrix they "
-    "rank higher because the integrated mean impact captures the tail. "
-    "This differential ranking is the visual case for MC over standard "
-    "matrices."
+    "probability and high mean impact, easy to deprioritise. On the "
+    "probability-weighted matrix they rank by expected delay, which is "
+    "how the simulation weighs them."
 )
 
 # Beta-11 §3: dynamic template, placeholders filled at format time by
@@ -545,8 +574,7 @@ RISK_MATRIX_INTERPRETATION_TEMPLATE = (
     "contribution is {mode_weighted_days:.1f}d per fire, materially less "
     "than the traditional matrix's mean-impact-when-fired figure because "
     "the multiplier accounts for the activity's position relative to the "
-    "longest path. This differential ranking is the visual case for MC "
-    "over standard matrices."
+    "longest path."
 )
 
 # Beta-11 era template, retained for backwards compatibility with tests
@@ -564,8 +592,7 @@ RISK_MATRIX_INTERPRETATION_TEMPLATE_LEGACY = (
     "{tail_risk_id} ranks at {tail_risk_pct_of_mean_slip:.1%} of mean "
     "schedule slip ({tail_risk_rank} of {n_drivers} drivers) - higher "
     "in the integrated ranking than in the traditional matrix because "
-    "the mean impact captures the tail. This differential ranking is "
-    "the visual case for MC over standard matrices."
+    "the mean impact captures the tail."
 )
 
 
@@ -574,11 +601,9 @@ RISK_MATRIX_INTERPRETATION_TEMPLATE_LEGACY = (
 # ----------------------------------------------------------------------------
 
 COMPARISON_ORIENTING = (
-    "How does this MC result compare to first-principles and gut-feel "
-    "methods that the reader is likely familiar with? The table below "
-    "lists six approaches that all aim at the same question - how much "
-    "contingency? - and shows what each one produces against the same "
-    "risk register."
+    "How does this result compare with the first-principles and rule-of-thumb methods a "
+    "reader is likely to know? The table below lists {n} approaches to the same question, how "
+    "much contingency, and what each produces against the same risk register."
 )
 
 # Beta-11 §3: COMPARISON_INTERPRETATION did not previously hardcode a tail risk directly
@@ -596,11 +621,9 @@ COMPARISON_INTERPRETATION = (
 )
 
 WATERFALL_ORIENTING = (
-    "How is the integrated cost-plus-schedule P80 constructed? The "
-    "waterfall below traces the components: cost-only P80, then "
-    "schedule slip dollarised, then the diversification adjustment "
-    "(or anti-diversification) under joint sampling. The two scenarios "
-    "shown are the headline and the All Series upper bound."
+    "How is the integrated P80 built? The waterfall below traces it: the cost-only P80, plus "
+    "the schedule-only P80 priced at the day rate, plus the joint-sampling adjustment, equals "
+    "the integrated P80."
 )
 
 # Beta-11 §3: GENERIC fallback (no specific risk named). Dynamic
@@ -691,11 +714,10 @@ DISTRIBUTION_SHAPE_EXPLAINER_BULLETS: list[str] = [
 #: Template substituted with the metric name ("Mean" / "P80") at format
 #: time. Rendered as a two-sentence note above the cost RBS L1 table.
 RBS_L1_COST_ORIENTING_TEMPLATE = (
-    "Cost contingency concentrates by Risk Breakdown Structure (RBS) "
-    "category as well as by individual risk. The table below shows "
-    "{metric_name} contribution aggregated by RBS Level 1, useful for "
-    "assigning treatment-plan ownership and for stakeholder discussions "
-    "about which discipline carries the largest contingency."
+    "Event-risk cost grouped by Risk Breakdown Structure (RBS) Level 1, useful for assigning "
+    "treatment-plan ownership. The {metric_name} column is each category's own {metric_name} "
+    "cost; category {metric_name}s do not add to the project figure. The share column is of the "
+    "mean event-risk cost, which does add."
 )
 
 #: Beta-17 Item 4, RBS Level 1 schedule category breakdown orienting
@@ -726,33 +748,49 @@ CG_DRIVERS_ORIENTING_PARAGRAPHS: list[str] = [
         "probability of multiple downstream risks; modelling those as "
         "independent would understate the joint tail exposure at exactly "
         "the contingency-relevant probability levels. Risks within a "
-        "Correlation Group fire together more often than chance per the "
-        "coefficient shown; risks across groups fire independently."
+        "Correlation Group fire together more often than chance; risks "
+        "across groups fire independently."
     ),
     (
+        # REPORTCOH-01 S10: the coefficient correlates the random numbers that decide firing,
+        # not the fire events themselves, and the groups are distinct from the shared drivers.
         "The table below maps each active Correlation Group to its "
-        "driver description, the member risks, and the joint-firing "
-        "coefficient. Together with the per-risk Probability and "
-        "three-point distributions in the register, the CG mapping is "
-        "the third leg of the cost MC's correlation structure, the "
-        "other two being within-CG joint sampling (Cholesky-decomposed "
-        "correlated uniforms) and the shared severity uniform on the "
-        "dual-coded risks for joint cost-and-schedule sampling."
+        "description, its member risks and its coefficient. The "
+        "coefficient is the correlation applied to the random numbers "
+        "that decide whether each member fires (a Gaussian copula), so "
+        "the correlation between the fire events themselves is lower. "
+        "Correlation groups link event risks to each other; the shared "
+        "drivers in the Distribution section are a separate mechanism, "
+        "moving base cost and activity durations together. With the "
+        "per-risk probabilities and three-point ranges, two mechanisms "
+        "complete the correlation structure: within a group, the fire "
+        "decisions are drawn from correlated uniforms (Cholesky "
+        "decomposition); and each dual-coded (cost and time) risk uses "
+        "one fire decision and one shared severity uniform for both its "
+        "cost and its delay, so the two move together."
     ),
 ]
 
 
+# REPORTCOH-01 E7/S12: one reference list, each title checked against its publisher's.
+REFERENCES: list[str] = [
+    "AACE International RP 132R-23, Schedule Risk Analysis Maturity Model (the maturity "
+    "framework this analysis is placed against).",
+    "AACE International RP 57R-09, Integrated Cost and Schedule Risk Analysis Using Risk "
+    "Drivers and Monte Carlo Simulation of a CPM Model (the CPM replay and the shared drivers).",
+    "AACE International RP 65R-11, Integrated Cost and Schedule Risk Analysis and Contingency "
+    "Determination Using Expected Value (the expected-value reconciliation).",
+    "AACE International RP 44R-08, Risk Analysis and Contingency Determination Using Expected "
+    "Value.",
+    "Australian Government Department of Infrastructure, Cost Estimation Guidance Notes v2.0 "
+    "(November 2023), Guidance Note 3A, Probabilistic Contingency Estimation.",
+    "ISO 31000:2018, Risk management - Guidelines.",
+]
+
 STANDARDS_REFERENCES = (
-    "The methodology aligns with the following standards and "
-    "recommended practices: AACE RP 44R-08 Risk Analysis and "
-    "Contingency Determination Using Range Estimating; AACE RP 65R-11 "
-    "Integrated Cost and Schedule Risk Analysis Using Risk Drivers and "
-    "Monte Carlo Simulation of a CPM Model; AACE RP 57R-09 Integrated "
-    "Cost and Schedule Risk Analysis Using Monte Carlo Simulation of a "
-    "CPM Model (cited as future scope for full CPM-based replay); "
-    "AACE RP 113R-21 Integrated Cost and Schedule Risk Analysis - "
-    "Sampling and Computational Aspects; PMI PMBOK 7th edition (Project "
-    "Risk Management); ISO 31000:2018 (Risk management guidelines)."
+    "The method follows the recommended practices and guidance listed under References in "
+    "the appendices: chiefly AACE RP 57R-09 for the CPM replay and Guidance Note 3A for the "
+    "probabilistic contingency, within the ISO 31000 risk-management framework."
 )
 
 # Beta-15 Item 2: convergence diagnostic caveat. Names the distinction
@@ -766,8 +804,8 @@ CONVERGENCE_CAVEAT = (
     "run enough iterations for the headline to be reliable to within "
     "the band's width. The diagnostic measures Monte Carlo error only, "
     "it does not measure model uncertainty in the inputs (probability "
-    "estimates, three-point distributions, Mode classifications) or in "
-    "the methodology itself."
+    "estimates, three-point distributions, risk-to-activity bindings) "
+    "or in the methodology itself."
 )
 
 DP_REVIEW_CAVEAT = (
@@ -808,33 +846,30 @@ L1_SYSTEMIC_CAVEAT_BULLET = (
 LIMITATIONS_CURRENT = [
     "Per-party views are deferred to the next stage. The current deliverable "
     "presents the whole-project view only.",
-    "Criticality assessment uses the conservative starting-point "
-    "classification informed by current schedule structure",
-    # PRESENT-01, found by the numerics panel: this said full CPM replay was reserved for a
-    # future stage, the same claim the Director corrected in disclaimer paragraph 4 on
-    # 18/09/2026. It renders in the limitations list of the document that states the opposite
-    # three paragraphs earlier. Corrected to the signed wording's substance.
-    "Per-activity attribution of the finish to individual risks is deferred. The replay "
-    "reports the project finish and each activity's criticality; the per-risk driver ranking "
-    "beside it is the additive comparator basis, not the replay.",
-    "Sensitivity analysis on individual risk probabilities and "
-    "impacts (one-at-a-time, top-driver) is deferred to the next "
-    "stage.",
+    # REPORTCOH-01 E10: the criticality bullet named the Stage 2.5 classification, and the
+    # attribution and sensitivity bullets were contradicted by the leave-one-out results the
+    # report now shows. Restated as what is and is not done.
+    "Risk-to-activity bindings are auto-mapped from the register and the schedule, not "
+    "validated in a workshop, and one project-default calendar is used.",
+    "The leave-one-out results remove one risk at a time. Removing several together, and "
+    "one-at-a-time changes to probabilities and impacts, are not run.",
+    "The schedule's duration distribution does not feed the cost model: cost and schedule "
+    "are sampled jointly and the delay is priced at a single day rate.",
     L1_SYSTEMIC_CAVEAT_BULLET,
 ]
 
 LIMITATIONS_CLOSING = (
-    "None of these are limitations of the methodology; they are inputs "
-    "not yet available or capabilities deferred to the next stage. "
-    "When inputs land, the analysis extends without re-engineering."
+    "The first two are method limits that a workshop and a calendar per activity would "
+    "close; the others are capabilities not yet built."
 )
 
 REPRODUCIBILITY = (
-    "To regenerate this deliverable: restore the listed register and "
-    "strawman files to the versions specified in the audit trail, "
+    "To regenerate this deliverable: restore the listed register, schedule "
+    "and methodology workbook to the versions specified in the audit trail, "
     "set SR9_SEED to the seed recorded in this run's provenance and "
-    "execute RUN_FINAL.bat. Outputs reproduce within MC noise "
-    "tolerance. This deliverable reflects the input "
+    "execute RUN_FINAL.bat. With the same seed, inputs and engine "
+    "version the outputs reproduce exactly on the same machine type, "
+    "and to within rounding on another. This deliverable reflects the input "
     "data as recorded in the audit trail. Inputs evolve as the "
     "project progresses; re-running the analysis against current "
     "inputs produces an updated deliverable."
@@ -886,8 +921,8 @@ SINGLE_ITERATION_INTRO = (
     "in concrete terms. Read it as one of the simulated futures "
     "the analysis explored; the distribution charts above are the "
     "ensemble of all such futures. "
-    "Some risks listed in this iteration may sit outside the Page 3 "
-    "top-cost-driver tornado - the walkthrough captures every firing "
+    "Some risks listed in this iteration may sit outside the "
+    "cost-driver ranking - the walkthrough captures every firing "
     "risk in the simulated iteration regardless of overall ranking. "
     "Iteration-specific firings reflect the random draw, not the "
     "headline driver hierarchy."
@@ -922,7 +957,7 @@ SCHEDULE_DAYS_CONTEXT_STAGE3 = (
     "Schedule slip in days: {p80_days:.1f} days at P80 "
     "(schedule contingency at 80% confidence, matching cost contingency "
     "convention per AACE RP 41R-08 / 65R-11); {mean_days:.1f} days mean "
-    "(expected slip on average, from the Stage 3 CPM-replay distribution)."
+    "(expected slip on average, from the CPM-replay distribution)."
 )
 
 # Generic prod fallbacks (project copy preferred from the binding).
@@ -933,16 +968,17 @@ SCHEDULE_DAYS_CONTEXT_STAGE3 = (
 # schedule slip" when Stage 3 leads. These variants name the basis instead.
 DOMINANT_RISK_TEMPLATE_STAGE3 = (
     "A single risk - {top_risk_id} ({top_risk_short_title}) - "
-    "accounts for approximately {top_risk_pct:.0%} of the summed "
-    "additive per-risk schedule draws (comparator basis, not the CPM "
-    "mean). Resolution of {top_risk_id} is the highest-value "
+    "accounts for approximately {top_risk_pct:.0%} of the "
+    "probability-weighted schedule impacts as registered (before the "
+    "programme logic, so not a share of the CPM-replay mean). Resolution of {top_risk_id} is the highest-value "
     "risk-treatment action."
 )
 
 DOMINANT_RISK_FALLBACK_STAGE3 = (
     "The top three schedule risks account for approximately "
-    "{top3_pct:.0%} of the summed additive per-risk schedule draws "
-    "(comparator basis, not the CPM mean). Resolution of these risks "
+    "{top3_pct:.0%} of the probability-weighted schedule impacts as "
+    "registered (before the programme logic, so not a share of the "
+    "CPM-replay mean). Resolution of these risks "
     "is the highest-value risk-treatment action."
 )
 
@@ -1101,8 +1137,8 @@ CI_EXPLAINER_MODE_DIFFERENTIATION = (
     "criticality) or amplifying (Mode-conditioned over-reports). Charts "
     "and tables in this section show both views side by side where the "
     "comparison adds information; in the current run the two readings "
-    "converge on most activities because the project's strawman "
-    "declares every Time=Yes risk Hybrid and the auto-mapper binds "
+    "converge on most activities because the register's methodology sheets "
+    "declare every Time=Yes risk Hybrid and the auto-mapper binds "
     "each to a broad activity set ({n_min}-{n_max} activities per risk) "
     "which dilutes the per-activity Mode-tuning effect below the "
     "divergence-band threshold. Workshop validation of the risk-driver-"
@@ -1151,8 +1187,8 @@ CRITICALITY_DISTRIBUTION_INTERPRETATION_TEMPLATES = {
         "drivers - the contingency may be smaller than the headline "
         "figure if the model is missing risk drivers, or "
         "proportionate if the schedule is genuinely well-buffered. "
-        "Where the auto-mapper zero-expansion notice (top of Stage 3 "
-        "Beta section) lists unmapped risk drivers in the current run, "
+        "Where the auto-mapper zero-expansion notice (top of the "
+        "schedule section) lists unmapped risk drivers in the current run, "
         "this caveat is materially relevant: criticality rankings "
         "derived from drivers without activity bindings will appear "
         "muted."
@@ -1214,7 +1250,7 @@ CRITICALITY_INPUT_DEPENDENCIES_CAVEAT = (
     "affect the rankings above:\n\n"
     "1. **Risk-driver-to-activity assignments.** Each risk in the "
     "register maps to one or more schedule activities. The current "
-    "mapping is pattern-based (rules from the strawman expanded "
+    "mapping is pattern-based (rules from the register's methodology sheets expanded "
     "against the schedule network); replacing this with explicit "
     "per-(risk, activity) assignments - typically the output of a "
     "workshop with the planner and risk register owners - will "
@@ -1361,10 +1397,10 @@ _GENERIC_MODE_MULTIPLIERS_FULL_CPM_PARAGRAPHS_STAGE3: list[str] = [
         "kernel walks the network each iteration, applies per-iteration "
         "risk impacts at the bound activities, and recomputes the "
         "critical path; float consumption is handled by the kernel "
-        "mechanics. Mode multipliers were retained in the Stage 2.5 "
-        "deliverable as a practitioner-judgement layer where no CPM "
-        "kernel was available; in Stage 3 that layer would double-count "
-        "on the CPM mechanics and is not applied."
+        "mechanics. Mode multipliers were a practitioner-judgement "
+        "layer for analyses with no CPM kernel; on the CPM replay that "
+        "layer would double-count the network's own float, so it is not "
+        "applied."
     ),
     (
         "**Implication for the headline figure.** With Mode multipliers "
@@ -1424,12 +1460,10 @@ MODE_MULTIPLIERS_FULL_CPM_HEADING_STAGE3: str = (
 #: per-iteration impact magnitudes. Stage 2.5 docx is unaffected, Stage
 #: 2.5 composer does not set the corresponding composed-dict key.
 SCHEDULE_DRIVERS_MODE_COLUMN_FOOTNOTE_STAGE3: str = (
-    "Mode classification (Series / Hybrid / Parallel) is shown for "
-    "context. Under the Stage 3 full-CPM methodology (post-SR15), Mode "
-    "does not affect the per-iteration impact magnitude, the CPM "
-    "kernel handles float consumption directly. The Mode column "
-    "reflects the strawman classification carried forward from Stage 2.5 "
-    "for reporting consistency."
+    "The register's Series, Hybrid or Parallel classification is shown "
+    "for context only. It does not change any delay: the CPM replay "
+    "propagates each delay through the programme's own logic, and float "
+    "absorbs what does not reach the finish."
 )
 
 
@@ -1444,7 +1478,7 @@ SCHEDULE_DRIVERS_MODE_COLUMN_FOOTNOTE_STAGE3: str = (
 ACTION_IMPLICATIONS_PLACEHOLDER_BANNER = (
     "**Illustrative only, treatment definitions and effectiveness "
     "factors require workshop input.** Rows are populated from the "
-    "strawman Treatments sheet; remaining rows await workshop input. "
+    "register's Treatments sheet; remaining rows await workshop input. "
     "The methodology supports per-risk treatment descriptions and "
     "effectiveness estimates: populated rows render the workshop "
     "description and the computed reduction (driver value × supplied "
@@ -1536,7 +1570,7 @@ CRITICALITY_CI_DISTRIBUTION_CAPTION_STAGE3 = (
 #: "commentary_text.py unchanged" rule (Director-signed-off as D5).
 CRITICALITY_FORWARD_REFERENCE_TO_NOTE = (
     "Full criticality detail (Charts 1, 3, 4 + 10-row near-critical "
-    "table + risk-to-activity bridge) ships in the Stage 3 standalone "
+    "table + risk-to-activity bridge) ships in the standalone schedule "
     "report's appendix."
 )
 
@@ -1555,4 +1589,43 @@ CRITICALITY_NOTE_AUDIT_TRAIL_REFERENCE = (
     "_Audit trail: see `sra_final_report_PROD_*` for full register / "
     "strawman / P6 hashes, iteration count, and random seed. This note "
     "shares the same engine run._"
+)
+
+
+def confidence_curve_footnote(rows: list[dict] | None, *, small_m: float = 0.05) -> str:
+    """REPORTCOH-01 E4: the confidence-curve footnote, its sign sentence read from the rows.
+
+    ``rows`` are the page-2 confidence-curve records (``confidence_level`` and
+    ``above_naive_sum_m``). The sentence that interprets the column is chosen by the numbers,
+    so the text cannot claim a positive effect the table does not show. ``small_m`` ($M) is the
+    magnitude below which a difference is called small.
+    """
+    vals: list[tuple[str, float]] = []
+    for r in rows or []:
+        level = str(r.get("confidence_level", ""))
+        v = r.get("above_naive_sum_m")
+        if level.startswith("P") and v is not None:
+            vals.append((level, float(v)))
+    if not vals:
+        sign = ""
+    elif all(abs(v) < small_m for _, v in vals):
+        sign = CONFIDENCE_CURVE_SIGN_SMALL
+    elif all(v >= 0 for _, v in vals):
+        sign = CONFIDENCE_CURVE_SIGN_POSITIVE
+    else:
+        first_neg = next(level for level, v in vals if v < 0)
+        prior = [level for level, _ in vals]
+        idx = prior.index(first_neg)
+        flip = prior[idx - 1][1:] if idx > 0 else first_neg[1:]
+        sign = CONFIDENCE_CURVE_SIGN_NEGATIVE.format(flip=flip)
+    return " ".join(CONFIDENCE_CURVE_FOOTNOTE.format(sign_sentence=sign).split())
+
+
+# REPORTCOH-01 R2: what the Checks section proves, and what it does not.
+CHECKS_ORIENTING = (
+    "Four consistency checks gate this report: each confirms that two parts of the model, "
+    "built separately, give the same answer from the same inputs. They test the arithmetic, not "
+    "the inputs. A failed check stops the report being distributed. Below them, the result is "
+    "set against the first-principles methods a reader may know, and the convergence chart "
+    "shows the headline has settled at this iteration count."
 )

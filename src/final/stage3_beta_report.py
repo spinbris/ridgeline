@@ -63,7 +63,7 @@ logger = logging.getLogger(__name__)
 #: binding without its own banner gets. Read it through :func:`resolve_preview_banner` or the
 #: module attribute ``PREVIEW_BANNER_TEXT``; do not bind it at import (see ``__getattr__``).
 _GENERIC_PREVIEW_BANNER_TEXT: str = (
-    "Stage 3 preview. Risk-driver schedule bindings are auto-mapped from the register's "
+    "Preview. Risk-driver schedule bindings are auto-mapped from the register's "
     "mapping rules; mapping-workshop validation of those bindings is pending. Not for "
     "funding decisions or commercial commitment without workshop sign-off on the "
     "gating-activity selection."
@@ -91,7 +91,7 @@ def resolve_preview_banner() -> str:
 # project's copy, so external readers (and the verbatim-text tests) see the
 # a project's own text unchanged. (Showcase-P2 WS2-B.)
 _GENERIC_COVER_PAGE_CAVEAT: str = (
-    "This deliverable presents the Stage 3 integrated cost-plus-schedule "
+    "This deliverable presents the integrated cost-plus-schedule "
     "contingency for the project scope. Risk-driver schedule assignments "
     "are auto-mapped pending mapping-workshop validation; until that "
     "workshop is complete, this is not for funding decisions or commercial "
@@ -127,7 +127,7 @@ _ESCALATION_HANDOFF: str = (
 _PRODUCT_LINE: str = f" Produced by {PRODUCT_NAME}, a {MAKER} product."
 
 _GENERIC_SCHEDULE_BASIS: str = (
-    "Stage 3 CPM-replay against the project Primavera P6 schedule. "
+    "CPM replay against the project Primavera P6 schedule. "
     "Risk-driver assignments come from the strawman's auto-mapper rules "
     "(pattern-prefix matching with a float filter); workshop validation of "
     "these assignments is the production transition gate."

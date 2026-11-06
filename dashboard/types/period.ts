@@ -583,4 +583,6 @@ export interface PeriodData {
 export interface PeriodIndex {
   periods: string[]; // filenames, sorted ascending (oldest first)
   generated_at: string; // ISO 8601 datetime
+  /** ASKSVC-01 stage B: present and true for a synthetic showcase project (binding `illustrative_base`). */
+  showcase?: boolean;
 }

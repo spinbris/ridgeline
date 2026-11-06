@@ -40,7 +40,7 @@ def rendered_sections(notebook: Path = NOTEBOOK) -> list[str]:
     nb = json.loads(notebook.read_text(encoding="utf-8"))
     source = "\n".join("".join(c["source"]) for c in nb["cells"] if c["cell_type"] == "code")
     shown = re.findall(r'^show\("(\w+)"', source, flags=re.MULTILINE)
-    pages = re.findall(r'^\s+\("(page\d\w*)", "', source, flags=re.MULTILINE)
+    pages = re.findall(r'^\s+\("(page\d\w*|rpt_\w+)", "', source, flags=re.MULTILINE)
     return sorted(set(shown) | set(pages))
 
 

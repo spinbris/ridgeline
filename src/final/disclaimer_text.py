@@ -94,10 +94,12 @@ def get_paragraphs(
         ),
         # 2. Methodology source — prod variant drops PM-review/indicative framing.
         (
-            "Schedule classifications. Series, Hybrid, and Parallel classifications "
-            "for the dual-coded risks reflect the conservative starting-point "
-            "informed by current schedule structure. Sensitivity of the headline "
-            "to classification choice is bounded and documented in the appendices."
+            # REPORTCOH-01 R1: the old wording called the classifications a conservative
+            # starting point with a sensitivity in the appendices; neither holds under the CPM
+            # replay, which applies no classification and has no such appendix.
+            "Schedule classifications. The register carries a Series, Hybrid or Parallel "
+            "classification for each time-impacting risk. The headline does not use them: the "
+            "CPM replay propagates each delay through the programme's own logic."
         ),
         # 3. The tail-risk convention - inserted below, because it is the run's risk.
         # 4. What the schedule analysis actually replays.
@@ -114,10 +116,7 @@ def get_paragraphs(
             "path contributes to finish-date slip whenever sampling puts it on the path. The "
             "deterministic critical path quoted in the appendices is the activity set with zero "
             "float under a single zero-risk pass; where chains tie on float, that set is a "
-            "superset of any one longest path. Series, Hybrid and Parallel classifications are "
-            "carried from the strawman and reported for context; under the full-network replay "
-            "they do not multiply a risk's impact, because the network decides how a delay "
-            "propagates."
+            "superset of any one longest path."
         ),
         # 5. Deferred commercial layers - contract-shaped, inserted below when there are any.
         # 6. Multi-party views deferred - the parties are the binding's, not a literal.
@@ -132,18 +131,19 @@ def get_paragraphs(
         ),
         # 7. Day-rate basis
         (
-            "Day-rate basis. The day rate used to dollarise schedule slip is "
-            "sourced from the Risk Register Variables sheet via the strawman "
-            "methodology workbook. The same value is used by the standalone "
-            "schedule engine, the integrated engine, and the executive summary "
-            "so all reported dollar conversions are consistent."
+            # REPORTCOH-01 S6: the contract is Run_Config_Preview.Day_rate_default (DAYRATE-01/02).
+            "Day-rate basis. The day rate used to price schedule slip is the project's own, "
+            "read from the run configuration (Run_Config_Preview, Day_rate_default) in the "
+            "methodology workbook; there is no default. The same value is used by every "
+            "engine and every dollar conversion in this report."
         ),
         # 8. Target-cost basis - contract-shaped, inserted below when the contract has one.
         # 9. Strawman version date and provenance
         (
+            # REPORTCOH-01 S6: the audit trail records the workbook's digest, not a version date.
             "Strawman provenance. The strawman methodology workbook is the single "
-            "source of truth for Mode classifications, day rate, commercial reference "
-            "values, and run configuration. Its version date appears in the audit trail appendix. "
+            "source of truth for the day rate, commercial reference values and run "
+            "configuration. Its file digest is recorded in the audit trail. "
             "When the strawman is reissued, this deliverable re-runs against the "
             "amended state and supersedes the prior version."
         ),

@@ -105,7 +105,7 @@ def test_d5_criticality_forward_reference_verbatim() -> None:
     """SR14b D5 named exception in commentary_text.py."""
     assert commentary_text.CRITICALITY_FORWARD_REFERENCE_TO_NOTE == (
         "Full criticality detail (Charts 1, 3, 4 + 10-row near-critical "
-        "table + risk-to-activity bridge) ships in the Stage 3 standalone "
+        "table + risk-to-activity bridge) ships in the standalone schedule "
         "report's appendix."
     )
 
@@ -118,4 +118,4 @@ def test_d5_strips_pre_sr14b_sibling_pointer_phrasing() -> None:
     text = commentary_text.CRITICALITY_FORWARD_REFERENCE_TO_NOTE
     assert "sra_criticality_note_PROD_*" not in text
     assert "companion deliverable" not in text
-    assert "Stage 3 standalone report" in text
+    assert "standalone schedule report" in text  # REPORTCOH-01 R2: "Stage 3" retired

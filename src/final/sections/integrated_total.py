@@ -65,8 +65,8 @@ def integrated_range_sentence(headline: dict[str, Any], metric: str = "P80") -> 
             return ""
         tag = " (recommended)" if f"P{p}" == str(metric) else ""
         parts.append(f"P{p} ${value / 1e6:.2f}M{tag}")
-    return ("Integrated event-risk contingency, cost plus float-aware delay cost on the Stage 3 "
-            "basis: " + ", ".join(parts) + ". Schedule slip in days follows below.")
+    return ("Integrated event-risk contingency, cost plus float-aware delay cost on the CPM "
+            "replay: " + ", ".join(parts) + ". Schedule slip in days follows below.")
 
 
 def stage3_headline_block(headline: dict[str, Any], heading: str) -> dict[str, Any]:
@@ -86,8 +86,8 @@ def stage3_headline_block(headline: dict[str, Any], heading: str) -> dict[str, A
     return {
         "stage3_headline_heading": f"### {heading}",
         "stage3_headline_lead": (
-            f"**Recommended contingency: ${lead / 1e6:.2f}M ({metric}, integrated cost plus "
-            f"schedule)**" if isinstance(lead, (int, float)) else ""),
+            f"**Recommended contingency: ${lead / 1e6:.2f}M ({metric}, event-risk cost plus "
+            f"delay cost)**" if isinstance(lead, (int, float)) else ""),
         "stage3_headline_table": rows,
         "stage3_headline_basis": f"*{str(headline.get('basis', '')).strip()}*",
     }
@@ -200,7 +200,7 @@ def shared_driver_display_rows(rows: list[dict[str, Any]]) -> list[dict[str, str
         "Driver": f"{r['driver_id']} {r['name']}",
         "Kind": "Productivity" if r["kind"] == "P" else "Quantity",
         "WBS": ", ".join(r["wbs_codes"]),
-        "Range (P10 / Mode / P90)": r["range"],
+        "Range (P10, most likely, P90)": r["range"],
         "Acts on": r["source"],
         "Mean duration change": f"{r['mean_delta']:+.1%}",
         **({f"Adds to P{r['loo_p_level']} total ($M)": _m(r["loo_total_dollars"]),
@@ -293,11 +293,17 @@ def confidence_curve_display_rows(rows: list[dict[str, Any]]) -> list[dict[str, 
         out.append({
             "Confidence level": level,
             "Integrated contingency ($M)": _m(r.get("integrated_contingency_m"), scale=1.0),
-            "Schedule slip (days)": f"{float(days):.1f}" if days is not None else "-",
+            # REPORTCOH-01 S9: the schedule-only percentile, not the slip in the iterations that
+            # make up the integrated figure on the same row.
+            "Schedule-only slip (days)": f"{float(days):.1f}" if days is not None else "-",
             "Above naive sum ($M)": _m(r.get("above_naive_sum_m"), scale=1.0),
         })
     return out
 
 
 def _m(value: Any, scale: float = 1e6) -> str:
-    return f"${float(value) / scale:.2f}M" if isinstance(value, (int, float)) else "-"
+    if not isinstance(value, (int, float)):
+        return "-"
+    # REPORTCOH-01 S14: the minus sign leads the currency symbol (-$0.12M, never $-0.12M).
+    v = float(value) / scale
+    return f"-${abs(v):.2f}M" if v < 0 else f"${v:.2f}M"

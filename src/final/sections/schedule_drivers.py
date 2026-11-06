@@ -322,6 +322,13 @@ def build_schedule_drivers_section(
     caller whose headline is the Stage 3 CPM replay.
     """
     risks_list = list(risks_list)
+    if stage3:
+        # REPORTCOH-01 E11: the CPM replay applies no Mode multiplier, so its driver table must
+        # not rank on Mode-scaled draws (a Parallel risk read as 0.00 days). Rank on the
+        # pre-Mode draws when the run carries them, as the Stage 3 standalone does (SR15.1).
+        _pre = integrated_dr.get("per_risk_schedule_pre_mode_array")
+        if _pre is not None and np.asarray(_pre).size:
+            integrated_dr = {**integrated_dr, "per_risk_schedule_array": np.asarray(_pre)}
     prob_weighted_sched_drivers = _build_probability_weighted_schedule_drivers(
         integrated_results=integrated_dr,
         risks=risks_list,
@@ -366,6 +373,12 @@ def build_schedule_drivers_section(
             pct_column_label: f"{d.get('pct_of_total_mean', 0.0)*100:.1f}%",
             BASIS_COLUMN: basis_cell(time_basis, d["risk_id"]),
         })
+        if stage3:
+            # REPORTCOH-01 R1: under the CPM replay no risk carries a Mode (the column would read
+            # "n/a" on every row), and a share of the summed additive draws is not a share of
+            # the replay's slip. Both columns are dropped rather than shown with a caveat.
+            sched_drivers_table[-1].pop(mode_column_label, None)
+            sched_drivers_table[-1].pop(pct_column_label, None)
 
     rbs_l1_sched_rows = build_rbs_l1_schedule_breakdown(
         integrated_results=integrated_dr,
@@ -378,7 +391,9 @@ def build_schedule_drivers_section(
             "Probability x mean impact (days)": round(
                 r["prob_weighted_mean_days"], 2,
             ),
-            "% of total": f"{r.get('pct_of_total', 0.0) * 100:.1f}%",
+            # REPORTCOH-01: a share of the summed per-risk draws, which add; not of the CPM
+            # replay's slip, where float absorbs part of each delay.
+            "Share of summed draws": f"{r.get('pct_of_total', 0.0) * 100:.1f}%",
         }
         for r in rbs_l1_sched_rows
     ]

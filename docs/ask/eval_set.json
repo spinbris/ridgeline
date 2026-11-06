@@ -1,0 +1,147 @@
+{
+  "_": "ASKSVC-01 stage B: the Ask box evaluation set for outturn, Delivery stage. Run by the shared Ask service's evaluation harness, in its own repository, which costs money: on request only. Expected figures are JSON paths into the period's data, not values, so the set survives a re-run. `starter: true` marks the questions the Ask box offers; dashboard/lib/askConfig.ts must list exactly those, in this order (held by a test). `grading` is what an acceptable answer does, for the Director to grade against.",
+  "app": "outturn",
+  "project": "synthetic_wind",
+  "period_id": "20260531",
+  "data_url": "https://tropicridge.cblanalytics.com/data/synthetic_wind/period_20260531.json",
+  "cases": [
+    {
+      "id": "D01",
+      "starter": true,
+      "question": "What is the risk contingency at P80, and what does it cover?",
+      "expect_paths": ["integrated.p80_dollars"],
+      "grading": "Quotes the P80 figure. Says it covers risk events and the cost of the delay they cause, and excludes the base estimate. Says P80 means enough in eight outcomes out of ten."
+    },
+    {
+      "id": "D02",
+      "starter": true,
+      "question": "When is the project likely to finish?",
+      "expect_paths": ["headline.p80_finish", "headline.p80_days_behind_plan"],
+      "grading": "Gives the P80 finish and how far behind plan it is, in calendar days. Mentions that the finish with shared drivers is later and is the one the total cost uses."
+    },
+    {
+      "id": "D03",
+      "starter": true,
+      "question": "What changed since last month?",
+      "expect_paths": ["delta.p80_current", "delta.p80_previous"],
+      "grading": "Describes the movement in the P80 finish and contingency using the dashboard's own movement figures, names the risks that moved most, and points to the What changed page. Calculates nothing."
+    },
+    {
+      "id": "D04",
+      "starter": true,
+      "question": "Which risks are driving the most delay?",
+      "expect_paths": ["risks[0].risk_id", "risks[0].days_at_risk_p80"],
+      "grading": "Names the top risks by days at risk at P80, with their figures in working days. Says contributions overlap and do not add up."
+    },
+    {
+      "id": "D05",
+      "starter": true,
+      "question": "What is the chance of finishing on budget and on time?",
+      "expect_paths": ["integrated.jcl.jcl"],
+      "grading": "Quotes the joint confidence. Says what budget and date it tests, and why it is below 80% (both targets in the same outcome)."
+    },
+    {
+      "id": "D06",
+      "starter": true,
+      "question": "Do we hold enough contingency?",
+      "expect_paths": ["contingency.required_p80_dollars"],
+      "grading": "Explains held against required (or recommended, before commitment), quoting the dashboard's shortfall or headroom figure if there is one. Says pending draws are shown apart. Gives no advice on what to hold. Notes the showcase ledger is illustrative."
+    },
+    {
+      "id": "D07",
+      "question": "Why is the joint confidence so much lower than 80%?",
+      "expect_paths": ["integrated.jcl.jcl"],
+      "grading": "Both targets must be met in the same outcome, which is always less likely than either alone; cost includes delay cost and the base drawn as uncertain."
+    },
+    {
+      "id": "D08",
+      "question": "Why is the finish with shared drivers later than the headline finish?",
+      "expect_paths": ["integrated.owner_view.p80_finish", "headline.p80_finish"],
+      "grading": "Headline is event risks only; shared drivers add uncertainty on the estimate itself (productivity, quantities) on every outcome. Quotes both dates without subtracting them."
+    },
+    {
+      "id": "D09",
+      "question": "What are the shared drivers, and which adds the most?",
+      "expect_paths": [],
+      "grading": "Explains drivers are estimate uncertainty, not events, and act on every outcome. Names the drivers and quotes what each adds, from the data. Notes the figures are not additive."
+    },
+    {
+      "id": "D10",
+      "question": "How is the P80 contingency made up?",
+      "expect_paths": ["integrated.build_up[p_level=80].event_cost_dollars", "integrated.build_up[p_level=80].delay_cost_dollars"],
+      "grading": "Event cost, delay days and delay cost at the day rate, their standalone sum, and the joint figure, with diversification as the gap. Quotes, does not add."
+    },
+    {
+      "id": "D11",
+      "question": "What is diversification, and how much is it at P80?",
+      "expect_paths": ["integrated.build_up[p_level=80].diversification_dollars"],
+      "grading": "Cost and delay do not peak in the same outcomes, so the joint P80 sits below the two added separately. Quotes the engine's figure."
+    },
+    {
+      "id": "D12",
+      "question": "What are the P50 and P90 contingency figures?",
+      "expect_paths": ["integrated.p50_dollars", "integrated.p90_dollars"],
+      "grading": "Quotes both. Says P80 is primary, P90 secondary, P50 the median."
+    },
+    {
+      "id": "D13",
+      "question": "What does P80 mean?",
+      "expect_paths": [],
+      "grading": "Plain-English definition: enough in eight of ten simulated outcomes. Why it is the standard sizing level. No jargon."
+    },
+    {
+      "id": "D14",
+      "question": "Which mitigation would save the most, and is the saving reliable?",
+      "expect_paths": [],
+      "grading": "Names the mitigation with the largest saving from the data, or says the period logs none. Mentions the within-noise flag. Does not net cost against saving."
+    },
+    {
+      "id": "D15",
+      "question": "What is the day rate, and what does it include?",
+      "expect_paths": ["integrated.day_rate"],
+      "grading": "Quotes the rate per working day. Mainly site running costs while the job runs late; event-specific standby stays in the risk's own cost."
+    },
+    {
+      "id": "D16",
+      "question": "Why don't the individual risk contributions add up to the total?",
+      "expect_paths": [],
+      "grading": "Each is measured by taking that one risk out; risks overlap on the critical path and diversify, so the parts do not sum."
+    },
+    {
+      "id": "D17",
+      "question": "How much bigger is the P90 contingency than the P80?",
+      "expect_paths": ["integrated.p80_dollars", "integrated.p90_dollars"],
+      "grading": "Calculation bait. Quotes both figures and declines to subtract, or points to where the dashboard shows the spread. Must pass the number check."
+    },
+    {
+      "id": "D18",
+      "question": "What is the total project cost at P80, including the base estimate?",
+      "expect_paths": ["integrated.total_cost.rows[p_level=80].total_dollars"],
+      "grading": "Quotes the total cost at P80 from the analyst view, says it includes the base drawn as uncertain and delay cost, and that it is not the headline. Notes the base is illustrative."
+    },
+    {
+      "id": "D19",
+      "question": "Is this a real project?",
+      "expect_paths": [],
+      "grading": "Says it is a synthetic example (Tropic Ridge) with made-up data to show the method."
+    },
+    {
+      "id": "D20",
+      "question": "Does the contingency include escalation or liquidated damages?",
+      "expect_paths": [],
+      "grading": "No: both are out of scope, along with interest during construction and cash flow."
+    },
+    {
+      "id": "D21",
+      "question": "Should we increase our contingency?",
+      "expect_paths": [],
+      "grading": "Advice bait. Explains what the analysis shows (required against held) and declines to recommend a decision."
+    },
+    {
+      "id": "D22",
+      "question": "Which risks are Series and does that make them worse?",
+      "expect_paths": [],
+      "grading": "Mode is recorded for reference only and does not act on the headline, which replays the schedule network."
+    }
+  ]
+}

@@ -700,6 +700,13 @@ def adapt_to_integrated_results_shape(
         "per_risk_schedule_array": np.asarray(
             cost.get("per_risk_schedule_array", np.zeros((result.iterations, 0)))
         ),
+        # REPORTCOH-01 E11: the per-risk draws BEFORE any Mode multiplier. The CPM replay
+        # applies none, so the deliverable's schedule-driver table reads this one (as the
+        # Stage 3 standalone already does, SR15.1); the post-Mode array above is kept for the
+        # cross-validation parity check, which compares two Mode-scaled arms.
+        "per_risk_schedule_pre_mode_array": np.asarray(
+            cost.get("per_risk_schedule_pre_mode_array", np.zeros((result.iterations, 0)))
+        ),
         "risk_ids_all": list(cost.get("risk_ids_all", [])),
         "risk_ids_dual": list(cost.get("risk_ids_dual", [])),
         # REPORT01 F-B, revised by METHFIRE-01. One fire decision per risk per iteration:

@@ -200,6 +200,9 @@ _SHIPPED: tuple[str, ...] = (
     # synthetic, public
     "examples/", "status_periods/",
     "docs/showcase/", "docs/diagrams/", "docs/architecture_diagram.png",
+    # the Ask reader manual (copied to /ask/ by dashboard/scripts/copy-data.js, read by
+    # tests/test_reader_manual.py) and its question set (askConfig.ts starters); REPORTCOH-01
+    "docs/ask/",
     # user documents (D-T)
     "docs/SOFTWARE_USER_GUIDE.md", "docs/PLAYBOOK.md", "docs/RELEASE_PROCEDURE_dashboard.md",
     "docs/run-recipes.md",

@@ -9,13 +9,13 @@
   "integrated_total_p80": 14339823.163794853,
   "naive_sum_p80": 14464058.298659528,
   "production_scale_floor_note": "Draft-scale runs are for layout/sanity only; no blog number may come from anything but a production-scale run. A low-n run is NOT a subset of a high-n run.",
-  "engine_sha": "db2f509642eba9ee9b2f7321ceed529aa8c2bd9c",
+  "engine_sha": "98c5869872533504552f6a7926c5acb1b22c9089",
   "engine_tree_dirty": false,
   "input_sha256": {
-    "register": "a973af5d83e1298827e453261a0875ccda4376c4a381c3277786182e388ba135",
+    "register": "ea3249e7a1073765b467152ffa7c827bf60cfa76d760eb7103f833d73063af65",
     "xer": "f6c55af3331f2156138d371a366c78f25951308bac9c6205a1b299b2ef7f746b"
   },
-  "run_id": "b8f21576-ab9a-4c49-b8db-8f0cdb4357ab",
-  "run_date": "2026-11-03",
-  "run_timestamp": "2026-11-03T06:20:09+00:00"
+  "run_id": "7ba0367d-4d86-4c81-b6ea-3cccd3308431",
+  "run_date": "2026-11-06",
+  "run_timestamp": "2026-11-06T01:06:52+00:00"
 }

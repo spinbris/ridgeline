@@ -25,8 +25,8 @@ STAGE3_SCENARIO_DISPLAY = "Stage 3 (CPM replay, one distribution)"
 
 #: What the headline says its range is. Stated once here so every surface says the same.
 STAGE3_HEADLINE_BASIS = (
-    "Stage 3 CPM replay: one distribution, percentiles of one modelled outcome. The P50-P95 "
-    "spread is project uncertainty, not a spread between Mode assumptions."
+    "CPM replay: one distribution, percentiles of one modelled outcome. The P50-P95 "
+    "spread is project uncertainty."
 )
 
 DEFAULT_P_LEVELS: tuple[int, ...] = (50, 80, 95)

@@ -184,11 +184,15 @@ def build_rbs_l1_cost_breakdown(
         rows.append({
             "rbs_l1": label,
             "n_risks": len(member_idx),
+            "mean_dollars": float(np.mean(group_iter_total)),
             "value_dollars": value,
             "value_M": value / 1e6,
             "metric_name": metric_label,
         })
 
+    sum_mean = sum(r["mean_dollars"] for r in rows)
+    for r in rows:
+        r["mean_share"] = r["mean_dollars"] / sum_mean if sum_mean > 0 else 0.0
     sum_value = sum(r["value_dollars"] for r in rows)
     for r in rows:
         r["pct_of_total"] = (
@@ -373,12 +377,13 @@ def build_cost_drivers_section(
     cost_basis = basis_lookup(risks_list, COST_FIELD)
 
     cost_drivers_table_full: list[dict[str, Any]] = []
+    # REPORTCOH-01 E6: no "% of total" column. A per-risk P80 is not a share of the contingency:
+    # percentiles do not add, so any denominator made by summing them misleads.
     for d in cost_drivers_full[:8]:
         cost_drivers_table_full.append({
             "Risk": d["risk_id"],
             "Title": d.get("title", d["risk_id"]),
             cost_value_col: round(d.get("value", 0.0), 2),
-            "% of total": f"{d.get('pct_of_total', 0.0)*100:.1f}%",
             BASIS_COLUMN: basis_cell(cost_basis, d["risk_id"]),
         })
     cost_drivers_filtered_input = _filter_cost_drivers_for_table(
@@ -390,7 +395,6 @@ def build_cost_drivers_section(
             "Risk": d["risk_id"],
             "Title": d.get("title", d["risk_id"]),
             cost_value_col: round(d.get("value", 0.0), 2),
-            "% of total": f"{d.get('pct_of_total', 0.0)*100:.1f}%",
             BASIS_COLUMN: basis_cell(cost_basis, d["risk_id"]),
         })
 
@@ -404,8 +408,10 @@ def build_cost_drivers_section(
         {
             "RBS Level 1 category": r["rbs_l1"],
             "Risk count": r["n_risks"],
-            f"{r['metric_name']} contribution ($M)": round(r["value_M"], 2),
-            "% of total": f"{r.get('pct_of_total', 0.0) * 100:.1f}%",
+            f"{r['metric_name']} of the category's cost ($M)": round(r["value_M"], 2),
+            # REPORTCOH-01 E6: the share is of the MEAN event-risk cost, because means add and
+            # category P80s do not.
+            "Share of mean event-risk cost": f"{r.get('mean_share', 0.0) * 100:.1f}%",
         }
         for r in rbs_l1_cost_rows
     ]

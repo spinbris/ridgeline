@@ -90,10 +90,11 @@ def test_beta_banner_lines_match_documented_text():
     # SR18 Item 2: em-dash in the first line replaced with a colon as
     # part of the scoped sweep (BETA_BANNER_LINES is one of the four
     # surfaces named in the SR18 brief §3 Item 2).
+    # REPORTCOH-01 R2: the third line printed its placeholder unfilled and named the retired
+    # basis; it is gone, and the first names the method rather than the stage.
     assert BETA_BANNER_LINES == (
-        "STAGE 3 + SR16: CURRENT PRODUCTION HEADLINE.",
+        "CPM REPLAY: CURRENT PRODUCTION HEADLINE.",
         "FIGURES PENDING WORKSHOP VALIDATION OF AUTO-MAPPER BINDINGS.",
-        "STAGE 2.5 HYBRID $<stage25_mean>M RETAINED AS HISTORICAL COMPARATOR ONLY.",
     )
 
 

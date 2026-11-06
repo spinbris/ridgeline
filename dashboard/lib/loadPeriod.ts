@@ -607,6 +607,7 @@ export function assertProjectKeyAgrees(
 export const periodIndexSchema: z.ZodType<PeriodIndex> = z.object({
   periods: z.array(z.string().regex(/^period_\d{8}\.json$/)),
   generated_at: isoDateTime,
+  showcase: z.boolean().optional(),
 });
 
 // ---------------------------------------------------------------------------

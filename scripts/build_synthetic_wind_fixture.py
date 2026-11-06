@@ -607,7 +607,7 @@ def build_register(path: Path) -> None:
         vals = [
             rid, status, desc, owner, rbs1, rbs2, "Yes", dist, cg, recur,
             "synthetic cause", "synthetic consequence", "synthetic controls",
-            "Yes", pc, oc, mc, pcst, "Wind Farm Beta capex basis",
+            "Yes", pc, oc, mc, pcst, "Tropic Ridge capex basis",
             timp, ptime, od, md, pd, "Synthetic",
             mode_cell, impact_basis,
         ]

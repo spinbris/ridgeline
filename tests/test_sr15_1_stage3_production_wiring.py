@@ -192,18 +192,20 @@ class TestDirectorLockedTextUnchanged:
         assert MODE_MULTIPLIERS_FULL_CPM_PARAGRAPHS_STAGE3[0].startswith(
             "**Mode multipliers and the full-CPM approach.**"
         )
-        assert "Stage 2.5" in MODE_MULTIPLIERS_FULL_CPM_PARAGRAPHS_STAGE3[0]
+        # REPORTCOH-01 R2: the paragraph names the retired layer, not the retired stage.
+        assert "practitioner-judgement" in MODE_MULTIPLIERS_FULL_CPM_PARAGRAPHS_STAGE3[0]
+        assert "Stage 2.5" not in MODE_MULTIPLIERS_FULL_CPM_PARAGRAPHS_STAGE3[0]
 
     def test_d4_footnote_unchanged(self):
         from src.final.commentary_text import (
             SCHEDULE_DRIVERS_MODE_COLUMN_FOOTNOTE_STAGE3,
         )
         assert (
-            "Stage 3 full-CPM methodology"
+            "for context only. It does not change any delay"
             in SCHEDULE_DRIVERS_MODE_COLUMN_FOOTNOTE_STAGE3
         )
         assert (
-            "Series / Hybrid / Parallel"
+            "Series, Hybrid or Parallel"
             in SCHEDULE_DRIVERS_MODE_COLUMN_FOOTNOTE_STAGE3
         )
 

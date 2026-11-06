@@ -523,6 +523,8 @@ def test_v3_1_static_constants_present():
         commentary_text.DOMINANT_RISK_TEMPLATE,
         commentary_text.DOMINANT_RISK_FALLBACK,
         commentary_text.READING_CONVENTION,  # SR9 v3.5: now a template
+        # REPORTCOH-01 E4: the footnote's sign sentence now follows the numbers.
+        commentary_text.CONFIDENCE_CURVE_FOOTNOTE,
     ):
         assert "{" in template
 
@@ -532,7 +534,6 @@ def test_v3_1_static_constants_present():
         commentary_text.MEAN_COST_IDENTICAL_NOTE,
         commentary_text.COST_DRIVERS_MODE_INDEPENDENCE_NOTE,
         commentary_text.CONFIDENCE_CURVE_PREAMBLE,
-        commentary_text.CONFIDENCE_CURVE_FOOTNOTE,
     ):
         assert "{" not in static
         assert "}" not in static

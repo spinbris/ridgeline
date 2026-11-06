@@ -36,7 +36,11 @@ from dataclasses import dataclass, field
 #:       Layer 1 is on; the methodology names any Layer 1 factor D-4 leaves out of the base.
 #: 1.4 - INTSCURVE-01 Part C, 28/10/2026: the joint confidence level (cost against finish, with
 #:       its targets and the 70% frontier) follows the total-cost S-curve in Distribution.
-CONTRACT_VERSION = "1.4"
+#: 1.5 - REPORTCOH-01 R2, 05/11/2026: the HTML body in the reader's order (review section 7):
+#:       Summary, Project and inputs, Contingency, Schedule, Risk drivers, Total cost, Checks,
+#:       Actions, Method, then appendices A-C and the Disclaimer. Each item appears once; the
+#:       artefact list leaves the page. The Word sections are unchanged.
+CONTRACT_VERSION = "1.5"
 
 
 @dataclass(frozen=True)
@@ -62,7 +66,7 @@ class Section:
 #: off the call sequence.
 WORD_SECTIONS: tuple[Section, ...] = (
     Section("executive_summary", "Executive summary", ("executive_summary",)),
-    Section("stage3_headline", "{label} ({metric}, Stage 3)", ("executive_summary",),
+    Section("stage3_headline", "{label} ({metric}, CPM replay)", ("executive_summary",),
             requires_stage3=True),
     Section("distribution_shape", "Distribution shape",
             ("page2_confidence_curve", "page2_distribution")),
@@ -87,14 +91,23 @@ STAGE3_STANDALONE_SECTIONS: tuple[Section, ...] = (
 #: The HTML body, rendered by ``final_runner.ipynb``. Its order is the notebook's ``PAGES``
 #: list; the test reads that list out of the committed notebook and compares it to this.
 HTML_SECTIONS: tuple[Section, ...] = (
-    Section("distribution", "## Distribution", ("page2_distribution",)),
-    Section("cost_drivers", "## Cost drivers", ("page3_cost_drivers",)),
-    Section("schedule_drivers", "## Schedule drivers", ("page4_schedule_drivers",)),
-    Section("reconciliation", "## Reconciliation", ("page5_reconciliation",)),
-    Section("action_implications", "## Actions and implications",
-            ("page6_action_implications",)),
-    Section("methodology", "## Methodology and caveats", ("page7_methodology",)),
-    Section("audit_trail", "## Audit trail", ("page8_audit_trail",)),
+    # REPORTCOH-01 R2: one list with src/final/sections/report_layout.SECTIONS, which builds
+    # each section's content; tests/test_reportcoh01_layout.py holds the two equal.
+    Section("summary", "## Summary", ("rpt_summary",)),
+    Section("inputs", "## Project and inputs", ("rpt_inputs",)),
+    Section("contingency", "## Contingency", ("rpt_contingency",)),
+    Section("schedule", "## Schedule", ("rpt_schedule",)),
+    Section("drivers", "## Risk drivers", ("rpt_drivers",)),
+    Section("total_cost", "## Total cost, shared drivers and joint confidence",
+            ("rpt_total_cost",)),
+    Section("checks", "## Checks", ("rpt_checks",)),
+    Section("actions", "## Actions", ("rpt_actions",)),
+    Section("method", "## Method and limitations", ("rpt_method",)),
+    Section("appendix_iteration", "## Appendix A - one iteration", ("rpt_appendix_iteration",)),
+    Section("appendix_correlation", "## Appendix B - correlation groups",
+            ("rpt_appendix_correlation",)),
+    Section("appendix_audit", "## Appendix C - audit trail", ("rpt_appendix_audit",)),
+    Section("disclaimer", "## Disclaimer", ("rpt_disclaimer",)),
 )
 
 
@@ -139,7 +152,7 @@ REQUIRED_DISCLOSURES: tuple[Disclosure, ...] = (
     Disclosure(
         "input_provenance",
         "Word and HTML: the audit trail appendix",
-        "Register, schedule and strawman hashes, the seed and the engine versions - what makes "
+        "Register, schedule and methodology hashes, the seed and the engine versions - what makes "
         "the run reproducible and the deliverable supersedable.",
     ),
 )
@@ -214,6 +227,14 @@ HTML_FIELDS: dict[str, Field] = {
         "shared_drivers_sentence", "shared_drivers_table",
         # INTSCURVE-01 Part C
         "jcl_orienting", "jcl_path", "jcl_sentence", "jcl_basis",
+        # REPORTCOH-01 R2
+        "report_vs_app", "summary_table", "which_number", "inputs_orienting", "inputs_table",
+        "finish_table", "criticality_sentence", "criticality_chart_path", "criticality_table",
+        "schedule_loo_sentence", "schedule_loo_table", "jcl_reason", "checks_orienting",
+        "cross_validation_table", "actions_text", "actions_table", "glossary", "disclaimer",
+        # REPORTCOH-01 R3
+        "worked_iteration_intro", "worked_iteration_chart_path", "worked_iteration_table",
+        "worked_iteration_steps",
     )},
     # headings carried as data
     "why_mc_matters_title": Field(HEADING, heads="why_mc_matters"),
@@ -226,6 +247,15 @@ HTML_FIELDS: dict[str, Field] = {
     "delay_cost_convention_heading": Field(HEADING, heads="delay_cost_convention"),
     "total_cost_heading": Field(HEADING, heads="total_cost_s_curve_path"),
     "jcl_heading": Field(HEADING, heads="jcl_path"),
+    # REPORTCOH-01 R2
+    "finish_heading": Field(HEADING, heads="finish_table"),
+    "criticality_heading": Field(HEADING, heads="criticality_table"),
+    "schedule_loo_heading": Field(HEADING, heads="schedule_loo_table"),
+    "input_view_heading": Field(HEADING, heads="drivers_table"),
+    "reconciliation_heading": Field(HEADING, heads="comparison_table"),
+    "convergence_heading": Field(HEADING, heads="convergence_chart_path"),
+    "glossary_heading": Field(HEADING, heads="glossary"),
+    "worked_iteration_table_heading": Field(HEADING, heads="worked_iteration_table"),
     # renderer settings, and what the Word renderer deliberately leaves out
     **{k: _X for k in (
         "metric_name", "value_column_header", "rbs_l1_metric_name", "bold_row_index",
@@ -239,7 +269,7 @@ HTML_FIELDS: dict[str, Field] = {
     "caveats": _l("Caveats"),
     "references": _l("References"),
     "register_path_display": _l("Risk register file"),
-    "strawman_path_display": _l("Strawman methodology workbook"),
+    "strawman_path_display": _l("Methodology sheets (workbook)"),
     "run_date": _l("Run date"),
     "iterations": _l("Iterations", "{:,}"),
     "random_seed": _l("Random seed"),
@@ -250,7 +280,7 @@ HTML_FIELDS: dict[str, Field] = {
     "engine": _l("Engine commit"),
     "input_hashes": _l("Input file hashes (SHA-256)"),
     "register_sha256": _l("Risk register"),
-    "strawman_sha256": _l("Strawman"),
+    "strawman_sha256": _l("Methodology sheets"),
     "p6_sha256": _l("Schedule (P6)"),
 }
 

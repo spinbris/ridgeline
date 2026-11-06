@@ -110,9 +110,10 @@ CUSTOM_PROPERTY_RECOMMENDATION_METRIC = "recommendation_metric"
 # ----------------------------------------------------------------------------
 
 BETA_BANNER_LINES = (
-    "STAGE 3 + SR16: CURRENT PRODUCTION HEADLINE.",
+    # REPORTCOH-01 R2: the third line named the retired basis and printed its placeholder
+    # unfilled ("$<stage25_mean>M") in every Word document; the method is named for what it is.
+    "CPM REPLAY: CURRENT PRODUCTION HEADLINE.",
     "FIGURES PENDING WORKSHOP VALIDATION OF AUTO-MAPPER BINDINGS.",
-    "STAGE 2.5 HYBRID $<stage25_mean>M RETAINED AS HISTORICAL COMPARATOR ONLY.",
 )
 
 BETA_BANNER_COLOR = RGBColor(0xCC, 0x66, 0x00)        # amber/orange - distinct from BANNER_COLOR red
@@ -478,17 +479,50 @@ def _add_title_page(doc: Document, summary_data: dict[str, Any], audit_trail: di
     doc.add_paragraph()  # spacer
 
 
+def _add_worked_iteration(doc: Document, worked: dict[str, Any]) -> None:
+    """REPORTCOH-01 R3: one iteration worked through, the same composed values as the web page."""
+    doc.add_heading("One iteration worked through", level=2)
+    if worked.get("worked_iteration_intro"):
+        doc.add_paragraph(worked["worked_iteration_intro"])
+    chart = worked.get("worked_iteration_chart_path")
+    if chart and Path(chart).exists():
+        _add_picture_centered(doc, chart)
+    p = doc.add_paragraph()
+    p.add_run(worked.get("worked_iteration_table_heading", "")).bold = True
+    _add_dict_list_table(doc, worked.get("worked_iteration_table") or [])
+    for step in worked.get("worked_iteration_steps") or []:
+        doc.add_paragraph(step)
+
+
+def _add_report_summary(doc: Document, summary: dict[str, Any]) -> None:
+    """REPORTCOH-01 R2: the web report's summary table and which-number box, in the Word summary.
+
+    The same composed values the web report renders, so the two cannot say different things.
+    The box arrives as Markdown blockquote lines; Word gets plain paragraphs in a callout.
+    """
+    table = summary.get("summary_table") or []
+    if table:
+        _add_dict_list_table(doc, table)
+    box = str(summary.get("which_number") or "")
+    paras = [ln[1:].strip().replace("**", "") for ln in box.splitlines()
+             if ln.startswith(">") and ln[1:].strip()]
+    if paras:
+        doc.add_paragraph()
+        title, _, first = paras[0].partition(". ")
+        _add_callout_box(doc, title.strip(), "\n\n".join([first, *paras[1:]]))
+
+
 def _add_stage3_headline(doc: Document, headline: dict[str, Any]) -> None:
     """STAGE3HEADLINE-01 (D-1): the headline block - percentiles of the one Stage 3 distribution."""
     metric = str(headline.get("headline_metric", "P80"))
     # PRESENT-01 (D-3): "TOC" is a fact about the reader's contract, not about their project.
     # Neutral unless the binding declares a contract shape that has a target cost.
     label = contract_terms.term("headline_contingency_label")
-    doc.add_heading(f"{label} ({metric}, Stage 3)", level=1)
+    doc.add_heading(f"{label} ({metric}, CPM replay)", level=1)
     lead = headline.get("headline_dollars")
     if isinstance(lead, (int, float)):
         para = doc.add_paragraph()
-        run = para.add_run(f"Recommended contingency: ${lead/1e6:.2f}M ({metric}, integrated cost plus schedule)")
+        run = para.add_run(f"Recommended contingency: ${lead/1e6:.2f}M ({metric}, event-risk cost plus delay cost)")
         run.bold = True
     table = doc.add_table(rows=1, cols=2)
     table.style = "Light Grid Accent 1"
@@ -658,11 +692,11 @@ def _add_audit_trail_footer(doc: Document, audit_trail: dict[str, Any]) -> None:
     )
     rows = [
         ("Risk register file", str(_register_display)),
-        ("Strawman methodology workbook", str(_strawman_display)),
+        ("Methodology sheets (workbook)", str(_strawman_display)),
         ("Run date", str(audit_trail.get("run_date", ""))),
         ("Iterations", str(audit_trail.get("iterations", ""))),
         ("Random seed", str(audit_trail.get("random_seed", ""))),
-        ("Day rate (sourced from Risk Register Variables sheet)",
+        ("Day rate (Run_Config_Preview, Day_rate_default)",
          f"${float(audit_trail.get('day_rate_dollars_per_workday', 0.0)):,.0f}/wd"),
         ("Reporting P-level", f"P{audit_trail.get('reporting_p_level', '')}"),
     ]
@@ -787,7 +821,7 @@ _COLUMN_LABELS = {
     "ci": "Criticality index",
     "on_deterministic_cp": "On deterministic critical path",
     "register_sha256": "Risk register",
-    "strawman_sha256": "Strawman",
+    "strawman_sha256": "Methodology sheets",
     "p6_sha256": "P6 schedule",
 }
 
@@ -1619,6 +1653,7 @@ def _render_v3_executive_summary(
     _stage3_headline = (composed.get("executive_summary") or {}).get("headline_stage3")
     if isinstance(_stage3_headline, dict):
         _add_stage3_headline(doc, _stage3_headline)
+    _add_report_summary(doc, composed.get("rpt_summary") or {})
 
     # Beta-17 Item 3: Mean / median / buffer-choice framing paragraph.
     # Three sentences explaining (i) Mean as the portfolio answer, (ii) P80
@@ -1643,7 +1678,7 @@ def _render_v3_executive_summary(
         sa_table = six_approach.get("table")
         if isinstance(sa_table, pd.DataFrame) and len(sa_table) > 0:
             doc.add_heading(
-                "Headline vs first-principles comparators", level=2,
+                "Headline against first-principles methods", level=2,
             )
             _add_six_approach_reconciliation_table(doc, six_approach)
 
@@ -2049,6 +2084,12 @@ def _render_v3_executive_summary(
     refs = p7.get("standards_references", "")
     if refs:
         doc.add_paragraph(refs)
+    # REPORTCOH-01 R2: the paragraph above points the reader at References; give it one.
+    ref_list = (composed.get("appendix_methodology") or {}).get("references") or []
+    if ref_list:
+        p_refs = doc.add_paragraph()
+        p_refs.add_run("References").bold = True
+        _add_bullets(doc, list(ref_list))
 
     # INTSCURVE-01 P7: the delay-cost convention, in the Director's words.
     convention = p7.get("delay_cost_convention", "")
@@ -2128,12 +2169,18 @@ def _render_v3_executive_summary(
         run = para.add_run(closing)
         run.italic = True
 
-    doc.add_heading("Single-iteration walkthrough", level=2)
-    _add_walkthrough_sidebar(
-        doc,
-        p7.get("single_iteration_intro", ""),
-        p7.get("single_iteration_walkthrough", ""),
-    )
+    # REPORTCOH-01 R3: the web report's worked iteration, when the CPM replay ran; the old
+    # Mode-scaled walkthrough only otherwise.
+    worked = composed.get("rpt_appendix_iteration") or {}
+    if worked.get("worked_iteration_table"):
+        _add_worked_iteration(doc, worked)
+    else:
+        doc.add_heading("Single-iteration walkthrough", level=2)
+        _add_walkthrough_sidebar(
+            doc,
+            p7.get("single_iteration_intro", ""),
+            p7.get("single_iteration_walkthrough", ""),
+        )
 
     # Beta-15 Item 6: structured per-risk transparency table from
     # run_single_scenario_transparency (the run's seed). Renders 8 body rows
@@ -2349,7 +2396,10 @@ def generate_word_summary(
     if isinstance(stage3_headline, dict):
         _add_stage3_headline(doc, stage3_headline)
     headline = summary_data.get("headline_contingency_range_p80", {})
-    _add_headline_range(doc, headline)
+    # REPORTCOH-01 R1: under the CPM replay the Stage 2.5 Mode-scenario range is retired from
+    # the report; the Stage 3 headline above is the only range shown.
+    if not isinstance(stage3_headline, dict):
+        _add_headline_range(doc, headline)
 
     _add_top_n_table(
         doc,
@@ -2367,7 +2417,8 @@ def generate_word_summary(
         drivers=summary_data.get("top_3_schedule_drivers", []),
         metric_label="P80 schedule",
         units_label="days",
-        extra_columns=[("Mode", "mode")],
+        # REPORTCOH-01: the CPM replay has no Mode, so under it the column would read n/a.
+        extra_columns=(None if summary_data.get("headline_stage3") else [("Mode", "mode")]),
     )
     note = summary_data.get("schedule_basis_note", "")
     if note:

@@ -98,32 +98,37 @@ def _build_comparison_table(
     })
 
     rows.append({
-        "Approach": "EMV (sum of probability x ML impact)",
+        "Approach": "EMV (sum of probability x Most Likely impact)",
         "Schedule contingency (days)": round(emv_days, 2),
         "Cost contingency ($M)": round(emv_cost / 1e6, 2),
-        "Notes": "First-principles probability-weighted estimate (deterministic)",
+        "Notes": "First-principles expected value (deterministic)",
     })
 
     if cost_arr.size > 0:
+        # REPORTCOH-01 R1: these rows are the cost and schedule simulations each on its own.
+        # The headline combines the two in one distribution, so a row here must not be labelled
+        # as the headline.
         rows.append({
-            "Approach": "MC mean, Stage 3 headline (recommended central estimate)",
+            "Approach": "Monte Carlo mean (CPM replay)",
             "Schedule contingency (days)": round(float(sched_arr.mean()), 2),
             "Cost contingency ($M)": round(float(cost_arr.mean()) / 1e6, 2),
-            "Notes": "Reconciles with EMV; adds tail visibility",
+            "Notes": "Expected value with the programme logic applied",
         })
         rows.append({
-            "Approach": "MC P80, Stage 3 headline",
+            "Approach": "Monte Carlo P80, cost and schedule each on its own",
             "Schedule contingency (days)": round(float(np.percentile(sched_arr, 80)), 2),
             "Cost contingency ($M)": round(float(np.percentile(cost_arr, 80)) / 1e6, 2),
-            "Notes": "Useful for contingency floor",
+            "Notes": "The headline combines the two at P80",
         })
         rows.append({
-            "Approach": "MC P95, Stage 3 headline",
+            "Approach": "Monte Carlo P95, cost and schedule each on its own",
             "Schedule contingency (days)": round(float(np.percentile(sched_arr, 95)), 2),
             "Cost contingency ($M)": round(float(np.percentile(cost_arr, 95)) / 1e6, 2),
-            "Notes": "For risk-aware contingency",
+            "Notes": "Upper tail, for risk-averse owners",
         })
 
+    # A rule of thumb gives no cost figure. The cell stays empty (None) so the column stays
+    # numeric for the state cache; the HTML renders an empty cell as "-" (REPORTCOH-01 S14).
     return pd.DataFrame(rows)
 
 
@@ -251,12 +256,9 @@ def build_six_approach_reconciliation_table(
         df = df.reindex(columns=[c for c in final_cols if c in df.columns])
 
     orienting = (
-        "The headline P80 contingency sits within a range bounded by "
-        "simpler heuristics on one side (10% / 20% of programme rules "
-        "of thumb) and tail-percentile readings on the other (P95 and "
-        "beyond). The table below shows where the headline sits against "
-        "six common reference points so the reader can plant the Monte "
-        "Carlo number against first-principles comparators. The "
+        "The table below shows where the headline sits against "
+        "six common reference points so the reader can set the Monte "
+        "Carlo number against first-principles methods. The "
         "deterministic EMV PERT is the textbook expected-value answer; "
         "the MC Mean reconciles with it by construction; the MC P80 is "
         "the recommended contingency level per AACE / GN3A convention."

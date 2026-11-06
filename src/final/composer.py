@@ -34,6 +34,7 @@ from src.integrated.run_config_contract import require_day_rate
 from src.rng_streams import require_seed
 from src.sra.methodology_defaults_reader import read_calibration_tolerances
 from src.final import callout_text, commentary_text, contract_terms, disclaimer_text
+from src.final.sections.report_cohesion import apply_stage3_cohesion
 from src.final.sections.action_implications import (
     _build_specific_recommendations,
     _build_treatment_roi_table,
@@ -199,37 +200,33 @@ KEY_FINDINGS = [
 # Stage 2.5 three-scenario Mode range. When a Stage 3 result leads the deliverable, these
 # are the texts that describe what the page now shows. Selected in compose_final_report_data
 # on the presence of stage3_beta_result; the dev-mode texts above are unchanged.
-SCHEDULE_DRIVERS_BASIS_STAGE3 = "additive per-risk draws, Mode-scaled (comparator basis)"
+# REPORTCOH-01 R1 (05/11/2026): the Stage 3 texts no longer describe the retired Mode basis.
+# The driver ranking is on the register's pre-Mode draws (SR15.1), and the comparator range
+# these once pointed at is not shown.
+SCHEDULE_DRIVERS_BASIS_STAGE3 = "probability-weighted register draws, before programme logic"
 SCHEDULE_BASIS_NOTE_STAGE3 = (
-    "Schedule drivers are ranked by each risk's additive, Mode-scaled per-risk draw from the "
-    "Stage 3 cost arm's joint sample. That is the comparator basis, not the CPM replay: the "
-    "CPM kernel reports the project finish and each activity's criticality, and does not "
-    "attribute the finish to individual risks. The headline figure is the CPM replay; the "
-    "driver ranking is not, and a CPM attribution by leave-one-out is owed (CPMATTRIB-01). "
-    "Stage 3 has no Mode classification, so the Mode column reads n/a."
+    "Schedule drivers are ranked by each risk's probability-weighted delay as drawn from the "
+    "register, before the programme logic is applied. It is the input view, and its figures "
+    "add. The headline is the CPM replay, which lets float absorb part of each delay, so its "
+    "mean finish delay is smaller than the sum of the drivers."
 )
 KEY_FINDINGS_STAGE3 = [
-    "The headline contingency is the P80 of one integrated distribution: cost plus "
-    "dollarised schedule delay from the Stage 3 CPM replay. Its P50 to P95 spread is "
-    "project uncertainty, not a spread between Mode assumptions.",
-    "Cost contingency is dominated by a small number of high-pessimistic risks; the top-3 "
-    "cost drivers account for the majority of the P80 headline contribution.",
+    "The headline contingency is the P80 of one distribution: event-risk cost plus the "
+    "delay cost of the finish delay from the CPM replay. Its P50 to P95 spread is project "
+    "uncertainty.",
+    "A small number of risks dominate the contingency: the leave-one-out ranking shows "
+    "what removing each one alone would save at P80.",
     "Schedule contribution to the headline follows where each risk's delay lands in the "
     "programme logic. Delays injected at zero-float gates reach the finish; delays injected "
-    "into floated work are absorbed, so the Stage 3 figure can sit either side of the "
-    "additive Stage 2.5 comparator, and the reconciliation table shows which. The per-risk "
-    "driver ranking is still the additive comparator basis (see the schedule drivers note).",
-    "The Stage 2.5 Mode-scenario range is retained beside the reconciliation as a labelled "
-    "comparator, for continuity with what has been reported before. It is not the headline "
-    "and no shipping gate depends on it.",
+    "into floated work are absorbed.",
     "Cross-validation passes: the cost arm reconciles against the standalone cost engine, "
     "and the schedule arm reconciles across the two product surfaces that assemble a "
-    "Stage 3 run, within the register's tolerances.",
+    "CPM replay run, within the register's tolerances.",
 ]
 METHODOLOGY_CAVEATS_STAGE3 = [
-    "The headline is a single Stage 3 distribution. Mode classifications play no part in "
-    "it; they remain visible only in the Stage 2.5 comparator range beside the "
-    "reconciliation.",
+    # REPORTCOH-01 R1: the Stage 2.5 comparator range this pointed at is no longer shown.
+    "The headline is a single distribution from the CPM replay. The register's Series, "
+    "Hybrid and Parallel classifications play no part in it.",
     "Schedule analysis operates on the full programme logic exported from the planning "
     "tool. Delays propagate along that logic; a gating activity outside a risk's cohort is "
     "refused before any iteration runs.",
@@ -419,8 +416,10 @@ def _generate_v3_charts(
     # STAGE3HEADLINE-01: when Stage 3 is the named basis it is plotted last and carries the
     # headline suffix; DP_Review is then a comparator like the others.
     _stage3_leads = indicative_name == STAGE3_SCENARIO_NAME and STAGE3_SCENARIO_NAME in integrated_results_by_scenario
+    # REPORTCOH-01 R1: when Stage 3 leads, the Mode scenarios are not plotted. They are a
+    # retired comparator and the chart is the CPM replay's distribution alone.
     iter_order = (
-        ("Dummy_Realistic", "All_Series", "DP_Review", STAGE3_SCENARIO_NAME) if _stage3_leads
+        (STAGE3_SCENARIO_NAME,) if _stage3_leads
         else ("Dummy_Realistic", "All_Series", "DP_Review"))
     _headline_scenario = STAGE3_SCENARIO_NAME if _stage3_leads else "DP_Review"
     headline_label: str | None = None
@@ -458,7 +457,7 @@ def _generate_v3_charts(
         percentile_markers=[50, 80, 90, 95],
         # DELIVFIX-01 (FW-28): the headline is Stage 3, which applies no Mode multiplier; the
         # Mode scenarios beside it are comparators, so "three Mode scenarios" misread the chart.
-        title=("Schedule slip S-curve - Stage 3 headline, with Mode comparators"
+        title=("Schedule slip S-curve - CPM replay"
                if _stage3_leads else "Schedule slip S-curve - three Mode scenarios"),
         output_path=s_curve_path,
         color_map=s_curve_color_map,
@@ -653,6 +652,9 @@ def _generate_v3_charts(
         x_axis_label=f"{cost_metric_label} cost contribution ($M)",
         output_path=cost_tornado_path,
         value_format="${:.2f}M",
+        # REPORTCOH-01 E6: a per-risk P80 is not a share of the contingency (percentiles do
+        # not add), so the bars carry the dollar value only.
+        show_pct_of_total=False,
     )
     paths["cost_tornado_path"] = str(cost_tornado_path.resolve())
 
@@ -667,14 +669,21 @@ def _generate_v3_charts(
         }
         for d in schedule_drivers_top_n
     ]
+    # REPORTCOH-01 R1: under the CPM replay no risk carries a Mode, so a Mode legend would show
+    # every bar as "n/a". The share label is of the summed additive draws, not of the replay's
+    # slip, so it is dropped with it.
+    _sched_has_mode = any(
+        str(d.get("color_category") or "") in MODE_COLORS and d.get("color_category") != "n/a"
+        for d in sched_tornado_data)
     sched_tornado_path = chart_output_dir / "page4_schedule_tornado.png"
     make_tornado_chart(
         ranked_risks=sched_tornado_data,
         title="Top schedule contributors (probability-weighted mean, days)",
         x_axis_label="Probability x mean impact (days)",
         output_path=sched_tornado_path,
-        color_map=MODE_COLORS,
+        color_map=MODE_COLORS if _sched_has_mode else None,
         value_format="{:.2f} d",
+        show_pct_of_total=_sched_has_mode,
     )
     paths["schedule_tornado_path"] = str(sched_tornado_path.resolve())
 
@@ -967,14 +976,14 @@ def _apply_headline_metric(composed: dict[str, Any], headline_metric: str) -> No
             # risk-appetite context. P80 BETA flavour (separate docx) is
             # the right deliverable for fixed-budget / lump-sum approval.
             composed["page1_headline_integrated"] = (
-                f"Recommended project contingency: ${integrated_mean_m:.2f} M "
+                f"Recommended event-risk contingency: ${integrated_mean_m:.2f}M "
                 f"(Mean integrated cost plus schedule — primary headline "
                 f"for shared-buffer arithmetic; P80 retained for "
                 f"risk-appetite context at "
-                f"${float(p80_row['integrated_contingency_m']):.2f} M, "
+                f"${float(p80_row['integrated_contingency_m']):.2f}M, "
                 f"shown in the confidence curve below)."
                 if p80_row
-                else f"Recommended project contingency: ${integrated_mean_m:.2f} M "
+                else f"Recommended event-risk contingency: ${integrated_mean_m:.2f}M "
                      f"(Mean integrated cost plus schedule — primary headline "
                      f"for shared-buffer arithmetic)."
             )
@@ -1175,8 +1184,16 @@ def compose_final_report_data(
         p_level=p_level,
         risk_titles=risk_titles,
     )
+    # REPORTCOH-01 E11: under Stage 3 rank on the pre-Mode draws, as the schedule-drivers
+    # section does, so a Parallel risk is not shown at zero days.
+    _sched_drivers_source = integrated_dr
+    if (stage3_beta_result is not None
+            and integrated_dr.get("per_risk_schedule_pre_mode_array") is not None):
+        _sched_drivers_source = {
+            **integrated_dr,
+            "per_risk_schedule_array": integrated_dr["per_risk_schedule_pre_mode_array"]}
     top_3_sched = get_top_n_risk_drivers(
-        integrated_results=integrated_dr,
+        integrated_results=_sched_drivers_source,
         n=3,
         metric="schedule",
         p_level=p_level,
@@ -1271,13 +1288,8 @@ def compose_final_report_data(
     appendix_methodology = {
         "caveats": list(
             METHODOLOGY_CAVEATS_STAGE3 if stage3_beta_result is not None else _methodology_caveats()),
-        "references": [
-            "AACE 57R-09: Risk analysis and contingency determination using "
-            "expected value (cost engine basis).",
-            "AACE 65R-11: Integrated cost and schedule risk analysis using "
-            "Monte Carlo simulation.",
-            "PMI Practice Standard for Project Risk Management.",
-        ],
+        # REPORTCOH-01 E7: one reference list for the whole report (titles verified).
+        "references": list(commentary_text.REFERENCES),
         "distribution_choices_summary": (
             "PERT distributions for cost and schedule severity per risk "
             "(opt/ml/pess from the project risk register). Lognormal "
@@ -1377,9 +1389,15 @@ def compose_final_report_data(
     # Risk matrix data (all open dual-coded risks). SR14a: data assembly
     # via section-builder; the chart-rendering call below consumes
     # `risk_matrix_data` unchanged.
+    # REPORTCOH-01 E11: under the CPM replay the matrix plots the pre-Mode draws, as the
+    # schedule-driver table does, so its x-coordinates match that table.
+    _matrix_source = integrated_dr
+    _pre_mode = integrated_dr.get("per_risk_schedule_pre_mode_array")
+    if stage3_beta_result is not None and _pre_mode is not None and np.asarray(_pre_mode).size:
+        _matrix_source = {**integrated_dr, "per_risk_schedule_array": np.asarray(_pre_mode)}
     risk_matrix_data = build_risk_matrix_section(
         risks=risks_list,
-        integrated_results=integrated_dr,
+        integrated_results=_matrix_source,
     )["data"]
 
     # INTSCURVE-01 Part B: the base beneath the headline basis's arrays, or None (Layer 1 off).
@@ -1450,6 +1468,9 @@ def compose_final_report_data(
     ).format(
         mean_days=mean_days_indicative,
         mean_cost_m=mean_cost_indicative_m,
+        # REPORTCOH-01 E1: days are priced at the day rate; the mean event-risk cost is a
+        # different quantity and must not stand in for it.
+        mean_delay_m=float(mean_days_indicative) * float(day_rate) / 1e6,
         day_rate=day_rate,
         lower_days=lower_days,
         upper_days=upper_days,
@@ -1555,7 +1576,8 @@ def compose_final_report_data(
     )
     composed["page2_confidence_curve"] = _sc["page2_confidence_curve"]
     composed["page2_confidence_curve_preamble"] = commentary_text.CONFIDENCE_CURVE_PREAMBLE
-    composed["page2_confidence_curve_footnote"] = commentary_text.CONFIDENCE_CURVE_FOOTNOTE
+    composed["page2_confidence_curve_footnote"] = commentary_text.confidence_curve_footnote(
+        _sc["page2_confidence_curve"])
 
     # Beta-11 §3: dynamic narrative — pick the tail risk from the
     # current schedule drivers and route it through the three template
@@ -1604,7 +1626,8 @@ def compose_final_report_data(
         "confidence_curve_heading": "Confidence curve - integrated contingency by P-level",
         "confidence_curve_preamble": commentary_text.CONFIDENCE_CURVE_PREAMBLE,
         "confidence_curve_table": confidence_curve_display_rows(_sc["page2_confidence_curve"]),
-        "confidence_curve_footnote": commentary_text.CONFIDENCE_CURVE_FOOTNOTE,
+        "confidence_curve_footnote": commentary_text.confidence_curve_footnote(
+            _sc["page2_confidence_curve"]),
         "cost_distribution_heading": "Event-risk cost distribution",
         "cost_distribution_orienting": commentary_text.COST_DISTRIBUTION_ORIENTING,
         "cost_s_curve_path": chart_paths.get("cost_s_curve_path", ""),
@@ -1712,7 +1735,8 @@ def compose_final_report_data(
     )
     composed["page5_reconciliation"] = {
         **_p5,
-        "orienting": commentary_text.COMPARISON_ORIENTING,
+        "orienting": commentary_text.COMPARISON_ORIENTING.format(
+            n=len(_p5.get("comparison_table", [])) or "several"),
         "interpretation": commentary_text.COMPARISON_INTERPRETATION,
         "waterfall_orienting": commentary_text.WATERFALL_ORIENTING,
         # Beta-11 §3: the "{tail_risk_id}'s tail couples cost and
@@ -1951,6 +1975,18 @@ def compose_final_report_data(
     _apply_integrated_summary(composed)
     _apply_total_cost(composed, total_cost, chart_paths)
     _apply_jcl(composed, jcl, chart_paths)
+    # REPORTCOH-01 R1: last, so it sees every key the passes above wrote.
+    apply_stage3_cohesion(composed, stage3_beta_result)
+    # REPORTCOH-01 R2: the report's sections in the reader's order, from what is now composed.
+    from src.final.sections.report_layout import build_report_layout
+    from src.sra.cpm.bindings.registry import get_active_binding
+    _binding = get_active_binding()
+    build_report_layout(
+        composed, stage3_beta_result, day_rate=day_rate, total_cost=total_cost, jcl=jcl,
+        risks=risks_list, risk_titles=risk_titles,
+        run_date=run_date, status_period_glob=_binding.status_period_glob,
+        project_note=str(dict(_binding.narrative_templates).get("project_note", "")),
+    )
 
     return composed
 
@@ -2039,5 +2075,5 @@ def _apply_integrated_summary(composed: dict[str, Any]) -> None:
         return
     metric = str(headline.get("headline_metric", "P80"))
     composed["page1_headline_integrated_range"] = integrated_range_sentence(headline, metric)
-    heading = f"{contract_terms.term('headline_contingency_label')} ({metric}, Stage 3)"
+    heading = f"{contract_terms.term('headline_contingency_label')} ({metric}, CPM replay)"
     composed["page1_stage3_headline"] = stage3_headline_block(headline, heading)

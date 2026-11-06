@@ -14,6 +14,14 @@
  *   specialist's own delivery, on a page a client may put in front of their board. It renders in
  *   the Analyst view only.
  *
+ * **A showcase says what it is instead** (ASKSVC-01 stage B item 7, 04/11/2026). Both warnings
+ * describe a live project falling behind. A synthetic example's periods are fixed, so "a more
+ * recent position exists" would be false of it, and a reviewer reads a red banner as a fault. For
+ * a project whose binding declares `illustrative_base` (a synthetic project's), the latest period carries one neutral line naming
+ * it an example, and neither warning. The flag arrives in the project's `index.json`, written
+ * from the binding by `scripts/copy-data.js`; a live project's manifest has no flag and is
+ * unchanged.
+ *
  * That second one is **placement, not access control**: the PM/Analyst split is a client-side
  * toggle (`AppHeader`) over public static routes, so anyone holding the URL can click across.
  * Enforcing it would need authentication, which is a new surface and not stage 7's. Recorded here
@@ -24,6 +32,7 @@
 
 import { usePathname } from "next/navigation";
 
+import { formatLongDate } from "@/lib/formatters";
 import { assessFreshness, SLA_WORKING_DAYS } from "@/lib/periodFreshness";
 import { roleFromPathname, usePeriodContext } from "@/lib/PeriodContext";
 
@@ -34,6 +43,26 @@ export function PeriodFreshnessBanner() {
   if (status.kind !== "ready") return null;
 
   const meta = status.data.meta;
+
+  // Neither warning describes an older period the reader picked on purpose (below), so the
+  // showcase line follows the same rule: it sits on the latest period only.
+  const latestFile = availablePeriods[availablePeriods.length - 1];
+  const onLatest = latestFile === undefined || status.filename === latestFile;
+
+  if (status.index.showcase === true) {
+    if (!onLatest) return null;
+    return (
+      <div
+        role="status"
+        className="px-6 py-2 text-sm border-b"
+        style={{ backgroundColor: "#f3f4f6", color: "#374151", borderColor: "#e5e7eb" }}
+      >
+        <strong className="font-semibold">Example project</strong> with synthetic data. Figures
+        are for the period ending {formatLongDate(meta.period_end_date)}.
+      </div>
+    );
+  }
+
   const freshness = assessFreshness(
     meta.period_end_date,
     meta.previous_period_end_date ?? null,
@@ -47,8 +76,7 @@ export function PeriodFreshnessBanner() {
   // and telling them "a more recent position exists that this dashboard has not been given"
   // would be false - the dashboard has been given it, and they are standing on it. Raised as
   // a NOTE by the part C re-review: the message is a factual claim made to a client.
-  const latest = availablePeriods[availablePeriods.length - 1];
-  if (latest !== undefined && status.filename !== latest) return null;
+  if (!onLatest) return null;
 
   const isAnalyst = roleFromPathname(pathname) === "analyst";
   if (freshness.kind === "late" && !isAnalyst) return null;
