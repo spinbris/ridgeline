@@ -76,13 +76,13 @@ NARRATIVE_TEMPLATES = {
         "risks is the highest-value risk-treatment action."
     ),
     "stage3_cover_caveat": (
-        "This deliverable presents the Stage 3 integrated cost-plus-schedule "
+        "This deliverable presents the integrated cost-plus-schedule "
         "contingency for the synthetic wind farm scope. It is illustrative "
         "marketing data, not a client deliverable; risk-driver schedule "
         "assignments are auto-mapped and not for funding decisions."
     ),
     "stage3_schedule_basis": (
-        "Stage 3 CPM-replay against the synthetic wind farm Primavera P6 "
+        "CPM replay against the synthetic wind farm Primavera P6 "
         "schedule. Risk-driver assignments come from the strawman's "
         "auto-mapper rules (pattern-prefix matching with a float filter)."
     ),
@@ -170,6 +170,8 @@ SYNTHETIC_WIND_BINDING: ProjectBinding = register_binding(
         confidential=False,
         # INTSCURVE-01 Part B: the register's base is a synthetic project's, so illustrative.
         illustrative_base=True,
+        # REPORTCOH-01 D4: the report's Actions section reads the mitigations logged here.
+        status_period_glob="status_periods/wind_period_*.xlsx",
         default_filenames=DEFAULT_FILENAMES,
         data_dirs=DATA_DIRS,
         # ROAD-01 §5.3: these were module constants in `src/am/project_binding.py`,

@@ -9,6 +9,7 @@ import { Suspense } from "react";
 import { AppFooter } from "@/components/AppFooter";
 import { AppHeader } from "@/components/AppHeader";
 import { PeriodFreshnessBanner } from "@/components/PeriodFreshnessBanner";
+import { AskBox } from "@/components/AskBox";
 import { GuidanceStrip } from "@/components/GuidanceStrip";
 import { PageNav } from "@/components/PageNav";
 import { PeriodProvider } from "@/lib/PeriodContext";
@@ -129,6 +130,8 @@ export default async function RootLayout({
             <GuidanceStrip />
             <PeriodFreshnessBanner />
             <div className="flex-1">{children}</div>
+            {/* ASKSVC-01 stage B: under every page; renders nothing until switched on. */}
+            <AskBox />
             <AppFooter />
           </div>
         </PeriodProvider>

@@ -54,12 +54,14 @@ def test_limitations_current_exists():
 
 
 def test_limitations_current_has_pm_approved_entry3_text():
-    """PM addendum §1.4 supplies this phrasing verbatim."""
-    expected = (
-        "Criticality assessment uses the conservative starting-point "
-        "classification informed by current schedule structure"
-    )
-    assert expected in commentary_text.LIMITATIONS_CURRENT
+    """PM addendum §1.4 supplied entry 3; REPORTCOH-01 E10 (05/11/2026) replaced it.
+
+    The old entry named a Mode classification the CPM replay does not use. Entry 3 now
+    states the leave-one-out limit, and no entry may name the retired basis.
+    """
+    lst = commentary_text.LIMITATIONS_CURRENT
+    assert any(e.startswith("The leave-one-out results remove one risk at a time") for e in lst)
+    assert not any("starting-point classification" in e for e in lst)
 
 
 def test_limitations_current_omits_dev_phrases():

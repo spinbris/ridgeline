@@ -52,10 +52,10 @@ EXPECTED_D3_PARAGRAPHS: list[str] = [
         "kernel walks the network each iteration, applies per-iteration "
         "risk impacts at the bound activities, and recomputes the "
         "critical path; float consumption is handled by the kernel "
-        "mechanics. Mode multipliers were retained in the Stage 2.5 "
-        "deliverable as a practitioner-judgement layer where no CPM "
-        "kernel was available; in Stage 3 that layer would double-count "
-        "on the CPM mechanics and is not applied."
+        "mechanics. Mode multipliers were a practitioner-judgement "
+        "layer for analyses with no CPM kernel; on the CPM replay that "
+        "layer would double-count the network's own float, so it is not "
+        "applied."
     ),
     # SR17, D8.1 reword: paragraph 2 reframes the headline figure as
     # the SR16 collapse outcome (<pre_sr16_p80>d to <stage3_p80>d) rather than the prior
@@ -99,12 +99,12 @@ EXPECTED_D3_PARAGRAPHS: list[str] = [
 EXPECTED_D3_HEADING: str = "Mode multipliers and the full-CPM approach"
 
 EXPECTED_D4_FOOTNOTE: str = (
-    "Mode classification (Series / Hybrid / Parallel) is shown for "
-    "context. Under the Stage 3 full-CPM methodology (post-SR15), Mode "
-    "does not affect the per-iteration impact magnitude, the CPM "
-    "kernel handles float consumption directly. The Mode column "
-    "reflects the strawman classification carried forward from Stage 2.5 "
-    "for reporting consistency."
+    # REPORTCOH-01 R2 (Director-approved brief, 05/11/2026): reworded so the reader-facing text
+    # names no retired basis; still pinned verbatim.
+    "The register's Series, Hybrid or Parallel classification is shown "
+    "for context only. It does not change any delay: the CPM replay "
+    "propagates each delay through the programme's own logic, and float "
+    "absorbs what does not reach the finish."
 )
 
 

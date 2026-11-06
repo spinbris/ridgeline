@@ -164,6 +164,11 @@ class ProjectBinding:
         Whether the register's base estimate is illustrative rather than a real estimate: a
         synthetic project's. **Default ``False``.** Where the report draws the base beneath the
         contingency (INTSCURVE-01 Part B), it says "illustrative" when this is ``True``.
+    status_period_glob:
+        Repository-relative glob naming this project's status-period workbooks, or ``None``
+        (REPORTCOH-01 D4). The technical report's Actions section reads the mitigations logged
+        in them; ``None`` means the project declares none, and the section says so rather than
+        reading another project's.
     """
 
     name: str
@@ -184,6 +189,7 @@ class ProjectBinding:
     publish: bool = False
     confidential: bool = True
     illustrative_base: bool = False
+    status_period_glob: str | None = None
 
     def __post_init__(self) -> None:
         # DASHGATE-01 round 1, N7: the two publish locks are real booleans, never truthy stand-ins.

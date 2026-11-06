@@ -15,7 +15,7 @@
     "inputs": {
       "register": {
         "path": "tests/fixtures/synthetic_wind/wind_register.xlsx",
-        "sha256": "a973af5d83e1298827e453261a0875ccda4376c4a381c3277786182e388ba135"
+        "sha256": "ea3249e7a1073765b467152ffa7c827bf60cfa76d760eb7103f833d73063af65"
       },
       "xer": {
         "path": "tests/fixtures/synthetic_wind/wind_schedule.xer",

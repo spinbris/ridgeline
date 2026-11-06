@@ -24,6 +24,21 @@ def test_the_committed_list_is_the_bindings_answer():
     assert write_publish_list.main(["--check"]) == 0
     listed = json.loads((REPO / "dashboard" / "publish.json").read_text(encoding="utf-8"))
     assert listed["projects"] == publishable_projects() == ["synthetic_wind"]
+    # ASKSVC-01 stage B: the showcase list rides in the same file, from the same bindings.
+    assert listed["showcase"] == write_publish_list.showcase_projects() == ["synthetic_wind"]
+
+
+def test_a_showcase_is_a_published_synthetic_project_and_nothing_wider(monkeypatch):
+    import src.sra.cpm.bindings.registry as registry
+
+    # synthetic_road has an illustrative base but is not published, so it reaches no app.
+    assert get_binding("synthetic_road").illustrative_base is True
+    assert "synthetic_road" not in write_publish_list.showcase_projects()
+    # A published project with a real base is live, not a showcase.
+    wind = get_binding("synthetic_wind")
+    monkeypatch.setitem(registry._REGISTRY, "synthetic_wind",
+                        dataclasses.replace(wind, illustrative_base=False))
+    assert write_publish_list.showcase_projects() == []
 
 
 def test_the_check_reds_when_a_binding_changes_and_the_list_does_not(monkeypatch):

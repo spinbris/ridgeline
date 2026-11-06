@@ -28,9 +28,15 @@ GOLDEN = REPO / "tests" / "golden" / "period_json" / "wind_synth" / "period_2026
 PERIOD = "period_20260228.json"
 
 
-def _layout(tmp_path: Path, *, publish: dict | None = None) -> Path:
+MANUAL = REPO / "docs" / "ask" / "READER_MANUAL.md"
+
+
+def _layout(tmp_path: Path, *, publish: dict | None = None, manual: bool = True) -> Path:
     root = tmp_path / "repo"
     (root / "dashboard" / "scripts").mkdir(parents=True)
+    if manual:  # ASKSVC-01 stage B: the copy publishes the reader manual beside the data
+        (root / "docs" / "ask").mkdir(parents=True)
+        shutil.copy2(MANUAL, root / "docs" / "ask" / "READER_MANUAL.md")
     shutil.copy2(REPO / "dashboard" / "scripts" / "copy-data.js", root / "dashboard" / "scripts")
     listed = REPO / "dashboard" / "publish.json"
     if publish is not None:
@@ -80,3 +86,37 @@ def test_with_nothing_named_the_build_fails_loudly(tmp_path):
 def test_a_named_project_with_no_periods_does_not_ship_an_empty_picker(tmp_path):
     r = _copy(_layout(tmp_path, publish={"projects": ["no_such_project"]}))
     assert r.returncode != 0, "nothing named had any periods, and the build still succeeded"
+
+
+# ASKSVC-01 stage B: the reader manual ships with the data, and a showcase says so in its manifest.
+
+def test_the_reader_manual_is_published_beside_the_data(tmp_path):
+    root = _layout(tmp_path)
+    r = _copy(root)
+    assert r.returncode == 0, r.stderr
+    published = root / "dashboard" / "public" / "ask" / "READER_MANUAL.md"
+    assert published.read_bytes() == MANUAL.read_bytes()
+
+
+def test_a_missing_manual_fails_the_build(tmp_path):
+    r = _copy(_layout(tmp_path, manual=False))
+    assert r.returncode != 0, "the build shipped an Ask box with no manual to answer from"
+    assert "reader manual" in r.stderr.lower()
+
+
+def test_only_a_showcase_project_is_marked_showcase(tmp_path):
+    both = {"projects": ["synthetic_road", "synthetic_wind"], "showcase": ["synthetic_wind"]}
+    root = _layout(tmp_path, publish=both)
+    assert _copy(root).returncode == 0
+    target = root / "dashboard" / "public" / "data"
+    wind = json.loads((target / "synthetic_wind" / "index.json").read_text(encoding="utf-8"))
+    road = json.loads((target / "synthetic_road" / "index.json").read_text(encoding="utf-8"))
+    assert wind["showcase"] is True
+    assert "showcase" not in road, "a live project's manifest gained a showcase key"
+
+
+def test_a_publish_list_naming_no_showcase_marks_none(tmp_path):
+    root = _layout(tmp_path, publish={"projects": ["synthetic_wind"]})
+    assert _copy(root).returncode == 0
+    index = root / "dashboard" / "public" / "data" / "synthetic_wind" / "index.json"
+    assert "showcase" not in json.loads(index.read_text(encoding="utf-8"))

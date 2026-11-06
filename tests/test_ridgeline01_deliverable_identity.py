@@ -128,16 +128,20 @@ def test_the_front_page_says_tropic_ridge_is_synthetic():
 
 
 def test_cell_7_shows_basenames_and_methods_in_words():
-    run = _stand_in_run()
-    assert not any(Path(str(p)).exists() for p in run.artefacts), "the stand-in touched the disk"
-    page = render_cell(_cell("0ee325d42f33"), run)
-    assert "synthetic_wind" not in page, "Cell 7 names the binding key"
-    assert "the run folder" in page
-    assert not SEPARATOR.search(page), f"Cell 7 prints a path: {page}"
+    # REPORTCOH-01 R2: the artefact list (old Cell 7) left the web page; the provenance lines it
+    # carried now render after the audit trail, through the same helper. Neither may print a path.
+    from src.final.run_identity import provenance_markdown
+
+    nb = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
+    code = "\n".join("".join(c["source"]) for c in nb["cells"] if c["cell_type"] == "code")
+    assert "run.artefacts" not in code, "the web page lists the run's artefacts again"
+    assert "provenance_markdown(run.provenance)" in code
+    page = provenance_markdown(_stand_in_run().provenance)
+    assert "synthetic_wind" not in page, "the provenance lines name the binding key"
+    assert not SEPARATOR.search(page), f"the provenance lines print a path: {page}"
     for raw in RAW_METHODS:
-        assert raw not in page, f"Cell 7 prints the raw method {raw}"
-    assert "executive_summary_2026-09-29.docx" in page and "provenance.json" in page
-    assert "git blob id" in page
+        assert raw not in page, f"the provenance lines print the raw method {raw}"
+    assert "provenance.json" in page and "git blob id" in page
 
 
 def test_every_digest_method_the_engine_records_has_words():

@@ -142,10 +142,12 @@ def test_the_executive_summary_names_its_bases_when_stage3_leads(tmp_path):
     )
     es = composed["executive_summary"]
     assert es["headline_stage3"] is not None
-    assert "additive" in es["schedule_drivers_basis"]
-    assert all(d["mode"] == "n/a" for d in es["top_3_schedule_drivers"])
+    # REPORTCOH-01 R1: the basis is named for what it is; the comparator wording is retired.
+    assert "before programme logic" in es["schedule_drivers_basis"]
+    assert all(d["mode"] == "n/a" for d in es["top_3_schedule_drivers"])  # Word drops the column
     assert es["cost_drivers_basis"].startswith("Stage 3 cost arm")
-    assert "comparator basis" in es["schedule_basis_note"] and "CPMATTRIB-01" in es["schedule_basis_note"]
+    assert "comparator" not in es["schedule_basis_note"]
+    assert "float absorb" in es["schedule_basis_note"]
     assert "comparator" in es["headline_contingency_range_p80"]["basis"]
 
 

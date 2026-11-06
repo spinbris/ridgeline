@@ -22,6 +22,15 @@ DIGEST_METHOD_WORDS = {
     "sha256_bytes": "SHA-256 of the file's bytes",
 }
 
+#: Reader names for the provenance keys. The keys stay as stored (provenance.json is data); the
+#: page names each input by what it is. "strawman" is the code's name for the methodology sheets,
+#: a term from the engagement this codebase came from (REPORTCOH-01).
+INPUT_WORDS = {
+    "register": "risk register",
+    "xer": "schedule (P6)",
+    "strawman": "methodology sheets",
+}
+
 
 def front_page_markdown(inputs: Any) -> str:
     """The title, the product line and, where the project declares one, its note."""
@@ -72,5 +81,5 @@ def provenance_markdown(provenance: Mapping[str, Any]) -> str:
         "",
     ]
     for name, d in provenance["input_sha256"].items():
-        lines.append(f"- {name}: {DIGEST_METHOD_WORDS[d['method']]} `{d['value'][:16]}...`")
+        lines.append(f"- {INPUT_WORDS.get(name, name)}: {DIGEST_METHOD_WORDS[d['method']]} `{d['value'][:16]}...`")
     return "\n".join(lines)

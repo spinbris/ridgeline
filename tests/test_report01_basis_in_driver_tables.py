@@ -191,4 +191,4 @@ def test_a_real_register_yields_real_basis_text_not_a_wall_of_not_recorded():
     assert values != {NOT_RECORDED}, (
         "every row read as unrecorded against a register that populates the column - "
         f"the basis is not reaching the table. Got: {values}")
-    assert "Wind Farm Beta capex basis" in values
+    assert "Tropic Ridge capex basis" in values

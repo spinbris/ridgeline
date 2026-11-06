@@ -58,6 +58,10 @@ function ensureDir(dir) {
   }
 }
 
+/** The docs folder the reader manual is published from (ASKSVC-01 stage B). */
+const MANUAL_SOURCE = path.join(REPO_ROOT, "docs", "ask", "READER_MANUAL.md");
+const MANUAL_TARGET_DIR = path.join(DASHBOARD_ROOT, "public", "ask");
+
 /** The projects named for publication (DASHGATE-01 P2). Refuses when there are none. */
 function namedProjects() {
   if (!fs.existsSync(PUBLISH_LIST)) {
@@ -75,6 +79,31 @@ function namedProjects() {
     );
   }
   return new Set(names);
+}
+
+/**
+ * The published projects that are synthetic showcases (ASKSVC-01 stage B item 7), from the same
+ * file. Absent means none: an older publish list names no showcase, and a live project is the
+ * safe reading because it keeps the out-of-date warning.
+ */
+function showcaseProjects() {
+  const declared = require(PUBLISH_LIST);
+  return new Set(Array.isArray(declared.showcase) ? declared.showcase : []);
+}
+
+/**
+ * Publish the Ask box's reader manual beside the data (ASKSVC-01 stage B item 3), so the Ask
+ * service fetches the manual that matches the deployed period JSON. Derived like public/data/:
+ * emptied and rewritten on every run.
+ */
+function copyReaderManual() {
+  if (!fs.existsSync(MANUAL_SOURCE)) {
+    refuse(`No reader manual at ${MANUAL_SOURCE}. The Ask box reads it; it ships with the data.`);
+  }
+  fs.rmSync(MANUAL_TARGET_DIR, { recursive: true, force: true });
+  ensureDir(MANUAL_TARGET_DIR);
+  fs.copyFileSync(MANUAL_SOURCE, path.join(MANUAL_TARGET_DIR, "READER_MANUAL.md"));
+  console.log(`[copy-data] Copied the reader manual to ${MANUAL_TARGET_DIR}.`);
 }
 
 /** Map of project key -> sorted period filenames, read from the directory layout alone. */
@@ -107,6 +136,7 @@ function copyPeriodJsons() {
   }
 
   const named = namedProjects();
+  const showcase = showcaseProjects();
   const byProject = discoverProjects();
 
   if (byProject.size === 0) {
@@ -146,7 +176,16 @@ function copyPeriodJsons() {
     // has nothing to enumerate without one.
     fs.writeFileSync(
       path.join(to, "index.json"),
-      JSON.stringify({ periods, generated_at: new Date().toISOString() }, null, 2),
+      JSON.stringify(
+        {
+          periods,
+          generated_at: new Date().toISOString(),
+          // Only written when true, so a live project's manifest is unchanged.
+          ...(showcase.has(project) ? { showcase: true } : {}),
+        },
+        null,
+        2,
+      ),
       "utf-8",
     );
     projects.push({ project, periods: periods.length });
@@ -174,3 +213,4 @@ function copyPeriodJsons() {
 }
 
 copyPeriodJsons();
+copyReaderManual();

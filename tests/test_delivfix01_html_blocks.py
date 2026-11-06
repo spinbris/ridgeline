@@ -66,7 +66,7 @@ def test_the_audit_trail_is_a_two_column_table_with_written_labels_in_words_orde
     table = bs[0][1]
     assert bs[0][0] == "table" and list(table.columns) == ["Item", "Value"]
     assert list(table["Item"]) == [
-        "Risk register file", "Strawman methodology workbook", "Run date", "Iterations",
+        "Risk register file", "Methodology sheets (workbook)", "Run date", "Iterations",
         "Random seed", "Day rate", "Reporting P-level", "Package version", "Engine commit"]
     values = dict(zip(table["Item"], table["Value"]))
     assert values["Day rate"] == "$35,000/wd"
@@ -86,7 +86,7 @@ def test_a_nested_dict_under_a_label_is_its_own_headed_table():
     bs = blocks(AUDIT, section="page8_audit_trail")
     i = next(n for n, b in enumerate(bs) if b == ("text", "**Input file hashes (SHA-256)**"))
     assert bs[i + 1][0] == "table"
-    assert list(bs[i + 1][1]["Item"]) == ["Risk register", "Strawman", "Schedule (P6)"]
+    assert list(bs[i + 1][1]["Item"]) == ["Risk register", "Methodology sheets", "Schedule (P6)"]
 
 
 # --- FW-20: labels, prose, headings, order ------------------------------------------------------
@@ -161,7 +161,7 @@ def test_red_the_coverage_check_sees_a_missing_label(inventory, monkeypatch):
     fields = dict(contract.HTML_FIELDS)
     del fields["day_rate_dollars_per_workday"]
     monkeypatch.setattr(contract, "HTML_FIELDS", fields)
-    assert "page8_audit_trail/day_rate_dollars_per_workday" in unlabelled(inventory["paths"])
+    assert "rpt_appendix_audit/day_rate_dollars_per_workday" in unlabelled(inventory["paths"])
 
 
 def test_the_inventory_covers_the_sections_the_notebook_renders(inventory):
